@@ -31,6 +31,7 @@ JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Co
 
 - `./gradlew build` — kompilacja wszystkich modułów i wariantów, testy jednostkowe, lint (ostrzeżenia = błędy)
 - `./gradlew :ksef:test :invoice:test` — szybkie testy modułów JVM
+- `./gradlew integrationTest` — testy z prawdziwym KSeF **TEST** (wymaga `secrets/ksef-test.properties`, bez niego testy są pomijane; nie wchodzi w `build`). Unikaj 16:00–18:00 (prace serwisowe TEST)
 - `./gradlew :app:assembleKsefTestDebug` — APK wersji testowej (KSeF TEST); `installKsefTestDebug` instaluje na emulatorze
 - Wersje aplikacji (product flavors): `ksefTest` → `pl.xsenia.fv.test`, `ksefProd` → `pl.xsenia.fv`
 - Emulator: AVD `Samsung_S23_xsenia` (Android 16, API 36)

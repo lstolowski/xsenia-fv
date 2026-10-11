@@ -5,7 +5,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | Nr | Tytuł | User story | Status |
 |---|---|---|---|
 | [ZAD-001](ZAD-001-szkielet-projektu.md) | Szkielet projektu Android (Gradle, moduły, wersje test/prod) | wszystkie | Zrobione |
-| [ZAD-002](ZAD-002-testy-integracyjne-ksef-test.md) | Infrastruktura testów integracyjnych z KSeF TEST | US-002, US-006 | Do zrobienia |
+| [ZAD-002](ZAD-002-testy-integracyjne-ksef-test.md) | Infrastruktura testów integracyjnych z KSeF TEST | US-002, US-006 | Zrobione |
 | [ZAD-003](ZAD-003-ksef-uwierzytelnianie.md) | Klient KSeF: uwierzytelnianie tokenem i odświeżanie | US-002 | Do zrobienia |
 | [ZAD-004](ZAD-004-pliki-json-konfiguracji.md) | Pliki JSON: firma, rachunki, kontrahenci — model i walidacja | US-001, US-006 | Do zrobienia |
 | [ZAD-005](ZAD-005-bezpieczenstwo-i-ustawienia.md) | Aplikacja: token w Keystore, biometria, wybór folderu, ustawienia | US-001 | Do zrobienia |
