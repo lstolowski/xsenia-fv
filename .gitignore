@@ -1,0 +1,24 @@
+# Secrets (KSeF tokens, certificates, signing keys) — never commit
+/secrets/*
+!/secrets/*.example
+*.jks
+*.keystore
+keystore.properties
+
+# Android / Gradle
+.gradle/
+build/
+/local.properties
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# IDE
+.idea/
+*.iml
+.kotlin/
+
+# macOS
+.DS_Store

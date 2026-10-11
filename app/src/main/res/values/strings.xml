@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="environment_label">Środowisko KSeF: %1$s</string>
+    <string name="version_label">Wersja %1$s</string>
+    <string name="app_tagline">Faktury sprzedażowe i zakupowe z KSeF</string>
+</resources>
