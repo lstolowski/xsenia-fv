@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 java {
@@ -15,12 +16,25 @@ kotlin {
     }
 }
 
+dependencies {
+    api(libs.ktor.client.core)
+    api(libs.kotlinx.coroutines.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.kotlinx.serialization.json)
+}
+
 testing {
     suites {
         val junitVersion = libs.versions.junit.get()
 
         named<JvmTestSuite>("test") {
             useJUnitJupiter(junitVersion)
+            dependencies {
+                implementation(libs.ktor.client.mock)
+                implementation(libs.kotlinx.coroutines.test)
+            }
         }
 
         // Tests calling the real KSeF TEST environment. Not part of `check`/`build`; run explicitly.
@@ -28,6 +42,7 @@ testing {
             useJUnitJupiter(junitVersion)
             dependencies {
                 implementation(project())
+                implementation(libs.kotlinx.coroutines.test)
             }
             targets.all {
                 testTask.configure {

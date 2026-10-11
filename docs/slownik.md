@@ -23,6 +23,9 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Podmiot2 / nabywca | `buyer` | Odbiorca faktury | |
 | Kontrahent | `counterparty` | Druga strona faktury (nabywca na sprzedażowej, sprzedawca na zakupowej) | |
 | Token KSeF | `ksefToken` | Sekret do uwierzytelnienia w API KSeF | |
+| Token dostępowy / odświeżający | `accessToken` / `refreshToken` (`AuthToken`) | JWT z `/auth/token/redeem`; dostępowy ~15 min, odświeżający do 7 dni | |
+| Uwierzytelnianie | `KsefAuthenticator` | Logowanie tokenem KSeF i odświeżanie tokena dostępowego | |
+| Menedżer tokenów | `KsefTokenManager` | Zwraca ważny token dostępowy, sam odświeża / loguje ponownie | |
 | Sesja interaktywna | `onlineSession` | Sesja KSeF do wysyłki pojedynczych faktur | |
 | UPO | `upo` | Urzędowe Poświadczenie Odbioru | |
 | FA(3) | `fa3` | Obowiązujący schemat XML faktury ustrukturyzowanej | |
