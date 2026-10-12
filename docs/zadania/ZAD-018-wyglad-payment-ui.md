@@ -42,5 +42,5 @@ Aplikacja w stylu szablonu Payment UI (Compose-Ui-Templates, Apache 2.0), bez oz
 ## Definicja ukończenia
 
 - [x] Testy (logika bez zmian — istniejące testy zielone; przy okazji usunięty wyścig w `UnsentInvoiceRepository`: początkowe wczytanie z dysku mogło nadpisać fakturę zapisaną w międzyczasie)
-- [x] Sprawdzone na emulatorze: lista, formularz (kafelki i okna wyboru kontrahenta oraz rachunku), szczegóły, ustawienia, blokada; ekran przyjęcia faktury („bilet”) po wysyłce do KSeF TEST (2026-10-12). Wycięcia perforacji (`TicketShape`) poprawione po tej wysyłce — do potwierdzenia przez użytkownika przy najbliższej wysyłce
+- [x] Sprawdzone na emulatorze: lista, formularz (kafelki i okna wyboru kontrahenta oraz rachunku), szczegóły, ustawienia, blokada; ekran przyjęcia faktury („bilet”) po wysyłce do KSeF TEST (2026-10-12). Wycięcia perforacji (`TicketShape`) poprawione po tej wysyłce — potwierdzone przez użytkownika przy kolejnej wysyłce
 - [x] Zaktualizowana dokumentacja
