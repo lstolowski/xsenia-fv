@@ -1,7 +1,7 @@
 # US-001. Bezpieczne uruchomienie i konfiguracja
 
 - Priorytet: MVP
-- Status: Gotowa
+- Status: Zrobiona (2026-10-12)
 
 ## Historyjka
 
@@ -9,13 +9,13 @@ Jako **właściciel firmy** chcę **jednorazowo skonfigurować aplikację (token
 
 ## Kryteria akceptacji
 
-- [ ] Przy pierwszym uruchomieniu aplikacja prosi o token KSeF i zapisuje go zaszyfrowany kluczem z Android Keystore; token nigdy nie jest wyświetlany w całości.
-- [ ] Przy pierwszym uruchomieniu wskazuję folder (np. `Dokumenty/xsenia`) z plikami `company.json`, `banks.json`, `counterparties.json`; aplikacja pamięta wybór.
-- [ ] Przy każdym starcie aplikacja wczytuje pliki JSON; błędy (plik, pozycja, pole) są pokazane czytelnie, a przeglądanie faktur działa dalej.
-- [ ] Każde otwarcie aplikacji (także powrót z tła po dłuższym czasie) wymaga biometrii; bez niej nie widać żadnych danych.
-- [ ] Wersja testowa i produkcyjna różnią się nazwą i ikoną, mają osobne ustawienia i mogą być zainstalowane jednocześnie.
-- [ ] W ustawieniach mogę zmienić token, folder oraz wyczyścić cache faktur.
-- [ ] Token i klucze nie trafiają do kopii zapasowej Androida.
+- [x] Przy pierwszym uruchomieniu aplikacja prosi o token KSeF i zapisuje go zaszyfrowany kluczem z Android Keystore; token nigdy nie jest wyświetlany w całości.
+- [x] Przy pierwszym uruchomieniu wskazuję folder (np. `Dokumenty/xsenia`) z plikami `company.json`, `banks.json`, `counterparties.json`; aplikacja pamięta wybór.
+- [x] Przy każdym starcie aplikacja wczytuje pliki JSON; błędy (plik, pozycja, pole) są pokazane czytelnie, a przeglądanie faktur działa dalej.
+- [x] Każde otwarcie aplikacji (także powrót z tła po dłuższym czasie) wymaga biometrii; bez niej nie widać żadnych danych.
+- [x] Wersja testowa i produkcyjna różnią się nazwą i ikoną, mają osobne ustawienia i mogą być zainstalowane jednocześnie.
+- [x] W ustawieniach mogę zmienić token, folder oraz wyczyścić cache faktur.
+- [x] Token i klucze nie trafiają do kopii zapasowej Androida.
 
 ## Zadania
 

@@ -1,7 +1,7 @@
 # ZAD-005. Aplikacja: token w Keystore, biometria, wybór folderu, ustawienia
 
 - User story: US-001
-- Status: W toku — do potwierdzenia: zapis tokena i sprawdzenie połączenia z KSeF na emulatorze (token wprowadza użytkownik)
+- Status: Zrobione (2026-10-12)
 - Szacunek: M
 
 ## Cel
@@ -16,13 +16,13 @@ Pierwsze uruchomienie, ekran Ustawienia i blokada biometryczna.
 - [x] Ekran konfiguracji przy pierwszym uruchomieniu (folder → token → „Dalej”) i ekran Ustawienia: zmiana tokena (pole maskowane), „Sprawdź połączenie z KSeF”, ostrzeżenie o niezgodności NIP tokena z `company.json`, zmiana folderu, „Wyczyść cache”, wersja i środowisko; ekran główny tymczasowy (do ZAD-009)
 - [x] `dataExtractionRules` — wyłączenie tokena i cache z backupu (ZAD-001)
 - [x] Test na emulatorze z odciskiem palca: blokada przy starcie, brak blokady po 20 s w tle, blokada i automatyczny monit po 62 s, wybór folderu przez okno systemowe, wyświetlanie błędów w plikach
-- [ ] Zapis tokena i „Połączenie z KSeF działa” na emulatorze
+- [x] Zapis tokena (wprowadzony przez użytkownika) i „Połączenie z KSeF działa — token poprawny.” na emulatorze (KSeF TEST); w DataStore brak tokena w postaci jawnej (sprawdzone `run-as`)
 
 ## Definicja ukończenia
 
 - [x] Testy (`AppLockTest`)
-- [ ] Sprawdzone na środowisku KSeF TEST / emulatorze (jeśli dotyczy)
-- [ ] Zaktualizowana dokumentacja / słownik
+- [x] Sprawdzone na środowisku KSeF TEST / emulatorze
+- [x] Zaktualizowana dokumentacja (AGENTS.md — obsługa odcisku na emulatorze, dane testowe)
 
 ## Decyzje
 

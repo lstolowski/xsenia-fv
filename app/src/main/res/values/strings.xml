@@ -72,7 +72,7 @@
     <string name="token_hide">Ukryj</string>
 
     <!-- Connection check -->
-    <string name="connection_check">Sprawdź połączenie z KSeF</string>
+    <string name="connection_check">Sprawdź połączenie</string>
     <string name="connection_checking">Łączenie z KSeF…</string>
     <string name="connection_success">Połączenie z KSeF działa — token poprawny.</string>
     <string name="connection_missing_token">Najpierw zapisz token KSeF.</string>
