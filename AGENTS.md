@@ -56,7 +56,8 @@ JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Co
 - Wersje aplikacji (product flavors): `ksefTest` → `pl.xsenia.fv.test`, `ksefProd` → `pl.xsenia.fv`
 - Emulator: AVD `Samsung_S23_xsenia` (Android 16, API 36)
   - PIN blokady ekranu emulatora: `1111` (wyłącznie emulator testowy, nie dotyczy prawdziwego telefonu)
-  - Odcisk palca zarejestrowany jako *Finger 1* (Extended controls → Fingerprint); z terminala: `adb -e emu finger touch 1`
+  - Odcisk palca zarejestrowany jako *Finger 1* (Extended controls → Fingerprint); z terminala: `adb -e emu finger touch 1` a potem `adb -e emu finger remove 1` (bez `remove` kolejne dotknięcia nie są rozpoznawane). Po restarcie emulatora pierwsze odblokowanie ekranu wymaga PIN-u — poproś użytkownika
+  - Testowe pliki danych na emulatorze: `/sdcard/Documents/xsenia-test/` (`company.json` z NIP-em kontekstu testowego)
 
 ## Konwencje językowe
 

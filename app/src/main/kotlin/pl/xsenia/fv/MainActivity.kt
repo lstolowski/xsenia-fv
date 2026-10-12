@@ -1,65 +1,83 @@
 package pl.xsenia.fv
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import pl.xsenia.fv.ksef.KsefEnvironment
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import pl.xsenia.fv.security.BiometricGate
+import pl.xsenia.fv.ui.XseniaApp
 import pl.xsenia.fv.ui.theme.XseniaTheme
 
-class MainActivity : ComponentActivity() {
+/** FragmentActivity is required by BiometricPrompt. */
+class MainActivity : FragmentActivity() {
+
+    private val container get() = (application as XseniaApplication).container
+
+    private var promptVisible = false
+
+    // Prompt automatically once per lock; after a cancel the user taps "Odblokuj" (avoids a prompt loop).
+    private var autoPromptPending = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Invoice data must not be visible in the recent apps overview.
+        setRecentsScreenshotEnabled(false)
+
         setContent {
             XseniaTheme {
-                StartScreen(
-                    environment = KsefEnvironment.valueOf(BuildConfig.KSEF_ENVIRONMENT),
-                    versionName = BuildConfig.VERSION_NAME,
+                XseniaApp(
+                    container = container,
+                    biometricAvailable = BiometricGate.isAvailable(this),
+                    onUnlockRequest = ::requestUnlock,
                 )
             }
         }
-    }
-}
 
-/** Temporary start screen confirming which app flavor and KSeF environment is running. */
-@Composable
-private fun StartScreen(environment: KsefEnvironment, versionName: String) {
-    Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
-            Text(stringResource(R.string.app_tagline), style = MaterialTheme.typography.bodyLarge)
-            Text(stringResource(R.string.environment_label, environment.name), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.version_label, versionName), style = MaterialTheme.typography.bodySmall)
+        lifecycleScope.launch {
+            container.appLock.locked.collect { locked ->
+                autoPromptPending = locked
+                maybeAutoPrompt()
+            }
         }
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-private fun StartScreenPreview() {
-    XseniaTheme {
-        StartScreen(environment = KsefEnvironment.TEST, versionName = "0.1.0-test")
+    // Lifecycle state is not yet RESUMED inside onResume(), so track it explicitly; fragments
+    // (BiometricPrompt) are ready only after onPostResume().
+    private var readyForPrompt = false
+
+    override fun onPostResume() {
+        super.onPostResume()
+        readyForPrompt = true
+        maybeAutoPrompt()
+    }
+
+    override fun onPause() {
+        readyForPrompt = false
+        super.onPause()
+    }
+
+    private fun maybeAutoPrompt() {
+        if (autoPromptPending && readyForPrompt) {
+            autoPromptPending = false
+            requestUnlock()
+        }
+    }
+
+    private fun requestUnlock() {
+        if (promptVisible || !BiometricGate.isAvailable(this)) return
+        promptVisible = true
+        BiometricGate.authenticate(
+            activity = this,
+            title = getString(R.string.unlock_title),
+            subtitle = getString(R.string.unlock_subtitle),
+            onSuccess = {
+                promptVisible = false
+                container.appLock.unlock()
+            },
+            onFailure = { promptVisible = false },
+        )
     }
 }
