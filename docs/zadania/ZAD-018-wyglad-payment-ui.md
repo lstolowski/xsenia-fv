@@ -1,7 +1,7 @@
 # ZAD-018. Wygląd w stylu „Payment UI”
 
 - User story: US-008
-- Status: W toku
+- Status: Zrobione
 - Szacunek: L
 
 ## Cel
@@ -37,10 +37,10 @@ Aplikacja w stylu szablonu Payment UI (Compose-Ui-Templates, Apache 2.0), bez oz
 - Komponenty: `ui/components/Common.kt` — `Tile`, `SectionCard`, `ScreenHeader`, `InfoRow`, `PrimaryButton`, `SecondaryButton`.
 - Lista: nagłówek z sumą brutto miesiąca (przewija się razem z listą), kafelek na fakturę, niewysłane z bursztynową ramką; pasek sum na dole usunięty (sumy w nagłówku).
 - Formularz: kontrahent i rachunek bankowy — kafelek z wybraną pozycją otwierający okno dialogowe z kafelkami do wyboru (z przyciskiem wyboru; `TileChoiceField`), sumy w kafelku z wierszami „etykieta / wartość”.
-- Wynik wysyłki: duże kółko ✓ (w kolorze akcentu) / ✕ (czerwone), karta „bilet” z perforacją i kwotą brutto.
+- Wynik wysyłki: duże kółko ✓ (w kolorze akcentu) / ✕ (czerwone), karta „bilet” z perforacją i kwotą brutto. Wycięcia perforacji to kształt karty (`TicketShape`: zaokrąglony prostokąt minus dwa półkola na wysokości linii perforacji), więc ramka biegnie wzdłuż nich — rysowane na karcie białe kółka znikały pod ramką i na białym tle.
 
 ## Definicja ukończenia
 
 - [x] Testy (logika bez zmian — istniejące testy zielone; przy okazji usunięty wyścig w `UnsentInvoiceRepository`: początkowe wczytanie z dysku mogło nadpisać fakturę zapisaną w międzyczasie)
-- [ ] Sprawdzone na emulatorze: lista, formularz (kafelki i okna wyboru kontrahenta oraz rachunku), szczegóły, ustawienia, blokada — zrobione; ekran przyjęcia faktury („bilet”) — do sprawdzenia przy najbliższej wysyłce
-- [ ] Zaktualizowana dokumentacja
+- [x] Sprawdzone na emulatorze: lista, formularz (kafelki i okna wyboru kontrahenta oraz rachunku), szczegóły, ustawienia, blokada; ekran przyjęcia faktury („bilet”) po wysyłce do KSeF TEST (2026-10-12). Wycięcia perforacji (`TicketShape`) poprawione po tej wysyłce — do potwierdzenia przez użytkownika przy najbliższej wysyłce
+- [x] Zaktualizowana dokumentacja

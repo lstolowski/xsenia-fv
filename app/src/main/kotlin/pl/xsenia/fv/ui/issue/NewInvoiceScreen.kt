@@ -3,6 +3,7 @@ package pl.xsenia.fv.ui.issue
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -32,6 +33,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -54,20 +57,33 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
@@ -474,7 +490,14 @@ private fun StatusContent(state: SendState, viewModel: NewInvoiceViewModel, onCl
 /** The template's success card: a "ticket" with info rows, a perforation and the amount in the accent color. */
 @Composable
 private fun SuccessTicket(state: SendState.Accepted, gross: String?) {
-    Tile {
+    // Vertical centre of the perforation, measured in the card; the card outline is cut there (TicketShape).
+    var notchY by remember { mutableFloatStateOf(0f) }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = TicketShape(notchY),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
         Column(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(R.string.status_sent_label), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             Text(stringResource(R.string.status_success_icon), fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
@@ -486,7 +509,7 @@ private fun SuccessTicket(state: SendState.Accepted, gross: String?) {
             InfoRow(stringResource(R.string.status_field_upo), stringResource(if (state.upoSaved) R.string.status_upo_saved else R.string.status_upo_missing))
         }
         if (gross != null) {
-            TicketPerforation()
+            TicketPerforation(Modifier.onPlaced { notchY = it.positionInParent().y + it.size.height / 2f })
             InfoRow(stringResource(R.string.details_total_gross), gross, modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp), emphasized = true)
         } else {
             Spacer(Modifier.height(12.dp))
@@ -494,23 +517,40 @@ private fun SuccessTicket(state: SendState.Accepted, gross: String?) {
     }
 }
 
-/** Dashed line with half-circle notches at both edges, as in the template. */
+/** Dashed line between the half-circle notches cut by [TicketShape], as in the template. */
 @Composable
-private fun TicketPerforation() {
-    val notch = MaterialTheme.colorScheme.background
+private fun TicketPerforation(modifier: Modifier = Modifier) {
     val dash = MaterialTheme.colorScheme.outlineVariant
-    Canvas(Modifier.fillMaxWidth().height(32.dp)) {
-        val radius = 12.dp.toPx()
+    Canvas(modifier.fillMaxWidth().height(32.dp)) {
         val y = size.height / 2
+        val inset = TICKET_NOTCH_RADIUS.toPx() + 8.dp.toPx()
         drawLine(
             color = dash,
-            start = Offset(radius + 8.dp.toPx(), y),
-            end = Offset(size.width - radius - 8.dp.toPx(), y),
+            start = Offset(inset, y),
+            end = Offset(size.width - inset, y),
             strokeWidth = 2.dp.toPx(),
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(10.dp.toPx(), 6.dp.toPx())),
         )
-        drawCircle(notch, radius, Offset(0f, y))
-        drawCircle(notch, radius, Offset(size.width, y))
+    }
+}
+
+private val TICKET_NOTCH_RADIUS = 12.dp
+
+/**
+ * Card outline with half-circle notches at both edges at [notchY] (px from the top), so the border follows them.
+ * Without a measured position (0) it is a plain rounded card.
+ */
+private class TicketShape(private val notchY: Float) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val corner = with(density) { 8.dp.toPx() }
+        val card = Path().apply { addRoundRect(RoundRect(Rect(Offset.Zero, size), CornerRadius(corner))) }
+        if (notchY <= 0f) return Outline.Generic(card)
+        val radius = with(density) { TICKET_NOTCH_RADIUS.toPx() }
+        val notches = Path().apply {
+            addOval(Rect(Offset(0f, notchY), radius))
+            addOval(Rect(Offset(size.width, notchY), radius))
+        }
+        return Outline.Generic(Path.combine(PathOperation.Difference, card, notches))
     }
 }
 
