@@ -4,12 +4,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -32,10 +31,10 @@ fun FolderSection(title: String, state: ConfigState, onSelectFolder: (android.ne
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (state is ConfigState.Loaded) {
-                OutlinedButton(onClick = { picker.launch(null) }) { Text(stringResource(R.string.folder_change)) }
-                OutlinedButton(onClick = onReload) { Text(stringResource(R.string.folder_reload)) }
+                SecondaryButton(onClick = { picker.launch(null) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.folder_change)) }
+                SecondaryButton(onClick = onReload, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.folder_reload)) }
             } else {
-                Button(onClick = { picker.launch(null) }) { Text(stringResource(R.string.folder_select)) }
+                PrimaryButton(onClick = { picker.launch(null) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.folder_select)) }
             }
         }
     }

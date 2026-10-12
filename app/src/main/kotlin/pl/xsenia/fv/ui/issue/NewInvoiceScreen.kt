@@ -3,21 +3,24 @@ package pl.xsenia.fv.ui.issue
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,20 +30,16 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -55,12 +54,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.AppContainer
@@ -76,11 +79,19 @@ import pl.xsenia.fv.issue.LineForm
 import pl.xsenia.fv.issue.SendState
 import pl.xsenia.fv.ksef.KsefEnvironment
 import pl.xsenia.fv.security.BiometricGate
+import pl.xsenia.fv.ui.components.ChoicePill
+import pl.xsenia.fv.ui.components.InfoRow
 import pl.xsenia.fv.ui.components.LoadingScreen
+import pl.xsenia.fv.ui.components.PrimaryButton
+import pl.xsenia.fv.ui.components.SecondaryButton
 import pl.xsenia.fv.ui.components.SectionCard
+import pl.xsenia.fv.ui.components.Tile
 import pl.xsenia.fv.ui.components.ksefFailureText
 import pl.xsenia.fv.ui.details.InvoiceDetailsContent
 import pl.xsenia.fv.ui.format.Formats
+import pl.xsenia.fv.ui.theme.ButtonShape
+import pl.xsenia.fv.ui.theme.FailureColor
+import pl.xsenia.fv.ui.theme.SuccessColor
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -176,25 +187,37 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
         }
     }
 
-    // Counterparty and bank account
-    val counterparty = config.counterparties.firstOrNull { it.nip == form.counterpartyNip }
-    ChoiceField(
-        label = stringResource(R.string.field_counterparty),
-        value = counterparty?.let { "${it.name} (NIP ${it.nip})" } ?: stringResource(R.string.field_counterparty_choose),
-        options = config.counterparties.map { it.nip to "${it.name}\nNIP ${it.nip} · ${it.address.line1}" },
-        error = formIssues.messageFor(FormIssueType.COUNTERPARTY_MISSING),
-        onSelect = viewModel::selectCounterparty,
-    )
-    val account = config.invoiceBankAccounts.firstOrNull { it.number == form.bankAccountNumber }
-    ChoiceField(
-        label = stringResource(R.string.field_bank_account),
-        value = account?.let { "${it.name} · ${Formats.bankAccount(it.number)}" } ?: stringResource(R.string.field_bank_account_choose),
-        options = config.invoiceBankAccounts.map { it.number to listOfNotNull(it.name, it.bank, Formats.bankAccount(it.number)).joinToString("\n") },
-        error = formIssues.messageFor(FormIssueType.BANK_ACCOUNT_MISSING),
-        onSelect = viewModel::selectBankAccount,
-    )
+    // Counterparty: one tile each (US-008)
+    FormSectionTitle(stringResource(R.string.field_counterparty))
+    config.counterparties.forEach { counterparty ->
+        CounterpartyTile(
+            name = counterparty.name,
+            nip = counterparty.nip,
+            address = listOfNotNull(counterparty.address.line1, counterparty.address.line2).joinToString(", "),
+            selected = counterparty.nip == form.counterpartyNip,
+            onClick = { viewModel.selectCounterparty(counterparty.nip) },
+        )
+    }
+    formIssues.messageFor(FormIssueType.COUNTERPARTY_MISSING)?.let { ErrorText(it) }
+
+    // Bank account: pills like the template's tip buttons
+    FormSectionTitle(stringResource(R.string.field_bank_account))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        config.invoiceBankAccounts.forEach { account ->
+            ChoicePill(account.name, selected = account.number == form.bankAccountNumber, onClick = { viewModel.selectBankAccount(account.number) })
+        }
+    }
+    config.invoiceBankAccounts.firstOrNull { it.number == form.bankAccountNumber }?.let { account ->
+        Text(
+            listOfNotNull(account.bank, Formats.bankAccount(account.number)).joinToString("\n"),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    formIssues.messageFor(FormIssueType.BANK_ACCOUNT_MISSING)?.let { ErrorText(it) }
 
     // Dates and number
+    FormSectionTitle(stringResource(R.string.form_section_dates))
     DateField(stringResource(R.string.field_issue_date), form.issueDate, draftIssues.messageFor(DraftIssueType.ISSUE_DATE_IN_FUTURE), viewModel::setIssueDate)
     DateField(stringResource(R.string.field_delivery_date), form.deliveryDate, null, viewModel::setDeliveryDate)
     val numberError = draftIssues.firstOrNull { it.lineIndex == null && it.type in NUMBER_ISSUES }
@@ -213,11 +236,11 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
         modifier = Modifier.fillMaxWidth(),
     )
     if (form.invoiceNumber != state.suggestedNumber) {
-        TextButton(onClick = viewModel::useSuggestedNumber) { Text(stringResource(R.string.field_number_use_suggested)) }
+        TextButton(onClick = viewModel::useSuggestedNumber, shape = ButtonShape) { Text(stringResource(R.string.field_number_use_suggested)) }
     }
 
     // Lines
-    Text(stringResource(R.string.lines_title), style = MaterialTheme.typography.titleMedium)
+    FormSectionTitle(stringResource(R.string.lines_title))
     form.lines.forEachIndexed { index, line ->
         LineCard(
             index = index,
@@ -229,23 +252,31 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
             onRemove = { viewModel.removeLine(index) },
         )
     }
-    OutlinedButton(onClick = viewModel::addLine) {
+    SecondaryButton(onClick = viewModel::addLine, modifier = Modifier.fillMaxWidth()) {
         Icon(Icons.Filled.Add, contentDescription = null)
         Text(stringResource(R.string.line_add))
     }
 
     // Payment and totals
-    Text(stringResource(R.string.payment_info, Formats.date(InvoiceCalculator.paymentDueDate(form.issueDate))))
+    Text(
+        stringResource(R.string.payment_info, Formats.date(InvoiceCalculator.paymentDueDate(form.issueDate))),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     val totals = check?.draft?.let { InvoiceCalculator.totals(it.lines) }
     if (totals != null) {
-        SectionCard(stringResource(R.string.totals_title)) {
-            Text(stringResource(R.string.totals_line, Formats.money(totals.net, "PLN"), Formats.money(totals.vat, "PLN"), Formats.money(totals.gross, "PLN")), fontWeight = FontWeight.SemiBold)
+        Tile {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                InfoRow(stringResource(R.string.details_total_net), Formats.money(totals.net, "PLN"))
+                InfoRow(stringResource(R.string.details_total_vat), Formats.money(totals.vat, "PLN"))
+                InfoRow(stringResource(R.string.details_total_gross), Formats.money(totals.gross, "PLN"), emphasized = true)
+            }
         }
     }
     draftIssues.filter { it.lineIndex == null && it.type !in NUMBER_ISSUES && it.type != DraftIssueType.ISSUE_DATE_IN_FUTURE }.forEach {
-        Text(draftIssueText(it), color = MaterialTheme.colorScheme.error)
+        ErrorText(draftIssueText(it))
     }
-    Button(onClick = viewModel::openPreview, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_preview)) }
+    PrimaryButton(onClick = viewModel::openPreview, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_preview)) }
 }
 
 @Composable
@@ -258,8 +289,8 @@ private fun LineCard(
     onChange: (LineForm) -> Unit,
     onRemove: () -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Tile {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.line_title, index + 1), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 if (canRemove) {
@@ -315,7 +346,12 @@ private fun LineCard(
             val price = DecimalInput.parse(line.unitNetPrice)
             if (quantity != null && price != null) {
                 val amounts = InvoiceCalculator.line(pl.xsenia.fv.invoice.issue.DraftLine(line.name, quantity, line.unit, price))
-                Text(stringResource(R.string.line_amounts, Formats.money(amounts.net, "PLN"), Formats.money(amounts.gross, "PLN")), style = MaterialTheme.typography.bodySmall)
+                Text(
+                    stringResource(R.string.line_amounts, Formats.money(amounts.net, "PLN"), Formats.money(amounts.gross, "PLN")),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
         }
     }
@@ -338,111 +374,166 @@ private fun PreviewContent(viewModel: NewInvoiceViewModel) {
     val today = LocalDate.now(AppContainer.POLAND)
     if (invoice.issueDate.isBefore(today)) {
         Text(stringResource(R.string.preview_issue_date_past, Formats.date(invoice.issueDate)), color = MaterialTheme.colorScheme.tertiary)
-        OutlinedButton(onClick = viewModel::useTodayAsIssueDate, modifier = Modifier.fillMaxWidth()) {
+        SecondaryButton(onClick = viewModel::useTodayAsIssueDate, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.preview_use_today))
         }
     }
     InvoiceDetailsContent(invoice, ksefNumber = null)
-    Button(
+    PrimaryButton(
         onClick = {
             BiometricGate.authenticate(activity, title, subtitle, onSuccess = viewModel::send, onFailure = {})
         },
         modifier = Modifier.fillMaxWidth(),
     ) { Text(stringResource(R.string.preview_send)) }
-    OutlinedButton(onClick = viewModel::saveWithoutSending, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.preview_save_unsent)) }
-    TextButton(onClick = viewModel::backToForm, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.preview_back)) }
+    SecondaryButton(onClick = viewModel::saveWithoutSending, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.preview_save_unsent)) }
+    TextButton(onClick = viewModel::backToForm, modifier = Modifier.fillMaxWidth(), shape = ButtonShape) { Text(stringResource(R.string.preview_back)) }
 }
 
 @Composable
 private fun StatusContent(state: SendState, viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
     when (state) {
         SendState.Idle -> LoadingScreen()
-        is SendState.Sending -> {
-            CircularProgressIndicator()
-            Text(stringResource(if (state.submitted) R.string.status_processing else R.string.status_sending, state.invoiceNumber))
+        is SendState.Sending -> Column(
+            Modifier.fillMaxWidth().padding(vertical = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            CircularProgressIndicator(Modifier.size(64.dp))
+            Text(
+                stringResource(if (state.submitted) R.string.status_processing else R.string.status_sending, state.invoiceNumber),
+                textAlign = TextAlign.Center,
+            )
         }
         is SendState.Accepted -> {
-            Text(stringResource(R.string.status_accepted, state.invoiceNumber), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            Text(stringResource(R.string.status_ksef_number, state.ksefNumber))
-            Text(stringResource(if (state.upoSaved) R.string.status_upo_saved else R.string.status_upo_missing))
+            val preview by viewModel.preview.collectAsStateWithLifecycle()
             StatusMark(success = true)
-            Button(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_done)) }
+            SuccessTicket(state, gross = preview?.let { Formats.money(it.grossTotal, it.currency) })
+            PrimaryButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_done)) }
         }
         is SendState.Rejected -> {
             val rejection = state.rejection
-            Text(stringResource(R.string.status_rejected, state.invoiceNumber, rejection.statusCode, rejection.description), color = MaterialTheme.colorScheme.error)
-            rejection.details.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
-            rejection.originalKsefNumber?.let { Text(stringResource(R.string.status_duplicate, it)) }
-            Text(stringResource(R.string.status_kept_unsent))
             StatusMark(success = false)
-            Button(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_fix)) }
-            OutlinedButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_close)) }
+            Tile(borderColor = MaterialTheme.colorScheme.error) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(R.string.status_rejected, state.invoiceNumber, rejection.statusCode, rejection.description),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    rejection.details.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                    rejection.originalKsefNumber?.let { Text(stringResource(R.string.status_duplicate, it)) }
+                    Text(stringResource(R.string.status_kept_unsent), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            PrimaryButton(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_fix)) }
+            SecondaryButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_close)) }
         }
         is SendState.Failed -> {
-            Text(
-                stringResource(if (state.pendingInKsef) R.string.status_failed_pending else R.string.status_failed, state.invoiceNumber),
-                color = MaterialTheme.colorScheme.error,
-            )
-            Text(ksefFailureText(state.failure))
-            if (!state.pendingInKsef) Text(stringResource(R.string.status_kept_unsent))
             StatusMark(success = false)
-            Button(onClick = viewModel::retry, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_retry)) }
+            Tile(borderColor = MaterialTheme.colorScheme.error) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(if (state.pendingInKsef) R.string.status_failed_pending else R.string.status_failed, state.invoiceNumber),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(ksefFailureText(state.failure))
+                    if (!state.pendingInKsef) {
+                        Text(stringResource(R.string.status_kept_unsent), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            PrimaryButton(onClick = viewModel::retry, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_retry)) }
             if (!state.pendingInKsef) {
-                OutlinedButton(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_fix)) }
-                TextButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_close)) }
+                SecondaryButton(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_fix)) }
+                TextButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth(), shape = ButtonShape) { Text(stringResource(R.string.status_close)) }
             }
         }
     }
 }
 
+/** The template's success card: a "ticket" with info rows, a perforation and the amount in the accent color. */
+@Composable
+private fun SuccessTicket(state: SendState.Accepted, gross: String?) {
+    Tile {
+        Column(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(stringResource(R.string.status_sent_label), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.status_success_icon), fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
+        }
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            InfoRow(stringResource(R.string.field_invoice_number), state.invoiceNumber)
+            Text(stringResource(R.string.status_field_ksef), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            SelectionContainer { Text(state.ksefNumber, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold) }
+            InfoRow(stringResource(R.string.status_field_upo), stringResource(if (state.upoSaved) R.string.status_upo_saved else R.string.status_upo_missing))
+        }
+        if (gross != null) {
+            TicketPerforation()
+            InfoRow(stringResource(R.string.details_total_gross), gross, modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp), emphasized = true)
+        } else {
+            Spacer(Modifier.height(12.dp))
+        }
+    }
+}
+
+/** Dashed line with half-circle notches at both edges, as in the template. */
+@Composable
+private fun TicketPerforation() {
+    val notch = MaterialTheme.colorScheme.background
+    val dash = MaterialTheme.colorScheme.outlineVariant
+    Canvas(Modifier.fillMaxWidth().height(32.dp)) {
+        val radius = 12.dp.toPx()
+        val y = size.height / 2
+        drawLine(
+            color = dash,
+            start = Offset(radius + 8.dp.toPx(), y),
+            end = Offset(size.width - radius - 8.dp.toPx(), y),
+            strokeWidth = 2.dp.toPx(),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10.dp.toPx(), 6.dp.toPx())),
+        )
+        drawCircle(notch, radius, Offset(0f, y))
+        drawCircle(notch, radius, Offset(size.width, y))
+    }
+}
+
 @Composable
 private fun StatusMark(success: Boolean) {
-    Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.size(160.dp).clip(CircleShape).background(if (success) SUCCESS_GREEN else FAILURE_RED),
+            Modifier.size(140.dp).clip(CircleShape).background(if (success) SuccessColor else FailureColor),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 if (success) Icons.Filled.Check else Icons.Filled.Close,
                 contentDescription = stringResource(if (success) R.string.status_success_icon else R.string.status_failure_icon),
                 tint = Color.White,
-                modifier = Modifier.size(104.dp),
+                modifier = Modifier.size(92.dp),
             )
         }
     }
 }
 
-// Fixed result colors, the same in light and dark theme.
-private val SUCCESS_GREEN = Color(0xFF2E7D32)
-private val FAILURE_RED = Color(0xFFC62828)
+@Composable
+private fun FormSectionTitle(text: String) {
+    Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+}
 
 @Composable
-private fun ChoiceField(label: String, value: String, options: List<Pair<String, String>>, error: String?, onSelect: (String) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    OutlinedTextField(
-        value = value,
-        onValueChange = {},
-        readOnly = true,
-        enabled = false,
-        colors = selectableFieldColors(),
-        label = { Text(label) },
-        isError = error != null,
-        supportingText = error?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
-        modifier = Modifier.fillMaxWidth().clickable { open = true },
-    )
-    if (open) {
-        AlertDialog(
-            onDismissRequest = { open = false },
-            title = { Text(label) },
-            text = {
-                LazyColumn {
-                    items(options, key = { it.first }) { (key, text) ->
-                        ListItem(headlineContent = { Text(text) }, modifier = Modifier.clickable { open = false; onSelect(key) })
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.action_cancel)) } },
-        )
+private fun ErrorText(text: String) {
+    Text(text, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+}
+
+/** Counterparty as a tile (US-008); the chosen one has an accent border and a selected radio button. */
+@Composable
+private fun CounterpartyTile(name: String, nip: String, address: String, selected: Boolean, onClick: () -> Unit) {
+    Tile(onClick = onClick, selected = selected) {
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(name, style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.list_nip, nip), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
+        }
     }
 }
 

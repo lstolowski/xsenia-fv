@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -53,12 +51,12 @@ fun TokenSection(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (tokenSet) {
-                OutlinedButton(onClick = { dialogOpen = true }) { Text(stringResource(R.string.token_change)) }
-                OutlinedButton(onClick = onCheckConnection, enabled = !connection.checking) {
+                SecondaryButton(onClick = { dialogOpen = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.token_change)) }
+                SecondaryButton(onClick = onCheckConnection, enabled = !connection.checking, modifier = Modifier.weight(1f)) {
                     Text(stringResource(R.string.connection_check))
                 }
             } else {
-                Button(onClick = { dialogOpen = true }) { Text(stringResource(R.string.token_enter)) }
+                PrimaryButton(onClick = { dialogOpen = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.token_enter)) }
             }
         }
         ConnectionStatus(connection)

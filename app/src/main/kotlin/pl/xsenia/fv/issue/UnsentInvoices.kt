@@ -85,20 +85,23 @@ class UnsentInvoiceRepository(private val store: UnsentInvoiceStore, scope: Coro
     private val _invoices = MutableStateFlow<List<UnsentInvoice>>(emptyList())
     val invoices: StateFlow<List<UnsentInvoice>> = _invoices.asStateFlow()
 
+    // Disk and state change together: otherwise the initial load could overwrite an invoice saved meanwhile.
+    private val lock = Any()
+
     init {
-        scope.launch(Dispatchers.IO) { _invoices.value = store.list() }
+        scope.launch(Dispatchers.IO) { synchronized(lock) { _invoices.value = store.list() } }
     }
 
     fun get(id: String): UnsentInvoice? = _invoices.value.firstOrNull { it.id == id } ?: store.get(id)
 
     /** Call from a background thread. */
-    fun save(invoice: UnsentInvoice) {
+    fun save(invoice: UnsentInvoice) = synchronized(lock) {
         store.save(invoice)
         _invoices.update { current -> (listOf(invoice) + current.filter { it.id != invoice.id }).sortedByDescending { it.updatedAt } }
     }
 
     /** Call from a background thread. */
-    fun delete(id: String) {
+    fun delete(id: String) = synchronized(lock) {
         store.delete(id)
         _invoices.update { current -> current.filter { it.id != id } }
     }

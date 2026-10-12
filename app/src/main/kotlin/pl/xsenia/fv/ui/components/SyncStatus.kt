@@ -21,15 +21,15 @@ import pl.xsenia.fv.ui.format.Formats
 /** Compact synchronization status shown above the invoice lists. */
 @Composable
 fun SyncStatus(state: SyncUiState, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+    Column(modifier.fillMaxWidth()) {
         when {
             state.running -> {
                 Text(progressText(state.progress), style = MaterialTheme.typography.bodySmall)
                 LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 4.dp))
             }
             state.lastSyncAt != null ->
-                Text(stringResource(R.string.sync_last, Formats.dateTime(state.lastSyncAt)), style = MaterialTheme.typography.bodySmall)
-            else -> Text(stringResource(R.string.sync_never), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.sync_last, Formats.dateTime(state.lastSyncAt)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            else -> Text(stringResource(R.string.sync_never), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         state.error?.let { Text(ksefFailureText(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (state.error is KsefFailure.Network) Text(stringResource(R.string.sync_offline_hint), style = MaterialTheme.typography.bodySmall)

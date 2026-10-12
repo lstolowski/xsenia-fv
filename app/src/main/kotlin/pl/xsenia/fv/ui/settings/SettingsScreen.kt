@@ -4,12 +4,12 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.BuildConfig
 import pl.xsenia.fv.R
+import pl.xsenia.fv.ui.components.SecondaryButton
 import pl.xsenia.fv.config.ConfigState
 import pl.xsenia.fv.ui.MainViewModel
 import pl.xsenia.fv.ui.components.FolderSection
@@ -77,7 +78,7 @@ fun SettingsScreen(viewModel: MainViewModel, onBack: (() -> Unit)?) {
             )
             SectionCard(stringResource(R.string.settings_cache_section)) {
                 Text(stringResource(R.string.settings_cache_description))
-                OutlinedButton(onClick = { confirmClearCache = true }) { Text(stringResource(R.string.settings_cache_clear)) }
+                SecondaryButton(onClick = { confirmClearCache = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_cache_clear)) }
             }
         }
     }

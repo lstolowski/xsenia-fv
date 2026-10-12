@@ -21,5 +21,6 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-015](ZAD-015-budowa-apk-prod.md) | Budowa i podpisanie APK produkcyjnego | wszystkie | Do zrobienia |
 | [ZAD-016](ZAD-016-faktury-niewyslane-model.md) | Faktury niewysłane: model, magazyn, numeracja | US-007 | Zrobione |
 | [ZAD-017](ZAD-017-faktury-niewyslane-ui.md) | Faktury niewysłane: UI listy, edycji, zapisu i usuwania | US-007 | Zrobione |
+| [ZAD-018](ZAD-018-wyglad-payment-ui.md) | Wygląd w stylu „Payment UI” | US-008 | W toku |
 
 Kolejność realizacji (F1): 001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010 → 011 → 012 → 013; 014 równolegle z 009; 016 → 017 (US-007, przed 015); 015 na końcu.

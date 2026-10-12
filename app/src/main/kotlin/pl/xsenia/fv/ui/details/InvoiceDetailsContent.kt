@@ -2,8 +2,8 @@ package pl.xsenia.fv.ui.details
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import pl.xsenia.fv.R
@@ -18,7 +19,9 @@ import pl.xsenia.fv.invoice.model.Invoice
 import pl.xsenia.fv.invoice.model.InvoiceLine
 import pl.xsenia.fv.invoice.model.Party
 import pl.xsenia.fv.invoice.model.VatCategory
+import pl.xsenia.fv.ui.components.InfoRow
 import pl.xsenia.fv.ui.components.SectionCard
+import pl.xsenia.fv.ui.components.Tile
 import pl.xsenia.fv.ui.format.Formats
 import java.math.BigDecimal
 
@@ -65,9 +68,9 @@ fun InvoiceDetailsContent(invoice: Invoice, ksefNumber: String?) {
                 )
             }
             HorizontalDivider()
-            AmountRow(stringResource(R.string.details_total_net), money(invoice.netTotal))
-            AmountRow(stringResource(R.string.details_total_vat), money(invoice.vatTotal))
-            AmountRow(stringResource(R.string.details_total_gross), money(invoice.grossTotal), emphasized = true)
+            InfoRow(stringResource(R.string.details_total_net), money(invoice.netTotal))
+            InfoRow(stringResource(R.string.details_total_vat), money(invoice.vatTotal))
+            InfoRow(stringResource(R.string.details_total_gross), money(invoice.grossTotal), emphasized = true)
         }
         invoice.payment?.let { payment ->
             SectionCard(stringResource(R.string.details_payment)) {
@@ -107,18 +110,32 @@ fun InvoiceDetailsContent(invoice: Invoice, ksefNumber: String?) {
 
 @Composable
 private fun Header(invoice: Invoice, ksefNumber: String?) {
-    SectionCard(invoiceKind(invoice.kind)) {
-        Text(invoice.invoiceNumber, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        ksefNumber?.let { SelectionContainer { Text(stringResource(R.string.details_ksef_number, it), style = MaterialTheme.typography.bodySmall) } }
-        Text(stringResource(R.string.details_issue_date, Formats.date(invoice.issueDate)))
-        invoice.issuePlace?.let { Text(stringResource(R.string.details_issue_place, it)) }
-        val period = invoice.period
-        if (period != null) {
-            Text(stringResource(R.string.details_period, Formats.date(period.from), Formats.date(period.to)))
-        } else {
-            Text(stringResource(R.string.details_delivery_date, Formats.date(invoice.deliveryDate)))
+    // Template's wallet header: kind, large number and the gross amount in the accent color.
+    Tile {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(invoiceKind(invoice.kind), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(invoice.invoiceNumber, fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                Formats.money(invoice.grossTotal, invoice.currency),
+                fontSize = 28.sp,
+                lineHeight = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            val secondary = MaterialTheme.colorScheme.onSurfaceVariant
+            Text(stringResource(R.string.details_issue_date, Formats.date(invoice.issueDate)), color = secondary)
+            invoice.issuePlace?.let { Text(stringResource(R.string.details_issue_place, it), color = secondary) }
+            val period = invoice.period
+            if (period != null) {
+                Text(stringResource(R.string.details_period, Formats.date(period.from), Formats.date(period.to)), color = secondary)
+            } else {
+                Text(stringResource(R.string.details_delivery_date, Formats.date(invoice.deliveryDate)), color = secondary)
+            }
+            if (invoice.currency != "PLN") Text(stringResource(R.string.details_currency, invoice.currency), color = secondary)
+            ksefNumber?.let {
+                SelectionContainer { Text(stringResource(R.string.details_ksef_number, it), style = MaterialTheme.typography.bodySmall, color = secondary) }
+            }
         }
-        if (invoice.currency != "PLN") Text(stringResource(R.string.details_currency, invoice.currency))
     }
 }
 
@@ -154,19 +171,10 @@ private fun LineItem(line: InvoiceLine, money: (BigDecimal) -> String) {
             Text(
                 stringResource(R.string.details_line_values, net?.let(money) ?: "—", vatRateLabel(line.vatRate), gross?.let(money) ?: "—"),
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
         line.deliveryDate?.let { Text(stringResource(R.string.details_line_delivery, Formats.date(it)), style = MaterialTheme.typography.bodySmall) }
-    }
-}
-
-@Composable
-private fun AmountRow(label: String, amount: String, emphasized: Boolean = false) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        val weight = if (emphasized) FontWeight.Bold else FontWeight.Normal
-        val style = if (emphasized) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium
-        Text(label, fontWeight = weight, style = style)
-        Text(amount, fontWeight = weight, style = style)
     }
 }
 
