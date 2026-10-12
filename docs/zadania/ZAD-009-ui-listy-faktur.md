@@ -15,8 +15,8 @@ Dwie zakładki z listą faktur wybranego miesiąca.
 - [x] Wiersz: data dostawy, kontrahent (nazwa + NIP), numer, brutto i netto; rodzaj faktury (Korekta, Zaliczkowa, …) gdy inny niż VAT; najnowsze na górze
 - [x] Podsumowanie miesiąca (po filtrze) netto / VAT / brutto, osobno dla każdej waluty; kwoty `1 234,56 zł`; polska odmiana „1 faktura / 2 faktury / 5 faktur” liczona w kodzie (`PolishPlural`) niezależnie od języka urządzenia
 - [x] „Odśwież z KSeF”: przycisk w pasku i pociągnięcie listy w dół
-- [ ] Przycisk „Nowa faktura” na liście sprzedażowej — w ZAD-013
-- [ ] Otwarcie szczegółów po dotknięciu wiersza — w ZAD-010
+- [x] Przycisk „Nowa faktura” na liście sprzedażowej — zrobione w ZAD-013
+- [x] Otwarcie szczegółów po dotknięciu wiersza — zrobione w ZAD-010
 - [x] Stan pusty (miesiąc / wyszukiwanie / przed pierwszą synchronizacją), błąd synchronizacji, postęp synchronizacji nad listą
 
 ## Definicja ukończenia

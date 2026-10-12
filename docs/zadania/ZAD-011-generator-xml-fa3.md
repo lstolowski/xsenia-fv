@@ -21,5 +21,5 @@ Moduł `invoice` buduje poprawny XML FA(3) faktury VAT 23%.
 ## Definicja ukończenia
 
 - [x] Testy (24: kalkulator, numeracja, daty, walidacja, generator + XSD)
-- [ ] Sprawdzone na KSeF TEST — przy wysyłce w ZAD-012
+- [x] Sprawdzone na KSeF TEST — przy wysyłce w ZAD-012 (`KsefInvoiceSendIntegrationTest`)
 - [x] Zaktualizowana dokumentacja / słownik

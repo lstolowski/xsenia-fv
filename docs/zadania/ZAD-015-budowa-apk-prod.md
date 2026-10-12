@@ -11,7 +11,7 @@ Podpisany APK `prod` gotowy do ręcznej instalacji na S23.
 ## Zakres
 
 - [ ] Klucz podpisu (`.jks`) i `keystore.properties` poza gitem; instrukcja wygenerowania i backupu klucza
-- [ ] `assembleProdRelease`, R8/minifikacja z regułami dla serializacji
+- [ ] `assembleKsefProdRelease`, R8/minifikacja z regułami dla serializacji
 - [ ] Instrukcja instalacji na telefonie (Auto Blocker, nieznane źródła) w `docs/srodowisko/`
 
 ## Definicja ukończenia
