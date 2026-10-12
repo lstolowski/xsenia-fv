@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
@@ -112,7 +113,7 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
                     key = "invoice-form-${unsentId ?: "new"}",
                     factory = viewModelFactory { initializer { NewInvoiceViewModel(container, unsentId) } },
                 )
-                NewInvoiceScreen(newInvoiceViewModel, onClose = { navController.popBackStack() })
+                NewInvoiceScreen(newInvoiceViewModel, onClose = { navController.popIfOn(NEW_INVOICE_ROUTE) })
             }
             composable(Tab.SETTINGS.route) { SettingsScreen(viewModel = viewModel, onBack = null) }
             composable("$DETAILS_ROUTE/{category}/{ksefNumber}") { entry ->
@@ -122,7 +123,7 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
                     factory = viewModelFactory { initializer { InvoiceDetailsViewModel(category, ksefNumber, container) } },
                 )
                 val state by detailsViewModel.state.collectAsStateWithLifecycle()
-                InvoiceDetailsScreen(state = state, onBack = { navController.popBackStack() })
+                InvoiceDetailsScreen(state = state, onBack = { navController.popIfOn(DETAILS_ROUTE) })
             }
         }
     }
@@ -154,4 +155,12 @@ private fun InvoiceListRoute(
         onOpenInvoice = { onOpenInvoice(category, it) },
         onNewInvoice = onNewInvoice,
     )
+}
+
+/**
+ * Closes the screen only while it is still on top — a second tap (e.g. "Gotowe" during the exit animation)
+ * must not pop the invoice list below it, which would leave an empty screen.
+ */
+private fun NavHostController.popIfOn(routePrefix: String) {
+    if (currentDestination?.route?.startsWith(routePrefix) == true) popBackStack()
 }

@@ -1,7 +1,7 @@
 # US-007. Faktury sprzedażowe zapisane bez wysyłki do KSeF
 
 - Priorytet: MVP (przed ZAD-015)
-- Status: Gotowa (decyzje z warsztatu 2026-10-12)
+- Status: Zrobiona (2026-10-12)
 - Zgłoszone: 2026-10-12
 
 ## Historyjka
@@ -14,16 +14,16 @@ Wystawienie faktury zawsze kończy się wysyłką do KSeF. Nieudana wysyłka (b�
 
 ## Kryteria akceptacji
 
-- [ ] Ścieżka „Wyślij do KSeF” (podgląd → biometria → wysyłka) działa jak dotychczas; faktura przyjęta przez KSeF jest na liście sprzedażowej jak dotychczas.
-- [ ] Na ekranie podglądu, obok „Wyślij do KSeF”, jest przycisk **„Zapisz bez wysyłki do KSeF”** — zapisuje fakturę na telefonie i wraca do listy.
-- [ ] Faktura niewysłana jest widoczna na **liście faktur sprzedażowych** w miesiącu swojej daty dostawy, oznaczona **żółtym trójkątem z wykrzyknikiem** (ostrzeżenie: „Niewysłana do KSeF”).
-- [ ] Dotknięcie faktury niewysłanej otwiera **formularz** wypełniony jej danymi (zamiast widoku szczegółów); można zmienić wszystko: kontrahenta, rachunek, daty, numer, pozycje (dodawać, usuwać, zmieniać ceny).
-- [ ] Z formularza: „Podgląd” → na końcu **„Wyślij do KSeF”** albo **„Zapisz bez wysyłki do KSeF”**.
-- [ ] Po przyjęciu przez KSeF faktura przestaje być niewysłana: znika ostrzeżenie, jest zwykłą fakturą z numerem KSeF (z lustra), a jej lokalna kopia robocza jest usuwana.
-- [ ] Faktury, której wysyłka nie powiodła się przed dotarciem do KSeF (błąd sieci / KSeF) albo którą KSeF odrzucił, nie traci się — zostaje jako niewysłana (do edycji i ponownej wysyłki); przy odrzuconej formularz pokazuje powód odrzucenia.
-- [ ] Faktury niewysłane rezerwują numer (sugestia i duplikaty) i nie są wliczane do „Razem” (osobna linia „Niewysłane: …”).
-- [ ] Przy wysyłce z datą wystawienia wcześniejszą niż dziś — ostrzeżenie z wyborem: „Ustaw dzisiejszą datę” albo wysyłka z zapisaną datą; data dostawy bez zmian.
-- [ ] Faktura już przyjęta do przetwarzania przez KSeF (czekamy na numer KSeF) **nie** jest edytowalna — jej status jest dokańczany jak dotychczas.
+- [x] Ścieżka „Wyślij do KSeF” (podgląd → biometria → wysyłka) działa jak dotychczas; faktura przyjęta przez KSeF jest na liście sprzedażowej jak dotychczas.
+- [x] Na ekranie podglądu, obok „Wyślij do KSeF”, jest przycisk **„Zapisz bez wysyłki do KSeF”** — zapisuje fakturę na telefonie i wraca do listy.
+- [x] Faktura niewysłana jest widoczna na **liście faktur sprzedażowych** w miesiącu swojej daty dostawy, oznaczona **żółtym trójkątem z wykrzyknikiem** (ostrzeżenie: „Niewysłana do KSeF”).
+- [x] Dotknięcie faktury niewysłanej otwiera **formularz** wypełniony jej danymi (zamiast widoku szczegółów); można zmienić wszystko: kontrahenta, rachunek, daty, numer, pozycje (dodawać, usuwać, zmieniać ceny).
+- [x] Z formularza: „Podgląd” → na końcu **„Wyślij do KSeF”** albo **„Zapisz bez wysyłki do KSeF”**.
+- [x] Po przyjęciu przez KSeF faktura przestaje być niewysłana: znika ostrzeżenie, jest zwykłą fakturą z numerem KSeF (z lustra), a jej lokalna kopia robocza jest usuwana.
+- [x] Faktury, której wysyłka nie powiodła się przed dotarciem do KSeF (błąd sieci / KSeF) albo którą KSeF odrzucił, nie traci się — zostaje jako niewysłana (do edycji i ponownej wysyłki); przy odrzuconej formularz pokazuje powód odrzucenia.
+- [x] Faktury niewysłane rezerwują numer (sugestia i duplikaty) i nie są wliczane do „Razem” (osobna linia „Niewysłane: …”).
+- [x] Przy wysyłce z datą wystawienia wcześniejszą niż dziś — ostrzeżenie z wyborem: „Ustaw dzisiejszą datę” albo wysyłka z zapisaną datą; data dostawy bez zmian.
+- [x] Faktura już przyjęta do przetwarzania przez KSeF (czekamy na numer KSeF) **nie** jest edytowalna — jej status jest dokańczany jak dotychczas.
 
 ## Decyzje (warsztat 2026-10-12)
 
