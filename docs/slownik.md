@@ -41,4 +41,5 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Metadane faktury | `InvoiceMetadata` | Dane faktury z listy KSeF (bez pełnej treści XML) | |
 | Eksport paczki | `exportInvoices` / `InvoiceExport` | Asynchroniczne pobranie wielu faktur (XML + `_metadata.json`) w zaszyfrowanej paczce ZIP | |
 | Rola podmiotu | `InvoiceSubjectType` (`SELLER` = Podmiot1, `BUYER` = Podmiot2) | Sprzedażowe = `SELLER`, zakupowe = `BUYER` | |
-| Szkic faktury | `invoiceDraft` | Niewysłana faktura zapisana lokalnie | |
+| Szkic faktury | `InvoiceForm` (`issue/draft.json`) | Automatycznie zapisywany formularz nowej faktury | |
+| Faktura niewysłana | `UnsentInvoice` | Faktura sprzedażowa zapisana na telefonie bez wysyłki do KSeF, edytowalna (US-007) | Oznaczenie: żółty trójkąt z wykrzyknikiem |
