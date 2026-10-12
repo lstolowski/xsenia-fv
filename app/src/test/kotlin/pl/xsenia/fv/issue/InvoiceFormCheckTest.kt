@@ -1,5 +1,6 @@
 package pl.xsenia.fv.issue
 
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -12,6 +13,7 @@ import pl.xsenia.fv.invoice.config.Counterparty
 import pl.xsenia.fv.invoice.config.InvoicingConfig
 import pl.xsenia.fv.invoice.issue.DraftIssue
 import pl.xsenia.fv.invoice.issue.DraftIssueType
+import pl.xsenia.fv.invoice.issue.VatRate
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -42,6 +44,34 @@ class InvoiceFormCheckTest {
         val draft = requireNotNull(check.draft)
         assertEquals(BigDecimal("1234.50"), draft.lines.single().unitNetPrice)
         assertEquals("Testowa Sp. z o.o.", draft.buyer.name)
+    }
+
+    @Test
+    fun `line rate and unit are passed to the draft, new lines default to 23 percent and hours`() {
+        val check = InvoiceFormCheck.check(
+            form(LineForm("Usługa testowa", "2", "dni", "100", VatRate.RATE_8), LineForm("Usługa testowa", unitNetPrice = "10")),
+            config,
+            emptyList(),
+            today,
+        )
+
+        val lines = requireNotNull(check.draft).lines
+        assertEquals(listOf(VatRate.RATE_8, VatRate.RATE_23), lines.map { it.vatRate })
+        assertEquals(listOf("dni", "godz."), lines.map { it.unit })
+    }
+
+    @Test
+    fun `not taxable line can be previewed`() {
+        val check = InvoiceFormCheck.check(form(LineForm("Usługa testowa", "1", "usł.", "100", VatRate.NOT_TAXABLE)), config, emptyList(), today)
+
+        assertTrue(check.canPreview)
+    }
+
+    @Test
+    fun `draft saved before VAT rates were added loads with 23 percent and keeps its unit`() {
+        val line = Json.decodeFromString(LineForm.serializer(), """{"name": "Usługa testowa", "quantity": "1", "unit": "szt.", "unitNetPrice": "10"}""")
+
+        assertEquals(LineForm("Usługa testowa", "1", "szt.", "10", VatRate.RATE_23), line)
     }
 
     @Test

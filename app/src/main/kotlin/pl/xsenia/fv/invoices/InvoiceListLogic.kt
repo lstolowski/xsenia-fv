@@ -71,7 +71,7 @@ object InvoiceListLogic {
         val lines = form.lines.mapNotNull { line ->
             val quantity = DecimalInput.parse(line.quantity) ?: return@mapNotNull null
             val price = DecimalInput.parse(line.unitNetPrice) ?: return@mapNotNull null
-            DraftLine(line.name, quantity, line.unit, price)
+            DraftLine(line.name, quantity, line.unit, price, line.vatRate)
         }
         val totals = InvoiceCalculator.totals(lines)
         return InvoiceRow(

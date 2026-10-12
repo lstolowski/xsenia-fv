@@ -22,5 +22,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-016](ZAD-016-faktury-niewyslane-model.md) | Faktury niewysłane: model, magazyn, numeracja | US-007 | Zrobione |
 | [ZAD-017](ZAD-017-faktury-niewyslane-ui.md) | Faktury niewysłane: UI listy, edycji, zapisu i usuwania | US-007 | Zrobione |
 | [ZAD-018](ZAD-018-wyglad-payment-ui.md) | Wygląd w stylu „Payment UI” | US-008 | W toku |
+| [ZAD-019](ZAD-019-stawki-vat-model.md) | Stawki VAT w modelu faktury: kalkulator, XML FA(3), reverse charge | US-009 | Zrobione |
+| [ZAD-020](ZAD-020-formularz-stawki-jednostki-uklad.md) | Formularz: listy stawki VAT i jednostki, nowa kolejność sekcji | US-009 | Zrobione |
 
-Kolejność realizacji (F1): 001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010 → 011 → 012 → 013; 014 równolegle z 009; 016 → 017 (US-007, przed 015); 015 na końcu.
+Kolejność realizacji (F1): 001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010 → 011 → 012 → 013; 014 równolegle z 009; 016 → 017 (US-007, przed 015); 019 → 020 (US-009, przed 015); 015 na końcu.

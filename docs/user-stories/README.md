@@ -13,3 +13,4 @@ Z każdej historyjki rozpisujemy zadania w [../zadania/](../zadania/README.md).
 | [US-006](US-006-wystawienie-faktury-sprzedazowej.md) | Wystawienie nowej faktury sprzedażowej | MVP | Zrobiona |
 | [US-007](US-007-faktury-niewyslane.md) | Faktury sprzedażowe zapisane bez wysyłki do KSeF | MVP | Zrobiona |
 | [US-008](US-008-wyglad-payment-ui.md) | Wygląd aplikacji według szablonu „Payment UI” | MVP | W realizacji |
+| [US-009](US-009-stawki-vat-jednostki.md) | Stawki VAT, jednostki z listy i nowy układ formularza faktury | MVP | Zrobiona |

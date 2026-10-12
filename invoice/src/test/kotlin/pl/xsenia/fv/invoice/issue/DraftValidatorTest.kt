@@ -19,6 +19,11 @@ class DraftValidatorTest {
     }
 
     @Test
+    fun `not taxable and zero rate lines need nothing more`() {
+        assertEquals(emptyList<DraftIssue>(), issues(draft(lines = listOf(line(rate = VatRate.NOT_TAXABLE), line(rate = VatRate.RATE_0)))))
+    }
+
+    @Test
     fun `reports number problems, mismatch only as a warning`() {
         assertEquals(listOf(DraftIssue(DraftIssueType.NUMBER_MISSING)), issues(draft(number = " ")))
         assertEquals(listOf(DraftIssue(DraftIssueType.NUMBER_DUPLICATE)), issues(draft(), existing = listOf("01/09/2026")))

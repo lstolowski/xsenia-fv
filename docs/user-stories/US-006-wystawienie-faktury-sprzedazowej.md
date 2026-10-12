@@ -14,7 +14,7 @@ Jako **właściciel firmy** chcę **wystawić nową fakturę sprzedażową VAT i
 - [x] Numer faktury jest sugerowany jako `NN/MM/RRRR` (MM/RRRR z daty dostawy, zero wiodące) i edytowalny; zmiana daty dostawy aktualizuje sugestię, dopóki nie edytowałem numeru ręcznie.
 - [x] NN = najwyższy numer spośród faktur sprzedażowych, których **numer** kończy się na `/MM/RRRR`, + 1 (liczone po numerach, nie po dacie dostawy — błędnie ponumerowana faktura nie zaburza sugestii i nie powoduje duplikatu).
 - [x] Ostrzeżenie, jeśli numer już istnieje, oraz jeśli miesiąc/rok w numerze nie zgadza się z datą dostawy.
-- [x] Dodaję 1..n pozycji: nazwa, ilość, jednostka, cena jedn. netto; aplikacja wylicza wartość netto i brutto pozycji oraz sumy (VAT 23% od sumy netto; brutto pozycji informacyjnie).
+- [x] Dodaję 1..n pozycji: nazwa, ilość, jednostka, cena jedn. netto; aplikacja wylicza wartość netto i brutto pozycji oraz sumy (VAT 23% od sumy netto; brutto pozycji informacyjnie). Od US-009: stawka i jednostka z listy w każdej pozycji.
 - [x] Płatność: przelew, termin 21 dni od daty wystawienia — bez możliwości zmiany.
 - [x] Szkic jest zapisywany na bieżąco i przetrwa zamknięcie aplikacji.
 - [x] Przed wysyłką widzę podgląd faktury w takiej formie jak w szczegółach; „Wyślij do KSeF” wymaga potwierdzenia biometrią.

@@ -8,6 +8,7 @@ import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.DraftValidator
 import pl.xsenia.fv.invoice.issue.InvoiceNumbering
 import pl.xsenia.fv.invoice.issue.SalesInvoiceDraft
+import pl.xsenia.fv.invoice.issue.VatRate
 import pl.xsenia.fv.ksef.http.LocalDateSerializer
 import java.time.LocalDate
 
@@ -26,13 +27,21 @@ data class InvoiceForm(
     val lines: List<LineForm> = listOf(LineForm()),
 )
 
+/** Drafts saved before ADR 0005 have no [vatRate] and load with the default 23%. */
 @Serializable
 data class LineForm(
     val name: String = "",
     val quantity: String = "1",
-    val unit: String = "szt.",
+    val unit: String = LineUnits.DEFAULT,
     val unitNetPrice: String = "",
+    val vatRate: VatRate = VatRate.DEFAULT,
 )
+
+/** Units offered in the form (`P_8A`, ADR 0005). */
+object LineUnits {
+    val ALL = listOf("szt.", "dni", "godz.", "usł.")
+    const val DEFAULT = "godz."
+}
 
 /** Default values of a new form and refreshing of a saved draft. */
 object InvoiceFormDefaults {
@@ -90,7 +99,7 @@ object InvoiceFormCheck {
             val price = DecimalInput.parse(line.unitNetPrice)
             if (quantity == null) formIssues += FormIssue(FormIssueType.LINE_QUANTITY_INVALID, index)
             if (price == null) formIssues += FormIssue(FormIssueType.LINE_PRICE_INVALID, index)
-            if (quantity != null && price != null) DraftLine(line.name.trim(), quantity, line.unit.trim(), price) else null
+            if (quantity != null && price != null) DraftLine(line.name.trim(), quantity, line.unit.trim(), price, line.vatRate) else null
         }
 
         val seller = config.company

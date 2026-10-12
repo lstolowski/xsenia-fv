@@ -109,7 +109,13 @@ data class InvoiceLine(
     /** Gross value: `P_11A` when present, otherwise net value × (1 + rate), rounded to grosze. */
     val displayGrossValue: BigDecimal?
         get() = grossValue ?: netValue?.let { net ->
-            vatRatePercent?.let { rate -> net + (net * rate).divide(HUNDRED, 2, RoundingMode.HALF_UP) }
+            val rate = vatRatePercent
+            when {
+                rate != null -> net + (net * rate).divide(HUNDRED, 2, RoundingMode.HALF_UP)
+                // Exempt, not taxable, reverse charge: the seller charges no VAT.
+                vatRate in NO_VAT_RATES -> net
+                else -> null
+            }
         }
 
     /** Numeric VAT rate (`23`, `0` for `0 KR`), or null for `zw`, `np`, `oo`. */
@@ -118,6 +124,7 @@ data class InvoiceLine(
 
     private companion object {
         val HUNDRED = BigDecimal(100)
+        val NO_VAT_RATES = setOf("zw", "oo", "np", "np I", "np II")
     }
 }
 

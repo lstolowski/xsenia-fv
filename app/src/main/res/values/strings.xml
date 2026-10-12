@@ -248,8 +248,10 @@
     <string name="new_invoice_status_title">Wysyłka do KSeF</string>
     <string name="new_invoice_unavailable">Wystawianie faktur jest niedostępne — popraw pliki danych (company.json, banks.json, counterparties.json) w Ustawieniach.</string>
     <string name="field_counterparty">Kontrahent</string>
+    <string name="field_counterparty_choose">Wybierz kontrahenta</string>
     <string name="form_section_dates">Daty i numer</string>
     <string name="field_bank_account">Rachunek bankowy</string>
+    <string name="field_bank_account_choose">Wybierz rachunek bankowy</string>
     <string name="field_issue_date">Data wystawienia</string>
     <string name="field_delivery_date">Data dostawy / wykonania usługi</string>
     <string name="field_invoice_number">Numer faktury</string>
@@ -262,8 +264,11 @@
     <string name="line_quantity">Ilość</string>
     <string name="line_unit">Jednostka</string>
     <string name="line_price">Cena jedn. netto (zł)</string>
-    <string name="line_amounts">netto %1$s · brutto %2$s (VAT 23%%)</string>
+    <string name="line_amounts">netto %1$s · brutto %2$s</string>
     <string name="line_add">Dodaj pozycję</string>
+    <string name="line_vat_rate">Stawka VAT</string>
+    <string name="vat_rate_percent">%1$s%%</string>
+    <string name="vat_rate_not_taxable">np</string>
     <string name="line_remove">Usuń pozycję</string>
     <string name="payment_info">Płatność: przelew, termin 21 dni (do %1$s)</string>
     <string name="action_preview">Podgląd</string>

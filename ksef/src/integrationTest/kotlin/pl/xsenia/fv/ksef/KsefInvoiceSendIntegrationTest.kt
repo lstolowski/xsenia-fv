@@ -13,6 +13,7 @@ import pl.xsenia.fv.invoice.config.Counterparty
 import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
 import pl.xsenia.fv.invoice.issue.SalesInvoiceDraft
+import pl.xsenia.fv.invoice.issue.VatRate
 import pl.xsenia.fv.invoice.xml.InvoiceXmlParser
 import pl.xsenia.fv.ksef.auth.KsefAuthenticator
 import pl.xsenia.fv.ksef.auth.KsefPublicKeyProvider
@@ -59,7 +60,10 @@ class KsefInvoiceSendIntegrationTest {
                 seller = Company("Jan Testowy Usługi Testowe", config.nip, Address("ul. Testowa 1", "00-001 Testowo", null), null, null),
                 buyer = Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6", "00-002 Testowo", null), null),
                 bankAccount = BankAccount("Konto testowe", "Toyota Bank", "85216097583216850246002152", "PLN"),
-                lines = listOf(DraftLine("Usługa testowa (test integracyjny)", BigDecimal.ONE, "szt.", BigDecimal("1.00"))),
+                // One line per supported rate, including "np" (np II, reverse charge with the remark) — ADR 0005.
+                lines = VatRate.entries.map { rate ->
+                    DraftLine("Usługa testowa (test integracyjny, ${rate.code})", BigDecimal.ONE, "godz.", BigDecimal("1.00"), rate)
+                },
             ),
             createdAt = now,
         )
@@ -73,6 +77,10 @@ class KsefInvoiceSendIntegrationTest {
         // The invoice stored in KSeF is exactly the XML we generated.
         val downloaded = KsefInvoiceClient(httpClient, tokens, publicKeys).downloadInvoiceXml(sent.ksefNumber)
         assertEquals(KsefCrypto.sha256Base64(xml), downloaded.sha256Base64)
-        assertEquals(number, InvoiceXmlParser.parse(downloaded.content).invoiceNumber)
+        val invoice = InvoiceXmlParser.parse(downloaded.content)
+        assertEquals(number, invoice.invoiceNumber)
+        assertEquals(VatRate.entries.map { it.code }, invoice.lines.map { it.vatRate })
+        assertTrue(invoice.annotations.reverseCharge)
+        assertEquals(listOf("Uwagi" to "Reverse charge"), invoice.additionalInfo)
     }
 }

@@ -116,7 +116,7 @@ class InvoiceXmlParserTest {
 
         assertEquals(listOf("23", "8", "zw"), invoice.lines.map { it.vatRate })
         assertEquals(BigDecimal("2.5"), invoice.lines[0].quantity)
-        assertEquals(listOf(BigDecimal("123.00"), BigDecimal("54.00"), null), invoice.lines.map { it.displayGrossValue })
+        assertEquals(listOf(BigDecimal("123.00"), BigDecimal("54.00"), BigDecimal("10.00")), invoice.lines.map { it.displayGrossValue })
         assertEquals(LocalDate.parse("2026-09-10"), invoice.lines[0].deliveryDate)
 
         assertEquals("Art. 43 ust. 1 pkt 37 ustawy o VAT (test)", invoice.annotations.exemptionBasis)

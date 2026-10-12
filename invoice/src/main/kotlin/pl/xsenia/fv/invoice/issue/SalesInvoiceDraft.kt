@@ -7,7 +7,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 /**
- * New sales invoice entered by the user (US-006): always VAT 23%, PLN, bank transfer due in 21 days.
+ * New sales invoice entered by the user (US-006): PLN, bank transfer due in 21 days; VAT rate per line (ADR 0005).
  */
 data class SalesInvoiceDraft(
     val invoiceNumber: String,
@@ -25,4 +25,5 @@ data class DraftLine(
     val quantity: BigDecimal,
     val unit: String,
     val unitNetPrice: BigDecimal,
+    val vatRate: VatRate = VatRate.DEFAULT,
 )

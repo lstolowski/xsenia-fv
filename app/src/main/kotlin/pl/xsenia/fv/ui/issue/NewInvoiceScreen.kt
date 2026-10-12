@@ -10,7 +10,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,12 +17,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -33,7 +35,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -68,18 +74,22 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
+import pl.xsenia.fv.invoice.config.BankAccount
+import pl.xsenia.fv.invoice.config.Counterparty
 import pl.xsenia.fv.invoice.config.InvoicingConfig
 import pl.xsenia.fv.invoice.issue.DraftIssue
 import pl.xsenia.fv.invoice.issue.DraftIssueType
+import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.InvoiceCalculator
+import pl.xsenia.fv.invoice.issue.VatRate
 import pl.xsenia.fv.issue.DecimalInput
 import pl.xsenia.fv.issue.FormIssue
 import pl.xsenia.fv.issue.FormIssueType
 import pl.xsenia.fv.issue.LineForm
+import pl.xsenia.fv.issue.LineUnits
 import pl.xsenia.fv.issue.SendState
 import pl.xsenia.fv.ksef.KsefEnvironment
 import pl.xsenia.fv.security.BiometricGate
-import pl.xsenia.fv.ui.components.ChoicePill
 import pl.xsenia.fv.ui.components.InfoRow
 import pl.xsenia.fv.ui.components.LoadingScreen
 import pl.xsenia.fv.ui.components.PrimaryButton
@@ -187,39 +197,19 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
         }
     }
 
-    // Counterparty: one tile each (US-008)
+    // Counterparty: the chosen one as a tile, the choice in a dialog with one tile each (US-008)
     FormSectionTitle(stringResource(R.string.field_counterparty))
-    config.counterparties.forEach { counterparty ->
-        CounterpartyTile(
-            name = counterparty.name,
-            nip = counterparty.nip,
-            address = listOfNotNull(counterparty.address.line1, counterparty.address.line2).joinToString(", "),
-            selected = counterparty.nip == form.counterpartyNip,
-            onClick = { viewModel.selectCounterparty(counterparty.nip) },
-        )
-    }
-    formIssues.messageFor(FormIssueType.COUNTERPARTY_MISSING)?.let { ErrorText(it) }
+    TileChoiceField(
+        options = config.counterparties,
+        key = { it.nip },
+        selectedKey = form.counterpartyNip,
+        placeholder = stringResource(R.string.field_counterparty_choose),
+        error = formIssues.messageFor(FormIssueType.COUNTERPARTY_MISSING),
+        onSelect = viewModel::selectCounterparty,
+    ) { CounterpartyText(it) }
 
-    // Bank account: pills like the template's tip buttons
-    FormSectionTitle(stringResource(R.string.field_bank_account))
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        config.invoiceBankAccounts.forEach { account ->
-            ChoicePill(account.name, selected = account.number == form.bankAccountNumber, onClick = { viewModel.selectBankAccount(account.number) })
-        }
-    }
-    config.invoiceBankAccounts.firstOrNull { it.number == form.bankAccountNumber }?.let { account ->
-        Text(
-            listOfNotNull(account.bank, Formats.bankAccount(account.number)).joinToString("\n"),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    formIssues.messageFor(FormIssueType.BANK_ACCOUNT_MISSING)?.let { ErrorText(it) }
-
-    // Dates and number
+    // Number and dates (ADR 0005: the number first)
     FormSectionTitle(stringResource(R.string.form_section_dates))
-    DateField(stringResource(R.string.field_issue_date), form.issueDate, draftIssues.messageFor(DraftIssueType.ISSUE_DATE_IN_FUTURE), viewModel::setIssueDate)
-    DateField(stringResource(R.string.field_delivery_date), form.deliveryDate, null, viewModel::setDeliveryDate)
     val numberError = draftIssues.firstOrNull { it.lineIndex == null && it.type in NUMBER_ISSUES }
     OutlinedTextField(
         value = form.invoiceNumber,
@@ -227,10 +217,15 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
         label = { Text(stringResource(R.string.field_invoice_number)) },
         singleLine = true,
         isError = numberError?.blocking == true,
-        supportingText = {
-            Column {
-                numberError?.let { Text(draftIssueText(it), color = if (it.blocking) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary) }
-                if (form.invoiceNumber != state.suggestedNumber) Text(stringResource(R.string.field_number_suggested, state.suggestedNumber))
+        // Only when there is something to say — an empty supporting text would leave a gap above the dates.
+        supportingText = if (numberError == null && form.invoiceNumber == state.suggestedNumber) {
+            null
+        } else {
+            {
+                Column {
+                    numberError?.let { Text(draftIssueText(it), color = if (it.blocking) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary) }
+                    if (form.invoiceNumber != state.suggestedNumber) Text(stringResource(R.string.field_number_suggested, state.suggestedNumber))
+                }
             }
         },
         modifier = Modifier.fillMaxWidth(),
@@ -238,6 +233,8 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
     if (form.invoiceNumber != state.suggestedNumber) {
         TextButton(onClick = viewModel::useSuggestedNumber, shape = ButtonShape) { Text(stringResource(R.string.field_number_use_suggested)) }
     }
+    DateField(stringResource(R.string.field_issue_date), form.issueDate, draftIssues.messageFor(DraftIssueType.ISSUE_DATE_IN_FUTURE), viewModel::setIssueDate)
+    DateField(stringResource(R.string.field_delivery_date), form.deliveryDate, null, viewModel::setDeliveryDate)
 
     // Lines
     FormSectionTitle(stringResource(R.string.lines_title))
@@ -256,6 +253,17 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
         Icon(Icons.Filled.Add, contentDescription = null)
         Text(stringResource(R.string.line_add))
     }
+
+    // Bank account: below the lines, before the payment term (ADR 0005), chosen like the counterparty
+    FormSectionTitle(stringResource(R.string.field_bank_account))
+    TileChoiceField(
+        options = config.invoiceBankAccounts,
+        key = { it.number },
+        selectedKey = form.bankAccountNumber,
+        placeholder = stringResource(R.string.field_bank_account_choose),
+        error = formIssues.messageFor(FormIssueType.BANK_ACCOUNT_MISSING),
+        onSelect = viewModel::selectBankAccount,
+    ) { BankAccountText(it) }
 
     // Payment and totals
     Text(
@@ -320,13 +328,15 @@ private fun LineCard(
                     modifier = Modifier.weight(1f),
                 )
                 val unitError = draftIssues.messageFor(DraftIssueType.LINE_UNIT_MISSING, DraftIssueType.LINE_UNIT_TOO_LONG)
-                OutlinedTextField(
-                    value = line.unit,
-                    onValueChange = { onChange(line.copy(unit = it)) },
-                    label = { Text(stringResource(R.string.line_unit)) },
-                    singleLine = true,
-                    isError = unitError != null,
-                    supportingText = unitError?.let { { Text(it) } },
+                // A unit outside the list (draft saved before ADR 0005) stays selectable until changed.
+                val units = if (line.unit in LineUnits.ALL) LineUnits.ALL else LineUnits.ALL + line.unit
+                DropdownField(
+                    label = stringResource(R.string.line_unit),
+                    options = units,
+                    selected = line.unit,
+                    optionText = { it },
+                    error = unitError,
+                    onSelect = { onChange(line.copy(unit = it)) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -342,10 +352,19 @@ private fun LineCard(
                 supportingText = priceError?.let { { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
             )
+            DropdownField(
+                label = stringResource(R.string.line_vat_rate),
+                options = VatRate.entries,
+                selected = line.vatRate,
+                optionText = { vatRateText(it) },
+                error = null,
+                onSelect = { onChange(line.copy(vatRate = it)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
             val quantity = DecimalInput.parse(line.quantity)
             val price = DecimalInput.parse(line.unitNetPrice)
             if (quantity != null && price != null) {
-                val amounts = InvoiceCalculator.line(pl.xsenia.fv.invoice.issue.DraftLine(line.name, quantity, line.unit, price))
+                val amounts = InvoiceCalculator.line(DraftLine(line.name, quantity, line.unit, price, line.vatRate))
                 Text(
                     stringResource(R.string.line_amounts, Formats.money(amounts.net, "PLN"), Formats.money(amounts.gross, "PLN")),
                     style = MaterialTheme.typography.bodyMedium,
@@ -522,19 +541,129 @@ private fun ErrorText(text: String) {
     Text(text, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
 }
 
-/** Counterparty as a tile (US-008); the chosen one has an accent border and a selected radio button. */
+/** Tile with the chosen option (or a prompt to choose one); a click opens a dialog with all options as tiles. */
 @Composable
-private fun CounterpartyTile(name: String, nip: String, address: String, selected: Boolean, onClick: () -> Unit) {
+private fun <T> TileChoiceField(
+    options: List<T>,
+    key: (T) -> String,
+    selectedKey: String?,
+    placeholder: String,
+    error: String?,
+    onSelect: (String) -> Unit,
+    content: @Composable (T) -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    val selected = options.firstOrNull { key(it) == selectedKey }
+    Tile(onClick = { open = true }, borderColor = if (error != null) MaterialTheme.colorScheme.error else null) {
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f)) {
+                if (selected != null) {
+                    content(selected)
+                } else {
+                    Text(placeholder, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    error?.let { ErrorText(it) }
+    if (open) {
+        AlertDialog(
+            onDismissRequest = { open = false },
+            title = { Text(placeholder) },
+            text = {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(options, key = key) { option ->
+                        ChoiceTile(selected = key(option) == selectedKey, onClick = {
+                            open = false
+                            onSelect(key(option))
+                        }) { content(option) }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { open = false }, shape = ButtonShape) { Text(stringResource(R.string.action_cancel)) } },
+        )
+    }
+}
+
+/** Option as a tile (US-008); the chosen one has an accent border and a selected radio button. */
+@Composable
+private fun ChoiceTile(selected: Boolean, onClick: () -> Unit, content: @Composable () -> Unit) {
     Tile(onClick = onClick, selected = selected) {
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(name, style = MaterialTheme.typography.titleSmall)
-                Text(stringResource(R.string.list_nip, nip), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            Box(Modifier.weight(1f)) { content() }
             RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
         }
     }
+}
+
+@Composable
+private fun BankAccountText(account: BankAccount) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(account.name, style = MaterialTheme.typography.titleSmall)
+        account.bank?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        Text(Formats.bankAccount(account.number), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun CounterpartyText(counterparty: Counterparty) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(counterparty.name, style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.list_nip, counterparty.nip), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            listOfNotNull(counterparty.address.line1, counterparty.address.line2).joinToString(", "),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** Read-only text field with a drop-down list of [options]. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun <T> DropdownField(
+    label: String,
+    options: List<T>,
+    selected: T,
+    optionText: @Composable (T) -> String,
+    error: String?,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
+        OutlinedTextField(
+            value = optionText(selected),
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            isError = error != null,
+            supportingText = error?.let { { Text(it) } },
+            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(optionText(option)) },
+                    onClick = {
+                        expanded = false
+                        onSelect(option)
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
+        }
+    }
+}
+
+/** "np" — not taxable in Poland, reverse charge (ADR 0005). */
+@Composable
+private fun vatRateText(rate: VatRate): String = when (rate) {
+    VatRate.NOT_TAXABLE -> stringResource(R.string.vat_rate_not_taxable)
+    else -> stringResource(R.string.vat_rate_percent, rate.percent.toPlainString())
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

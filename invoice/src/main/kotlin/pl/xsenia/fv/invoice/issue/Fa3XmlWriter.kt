@@ -9,8 +9,8 @@ import java.time.temporal.ChronoUnit
 /**
  * Writes a sales invoice as FA(3) XML (`schemat_FA(3)_v1-0E.xsd`).
  *
- * Fixed content (decisions C1–C14, R4–R10): VAT invoice in PLN, Polish buyer with NIP, rate 23%,
- * bank transfer due in 21 days, no split payment, all annotations "no".
+ * Fixed content (decisions C1–C14, R4–R10): VAT invoice in PLN, Polish buyer with NIP, bank transfer due in 21 days,
+ * no split payment, all annotations "no" except reverse charge for "np" lines. VAT rate per line (ADR 0005).
  * The XML is built as text (not via javax.xml.transform) so the bytes — and thus the hash sent to KSeF —
  * are identical on the JVM and on Android.
  */
@@ -24,7 +24,12 @@ object Fa3XmlWriter {
     private const val COUNTRY_CODE = "PL"
     private const val PAYMENT_TRANSFER = "6"
 
+    // Remark on invoices with "np" lines (ADR 0005).
+    const val REMARKS_KEY = "Uwagi"
+    const val REVERSE_CHARGE_REMARK = "Reverse charge"
+
     // FA(3) annotation values: 1 — yes, 2 — no (for the "N" elements: 1 — the case does not apply).
+    private const val YES = "1"
     private const val NO = "2"
     private const val NOT_APPLICABLE = "1"
 
@@ -68,13 +73,13 @@ object Fa3XmlWriter {
                 value("P_2", draft.invoiceNumber)
                 // P_6 only when the delivery date differs from the issue date.
                 if (draft.deliveryDate != draft.issueDate) value("P_6", draft.deliveryDate.toString())
-                value("P_13_1", amount(totals.net))
-                value("P_14_1", amount(totals.vat))
+                totals.byRate.forEach { rateSummary(it) }
                 value("P_15", amount(totals.gross))
+                val reverseCharge = draft.lines.any { it.vatRate == VatRate.NOT_TAXABLE }
                 element("Adnotacje") {
                     value("P_16", NO)
                     value("P_17", NO)
-                    value("P_18", NO)
+                    value("P_18", if (reverseCharge) YES else NO)
                     value("P_18A", NO)
                     element("Zwolnienie") { value("P_19N", NOT_APPLICABLE) }
                     element("NoweSrodkiTransportu") { value("P_22N", NOT_APPLICABLE) }
@@ -82,6 +87,12 @@ object Fa3XmlWriter {
                     element("PMarzy") { value("P_PMarzyN", NOT_APPLICABLE) }
                 }
                 value("RodzajFaktury", "VAT")
+                if (reverseCharge) {
+                    element("DodatkowyOpis") {
+                        value("Klucz", REMARKS_KEY)
+                        value("Wartosc", REVERSE_CHARGE_REMARK)
+                    }
+                }
                 draft.lines.forEachIndexed { index, line ->
                     element("FaWiersz") {
                         value("NrWierszaFa", (index + 1).toString())
@@ -90,7 +101,7 @@ object Fa3XmlWriter {
                         value("P_8B", decimal(line.quantity))
                         value("P_9A", decimal(line.unitNetPrice))
                         value("P_11", amount(InvoiceCalculator.lineNet(line)))
-                        value("P_12", InvoiceCalculator.VAT_RATE_CODE)
+                        value("P_12", line.vatRate.code)
                     }
                 }
                 element("Platnosc") {
@@ -104,6 +115,22 @@ object Fa3XmlWriter {
             }
         }
         return xml.toBytes()
+    }
+
+    /** Summary fields of one rate; [VatRate] order matches the FA(3) element order. */
+    private fun XmlBuilder.rateSummary(totals: RateTotals) {
+        when (totals.rate) {
+            VatRate.RATE_23 -> netAndVat("P_13_1", "P_14_1", totals)
+            VatRate.RATE_8 -> netAndVat("P_13_2", "P_14_2", totals)
+            VatRate.RATE_5 -> netAndVat("P_13_3", "P_14_3", totals)
+            VatRate.RATE_0 -> value("P_13_6_1", amount(totals.net))
+            VatRate.NOT_TAXABLE -> value("P_13_9", amount(totals.net))
+        }
+    }
+
+    private fun XmlBuilder.netAndVat(netField: String, vatField: String, totals: RateTotals) {
+        value(netField, amount(totals.net))
+        value(vatField, amount(totals.vat))
     }
 
     private fun XmlBuilder.address(address: Address) = element("Adres") {

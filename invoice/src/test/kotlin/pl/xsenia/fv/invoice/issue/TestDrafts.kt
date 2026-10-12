@@ -19,8 +19,8 @@ object TestDrafts {
     val buyer = Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6", "00-002 Testowo", "Polska"), "faktury@example.com")
     val account = BankAccount("Konto testowe Toyota", "Toyota Bank", "85216097583216850246002152", "PLN")
 
-    fun line(name: String = "Usługa testowa", quantity: String = "1", unit: String = "szt.", price: String = "233") =
-        DraftLine(name, BigDecimal(quantity), unit, BigDecimal(price))
+    fun line(name: String = "Usługa testowa", quantity: String = "1", unit: String = "szt.", price: String = "233", rate: VatRate = VatRate.RATE_23) =
+        DraftLine(name, BigDecimal(quantity), unit, BigDecimal(price), rate)
 
     fun draft(
         number: String = "01/09/2026",

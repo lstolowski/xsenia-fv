@@ -30,7 +30,7 @@ Status: **rundy 1 i 2 zakończone (2026-10-11); otwarte: R13**
 | Nr | Ustalenie |
 |---|---|
 | C1 | Nabywcy wyłącznie polscy (NIP). Kontrahenci w pliku JSON edytowanym ręcznie, wczytywanym przy otwarciu aplikacji — [ADR 0004](../adr/0004-kontrahenci-w-pliku-json.md). |
-| C2 | Stawka VAT zawsze 23%. |
+| C2 | Stawka VAT zawsze 23%. **Zastąpione 2026-10-12:** stawka wybierana w pozycji (23/8/5/0%/np) — [ADR 0005](../adr/0005-stawki-vat-i-jednostki.md). |
 | C3 | Waluta PLN (nie wskazano innych). |
 | C4 | Bez „wystaw na podstawie poprzedniej”. Nowa faktura + wybór kontrahenta z listy. |
 | C5 | Przy wystawianiu wpisuję cenę **netto**. Na listach i w szczegółach (sprzedażowe i zakupowe) pokazujemy **netto i brutto**. |
@@ -65,7 +65,7 @@ Status: **rundy 1 i 2 zakończone (2026-10-11); otwarte: R13**
 | R7 | Pliki we wspólnym folderze, np. `Dokumenty/xsenia`. |
 | R8 | Nazwy pól w JSON po angielsku. |
 | R9 | Numer z zerem wiodącym: `02/03/2025`. |
-| R10 | Bez mechanizmu podzielonej płatności i bez uwag/stopki. |
+| R10 | Bez mechanizmu podzielonej płatności i bez uwag/stopki. **Wyjątek od 2026-10-12:** faktura ze stawką „np” ma uwagę „Reverse charge” — [ADR 0005](../adr/0005-stawki-vat-i-jednostki.md). |
 | R11 | Użytkownik ma token KSeF dla środowiska TEST (NIP testowy) i certyfikat testowy — zapisane lokalnie w `secrets/ksef-test.properties` (poza gitem). Uwierzytelnienie tokenem zweryfikowane na TEST 2026-10-11. |
 | R12 | Zaakceptowane propozycje domyślne (C12, D1, D3–D7, E2, F1). |
 | Zaokrąglenia (2026-10-12) | VAT liczony od sumy netto pozycji (`P_14_1` = 23% × `P_13_1`); brutto pozycji tylko informacyjnie — przy wielu pozycjach suma brutto pozycji może różnić się o 1 gr od kwoty do zapłaty. |
