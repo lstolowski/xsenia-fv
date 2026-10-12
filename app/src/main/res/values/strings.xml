@@ -12,7 +12,6 @@
     <string name="lock_biometric_unavailable">Ustaw blokadę ekranu i odcisk palca w ustawieniach telefonu, aby korzystać z aplikacji.</string>
 
     <!-- Common -->
-    <string name="action_settings">Ustawienia</string>
     <string name="action_back">Wstecz</string>
     <string name="action_save">Zapisz</string>
     <string name="action_cancel">Anuluj</string>
@@ -93,11 +92,9 @@
     <string name="settings_cache_cleared">Cache wyczyszczony.</string>
 
     <!-- Sync -->
-    <string name="sync_title">Synchronizacja z KSeF</string>
     <string name="sync_now">Odśwież z KSeF</string>
-    <string name="sync_never">Faktury nie zostały jeszcze pobrane.</string>
-    <string name="sync_last">Ostatnia synchronizacja: %1$s</string>
-    <string name="sync_counts">Faktury sprzedażowe: %1$d, zakupowe: %2$d</string>
+    <string name="sync_never">Faktury nie zostały jeszcze pobrane z KSeF.</string>
+    <string name="sync_last">Zaktualizowano: %1$s</string>
     <string name="sync_running">Synchronizacja…</string>
     <string name="sync_phase_initial_sales">Pierwsze pobieranie faktur sprzedażowych…</string>
     <string name="sync_phase_initial_purchase">Pierwsze pobieranie faktur zakupowych…</string>
@@ -108,10 +105,42 @@
     <string name="sync_error_missing_company">Nie można pobrać faktur — brak poprawnego pliku company.json (NIP firmy).</string>
     <string name="sync_error_rate_limited">Przekroczono limit zapytań KSeF. Spróbuj ponownie za %1$s s.</string>
     <string name="sync_error_auth">KSeF odrzucił uwierzytelnienie: %1$d %2$s</string>
-    <string name="sync_error_network">Brak połączenia z KSeF. Pokazuję faktury zapisane na telefonie. (%1$s)</string>
+    <string name="sync_error_network">Brak połączenia z KSeF — pokazuję faktury zapisane na telefonie. (%1$s)</string>
     <string name="sync_error_ksef">Błąd KSeF: %1$s</string>
 
-    <!-- Home (temporary until invoice lists are implemented) -->
-    <string name="home_lists_coming">Listy faktur sprzedażowych i zakupowych pojawią się w kolejnej wersji.</string>
-    <string name="home_config_issues">Pliki danych zawierają problemy (%1$d) — szczegóły w ustawieniach.</string>
+    <!-- Navigation -->
+    <string name="nav_sales">Sprzedażowe</string>
+    <string name="nav_purchase">Zakupowe</string>
+    <string name="nav_settings">Ustawienia</string>
+
+    <!-- Invoice lists -->
+    <string name="sales_title">Faktury sprzedażowe</string>
+    <string name="purchase_title">Faktury zakupowe</string>
+    <string name="month_previous">Poprzedni miesiąc</string>
+    <string name="month_next">Następny miesiąc</string>
+    <string name="month_picker_title">Wybierz miesiąc (data dostawy)</string>
+    <string name="search_label">Szukaj (NIP lub nazwa)</string>
+    <string name="search_clear">Wyczyść</string>
+    <string name="list_empty_month">Brak faktur w tym miesiącu.</string>
+    <string name="list_empty_query">Brak faktur pasujących do „%1$s”.</string>
+    <string name="list_empty_never_synced">Faktury nie zostały jeszcze pobrane. Pociągnij listę w dół, aby pobrać je z KSeF.</string>
+    <string name="list_no_name">(brak nazwy)</string>
+    <string name="list_delivery">Dostawa %1$s</string>
+    <string name="list_nip">NIP %1$s</string>
+    <string name="list_number">nr %1$s</string>
+    <string name="list_net">netto %1$s</string>
+    <string name="totals_line">netto %1$s · VAT %2$s · brutto %3$s</string>
+    <!-- Polish plural forms are chosen in code (PolishPlural), independent of the device language. -->
+    <string name="invoice_count_one">%1$d faktura</string>
+    <string name="invoice_count_few">%1$d faktury</string>
+    <string name="invoice_count_many">%1$d faktur</string>
+    <string name="totals_count">Razem: %1$s</string>
+
+    <!-- KSeF invoice types (InvoiceMetadata.invoiceType) -->
+    <string name="invoice_type_kor">Korekta</string>
+    <string name="invoice_type_zal">Zaliczkowa</string>
+    <string name="invoice_type_roz">Rozliczeniowa</string>
+    <string name="invoice_type_upr">Uproszczona</string>
+    <string name="invoice_type_kor_zal">Korekta zaliczkowej</string>
+    <string name="invoice_type_kor_roz">Korekta rozliczeniowej</string>
 </resources>

@@ -34,7 +34,7 @@ import pl.xsenia.fv.ui.components.TokenSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(viewModel: MainViewModel, onBack: () -> Unit) {
+fun SettingsScreen(viewModel: MainViewModel, onBack: (() -> Unit)?) {
     val configState by viewModel.configState.collectAsStateWithLifecycle()
     val tokenSet by viewModel.tokenSet.collectAsStateWithLifecycle()
     val tokenNip by viewModel.tokenNip.collectAsStateWithLifecycle()
@@ -47,7 +47,7 @@ fun SettingsScreen(viewModel: MainViewModel, onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
-                navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) } },
+                navigationIcon = { onBack?.let { TextButton(onClick = it) { Text(stringResource(R.string.action_back)) } } },
             )
         },
     ) { padding ->

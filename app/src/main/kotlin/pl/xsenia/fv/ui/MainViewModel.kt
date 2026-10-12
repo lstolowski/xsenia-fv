@@ -35,7 +35,11 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun selectFolder(treeUri: Uri) {
-        viewModelScope.launch { container.configRepository.selectFolder(treeUri) }
+        viewModelScope.launch {
+            container.configRepository.selectFolder(treeUri)
+            // The token may have been checked before the company NIP was known — check again.
+            if (_connection.value.result == ConnectionCheckResult.MissingCompany) runConnectionCheck()
+        }
     }
 
     /** Saves the token and immediately verifies it in KSeF. */

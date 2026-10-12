@@ -10,21 +10,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.config.ConfigState
 import pl.xsenia.fv.ui.components.LoadingScreen
-import pl.xsenia.fv.ui.home.HomeScreen
 import pl.xsenia.fv.ui.lock.LockScreen
-import pl.xsenia.fv.ui.settings.SettingsScreen
 import pl.xsenia.fv.ui.setup.SetupScreen
-
-private object Routes {
-    const val HOME = "home"
-    const val SETTINGS = "settings"
-}
 
 /** Root of the UI: lock screen, first-run setup, then the main navigation. */
 @Composable
@@ -58,13 +48,5 @@ fun XseniaApp(
         return
     }
 
-    val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Routes.HOME) {
-        composable(Routes.HOME) {
-            HomeScreen(viewModel = viewModel, onOpenSettings = { navController.navigate(Routes.SETTINGS) })
-        }
-        composable(Routes.SETTINGS) {
-            SettingsScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
-        }
-    }
+    MainScaffold(container = container, viewModel = viewModel)
 }

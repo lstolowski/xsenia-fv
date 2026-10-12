@@ -1,43 +1,37 @@
 package pl.xsenia.fv.ui.components
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import pl.xsenia.fv.R
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.mirror.SyncPhase
 import pl.xsenia.fv.mirror.SyncProgress
 import pl.xsenia.fv.sync.SyncError
 import pl.xsenia.fv.sync.SyncUiState
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import pl.xsenia.fv.ui.format.Formats
 
-private val DATE_TIME = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
-
+/** Compact synchronization status shown above the invoice lists. */
 @Composable
-fun SyncCard(state: SyncUiState, onSyncNow: () -> Unit) {
-    SectionCard(stringResource(R.string.sync_title)) {
-        val lastSync = state.lastSyncAt
-        Text(if (lastSync == null) stringResource(R.string.sync_never) else stringResource(R.string.sync_last, lastSync.format()))
-        Text(
-            stringResource(
-                R.string.sync_counts,
-                state.invoiceCounts[InvoiceCategory.SALES] ?: 0,
-                state.invoiceCounts[InvoiceCategory.PURCHASE] ?: 0,
-            ),
-        )
-        if (state.running) {
-            Text(progressText(state.progress))
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+fun SyncStatus(state: SyncUiState, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        when {
+            state.running -> {
+                Text(progressText(state.progress), style = MaterialTheme.typography.bodySmall)
+                LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 4.dp))
+            }
+            state.lastSyncAt != null ->
+                Text(stringResource(R.string.sync_last, Formats.dateTime(state.lastSyncAt)), style = MaterialTheme.typography.bodySmall)
+            else -> Text(stringResource(R.string.sync_never), style = MaterialTheme.typography.bodySmall)
         }
-        state.error?.let { Text(errorText(it), color = MaterialTheme.colorScheme.error) }
-        Button(onClick = onSyncNow, enabled = !state.running) { Text(stringResource(R.string.sync_now)) }
+        state.error?.let { Text(errorText(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
     }
 }
 
@@ -61,5 +55,3 @@ private fun errorText(error: SyncError): String = when (error) {
     is SyncError.Network -> stringResource(R.string.sync_error_network, error.message.orEmpty())
     is SyncError.Ksef -> stringResource(R.string.sync_error_ksef, error.message.orEmpty())
 }
-
-private fun Instant.format(): String = DATE_TIME.format(atZone(ZoneId.systemDefault()))
