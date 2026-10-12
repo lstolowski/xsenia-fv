@@ -33,7 +33,9 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Token dostępowy / odświeżający | `accessToken` / `refreshToken` (`AuthToken`) | JWT z `/auth/token/redeem`; dostępowy ~15 min, odświeżający do 7 dni | |
 | Uwierzytelnianie | `KsefAuthenticator` | Logowanie tokenem KSeF i odświeżanie tokena dostępowego | |
 | Menedżer tokenów | `KsefTokenManager` | Zwraca ważny token dostępowy, sam odświeża / loguje ponownie | |
-| Sesja interaktywna | `onlineSession` | Sesja KSeF do wysyłki pojedynczych faktur | |
+| Sesja interaktywna | `KsefInvoiceSender` | Sesja KSeF do wysyłki pojedynczych faktur | |
+| Faktura w przetwarzaniu | `SubmittedInvoice` | Numery referencyjne sesji i faktury — do wznowienia sprawdzania statusu | |
+| Faktura przyjęta | `SentInvoice` | Numer KSeF, data przyjęcia, UPO | |
 | UPO | `upo` | Urzędowe Poświadczenie Odbioru | |
 | FA(3) | `fa3` | Obowiązujący schemat XML faktury ustrukturyzowanej | |
 | Metadane faktury | `InvoiceMetadata` | Dane faktury z listy KSeF (bez pełnej treści XML) | |

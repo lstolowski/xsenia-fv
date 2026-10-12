@@ -59,6 +59,8 @@ testing {
                         "ksef.secretsFile",
                         rootProject.layout.projectDirectory.file("secrets/ksef-test.properties").asFile.absolutePath,
                     )
+                    // Tests creating invoices in KSeF TEST run only on request: ./gradlew integrationTest -PsendInvoices
+                    systemProperty("ksef.sendInvoices", providers.gradleProperty("sendInvoices").isPresent.toString())
                     // Results depend on an external service, so never treat them as up to date or cached.
                     outputs.upToDateWhen { false }
                     outputs.cacheIf { false }

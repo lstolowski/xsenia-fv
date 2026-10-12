@@ -29,6 +29,7 @@ Stan: implementacja — postęp w [docs/zadania/](docs/zadania/README.md). Szcze
   - nazwy towarów/usług: „Usługa testowa”, Lorem ipsum.
 - Nie kopiuj do repozytorium ani do KSeF TEST żadnych prawdziwych danych użytkownika lub jego kontrahentów (także z faktur PROD).
 - Jeśli zauważysz w repozytorium dane wyglądające na prawdziwe — zgłoś to użytkownikowi.
+- Zgoda użytkownika (2026-10-12): testy integracyjne i testy na emulatorze **mogą wysyłać faktury do KSeF TEST** (kontekst NIP z `secrets/ksef-test.properties`), wyłącznie z danymi zmyślonymi jak wyżej. Faktur w KSeF nie da się usunąć — wysyłaj tylko tyle, ile potrzeba.
 
 ## Struktura
 
@@ -51,6 +52,7 @@ JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Co
 
 - `./gradlew build` — kompilacja wszystkich modułów i wariantów, testy jednostkowe, lint (ostrzeżenia = błędy)
 - `./gradlew :ksef:test :invoice:test :mirror:test` — szybkie testy modułów JVM
+- `./gradlew integrationTest -PsendInvoices` — dodatkowo test **wysyłający fakturę** do KSeF TEST (każde uruchomienie tworzy nową, nieusuwalną fakturę testową)
 - `./gradlew integrationTest` — testy z prawdziwym KSeF **TEST** (wymaga `secrets/ksef-test.properties`, bez niego testy są pomijane; nie wchodzi w `build`). Unikaj 16:00–18:00 (prace serwisowe TEST)
 - `./gradlew :app:assembleKsefTestDebug` — APK wersji testowej (KSeF TEST); `installKsefTestDebug` instaluje na emulatorze
 - Wersje aplikacji (product flavors): `ksefTest` → `pl.xsenia.fv.test`, `ksefProd` → `pl.xsenia.fv`

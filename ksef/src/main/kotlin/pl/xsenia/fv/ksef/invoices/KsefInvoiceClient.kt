@@ -4,7 +4,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.statement.readRawBytes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
-import pl.xsenia.fv.ksef.KsefApiException
 import pl.xsenia.fv.ksef.KsefProtocolException
 import pl.xsenia.fv.ksef.KsefTimeoutException
 import pl.xsenia.fv.ksef.auth.KsefPublicKeyProvider
@@ -62,7 +61,7 @@ class KsefInvoiceClient internal constructor(
     }
 
     /** Downloads the invoice XML and verifies its SHA-256 against the `x-ms-meta-hash` header, if present. */
-    suspend fun downloadInvoiceXml(ksefNumber: String): InvoiceXml = withAccessToken { accessToken ->
+    suspend fun downloadInvoiceXml(ksefNumber: String): InvoiceXml = tokens.withAccessToken { accessToken ->
         val response = api.invoiceXml(accessToken, ksefNumber)
         val content = response.readRawBytes()
         val hash = KsefCrypto.sha256Base64(content)
@@ -98,7 +97,7 @@ class KsefInvoiceClient internal constructor(
             ),
         )
 
-        val referenceNumber = withAccessToken { api.startExport(it, request) }.referenceNumber
+        val referenceNumber = tokens.withAccessToken { api.startExport(it, request) }.referenceNumber
         val invoicePackage = awaitExport(referenceNumber)
 
         val archive = ByteArrayOutputStream()
@@ -127,7 +126,7 @@ class KsefInvoiceClient internal constructor(
         var pageOffset = 0
         while (true) {
             val filters = InvoiceQueryFiltersDto(subjectType.apiValue, DateRangeDto(dateType.apiValue, rangeFrom, to))
-            val page = withAccessToken { api.queryMetadata(it, filters, pageOffset, PAGE_SIZE) }
+            val page = tokens.withAccessToken { api.queryMetadata(it, filters, pageOffset, PAGE_SIZE) }
             invoices += page.invoices
             when {
                 !page.hasMore -> return InvoiceMetadataResult(invoices, page.permanentStorageHwmDate)
@@ -145,7 +144,7 @@ class KsefInvoiceClient internal constructor(
         var invoicePackage: InvoicePackageDto? = null
         withTimeoutOrNull(exportTimeout) {
             while (invoicePackage == null) {
-                val response = withAccessToken { api.exportStatus(it, referenceNumber) }
+                val response = tokens.withAccessToken { api.exportStatus(it, referenceNumber) }
                 when (response.status.code) {
                     EXPORT_IN_PROGRESS -> delay(exportPollInterval)
                     EXPORT_DONE -> invoicePackage = response.invoicePackage
@@ -185,15 +184,6 @@ class KsefInvoiceClient internal constructor(
         )
     }
 
-    /** Runs [block] with a valid access token; after HTTP 401 re-authenticates once and retries. */
-    private suspend fun <T> withAccessToken(block: suspend (String) -> T): T =
-        try {
-            block(tokens.accessToken())
-        } catch (e: KsefApiException) {
-            if (e.httpStatus != HTTP_UNAUTHORIZED) throw e
-            tokens.invalidate()
-            block(tokens.accessToken())
-        }
 
     private fun InvoiceMetadata.dateOf(dateType: InvoiceDateType): Instant = when (dateType) {
         InvoiceDateType.ISSUE -> issueDate.atStartOfDay().toInstant(ZoneOffset.UTC)
@@ -209,6 +199,5 @@ class KsefInvoiceClient internal constructor(
         const val METADATA_FILE = "_metadata.json"
         const val EXPORT_IN_PROGRESS = 100
         const val EXPORT_DONE = 200
-        const val HTTP_UNAUTHORIZED = 401
     }
 }

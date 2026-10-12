@@ -36,6 +36,17 @@ class KsefRateLimitException(val retryAfter: Duration?, val details: List<String
 class KsefAuthenticationException(val statusCode: Int, val description: String, val details: List<String>) :
     KsefException("KSeF authentication failed: $statusCode $description $details")
 
+/**
+ * KSeF rejected a sent invoice (status 4xx/5xx of the invoice in the session), e.g. 450 — semantic validation
+ * error, 440 — duplicate ([extensions] contain `originalKsefNumber`).
+ */
+class KsefInvoiceRejectedException(
+    val statusCode: Int,
+    val description: String,
+    val details: List<String>,
+    val extensions: Map<String, String?>,
+) : KsefException("KSeF rejected the invoice: $statusCode $description $details")
+
 /** An asynchronous KSeF operation did not finish within the expected time. */
 class KsefTimeoutException(message: String) : KsefException(message)
 
