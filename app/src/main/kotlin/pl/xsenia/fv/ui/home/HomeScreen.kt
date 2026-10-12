@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -20,12 +21,16 @@ import pl.xsenia.fv.BuildConfig
 import pl.xsenia.fv.R
 import pl.xsenia.fv.config.ConfigState
 import pl.xsenia.fv.ui.MainViewModel
+import pl.xsenia.fv.ui.components.SyncCard
 
 /** Temporary home screen — invoice lists arrive in ZAD-009. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: MainViewModel, onOpenSettings: () -> Unit) {
     val configState by viewModel.configState.collectAsStateWithLifecycle()
+    val sync by viewModel.sync.collectAsStateWithLifecycle()
+    // Runs after every unlock (the home screen is recreated); the service skips it if synced < 15 min ago.
+    LaunchedEffect(Unit) { viewModel.syncIfStale() }
 
     Scaffold(
         topBar = {
@@ -49,6 +54,7 @@ fun HomeScreen(viewModel: MainViewModel, onOpenSettings: () -> Unit) {
             if (configState == ConfigState.FolderInaccessible) {
                 Text(stringResource(R.string.folder_inaccessible), color = MaterialTheme.colorScheme.error)
             }
+            SyncCard(state = sync, onSyncNow = viewModel::syncNow)
             Text(stringResource(R.string.home_lists_coming), style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.version_label, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.bodySmall)
         }

@@ -69,7 +69,7 @@ class KsefInvoiceClientTest {
             InvoiceDateType.ISSUE,
             Instant.parse("2026-10-01T00:00:00Z"),
             Instant.parse("2026-11-01T00:00:00Z"),
-        )
+        ).invoices
 
         assertEquals(listOf("A", "B"), invoices.map { it.ksefNumber })
         assertEquals(BigDecimal("53.59"), invoices[0].vatAmount)
@@ -96,7 +96,7 @@ class KsefInvoiceClientTest {
             InvoiceDateType.PERMANENT_STORAGE,
             Instant.parse("2026-04-01T00:00:00Z"),
             Instant.parse("2026-10-18T00:00:00Z"),
-        )
+        ).invoices
 
         assertEquals(1, invoices.size)
         val ranges = ksef.requestsTo("invoices/query/metadata").map {
@@ -129,7 +129,7 @@ class KsefInvoiceClientTest {
             InvoiceDateType.PERMANENT_STORAGE,
             Instant.parse("2026-10-01T00:00:00Z"),
             Instant.parse("2026-10-11T00:00:00Z"),
-        )
+        ).invoices
 
         assertEquals(listOf("A", "B", "C"), invoices.map { it.ksefNumber })
         val second = ksef.requestsTo("invoices/query/metadata")[1]

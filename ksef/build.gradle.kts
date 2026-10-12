@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
+    `java-test-fixtures`
 }
 
 java {
@@ -23,6 +24,10 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
+
+    // KsefTestConfig — shared by the integration tests of all modules.
+    testFixturesImplementation(platform(libs.junit.bom))
+    testFixturesImplementation(libs.junit.jupiter)
 }
 
 testing {
@@ -42,6 +47,7 @@ testing {
             useJUnitJupiter(junitVersion)
             dependencies {
                 implementation(project())
+                implementation(testFixtures(project()))
                 implementation(project(":invoice"))
                 implementation(libs.kotlinx.coroutines.test)
             }

@@ -18,7 +18,10 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Faktura (treść) | `Invoice` | Faktura odczytana z XML FA(2)/FA(3) przez `InvoiceXmlParser` | |
 | Pozycja faktury | `InvoiceLine` | `FaWiersz`: nazwa `P_7`, jednostka `P_8A`, ilość `P_8B`, cena jedn. netto `P_9A`, wartość netto `P_11`, stawka `P_12` | Wartość brutto pozycji wyliczana do wyświetlenia |
 | Termin płatności | `paymentDueDate` | `Platnosc/TerminPlatnosci/Termin` — zawsze 21 dni od daty wystawienia | |
-| Synchronizacja | `sync` | Pobranie nowych faktur z KSeF do lokalnego lustra | ADR 0003 |
+| Synchronizacja | `InvoiceSynchronizer` / `InvoiceSyncService` | Pobranie nowych faktur z KSeF do lokalnego lustra | ADR 0003 |
+| Lustro faktur (lokalna kopia) | `InvoiceMirror` / `MirrorEntry` | Faktury z KSeF zapisane w plikach na telefonie | ADR 0003 |
+| Punkt kontrolny | `checkpoint` | HWM, do którego lustro jest kompletne | ADR 0003 |
+| Kategoria faktur | `InvoiceCategory` (`SALES`, `PURCHASE`) | Sprzedażowe / zakupowe | |
 | Faktura sprzedażowa | `salesInvoice` | Faktura, na której jestem sprzedawcą (Podmiot1, `Subject1`) | |
 | Faktura zakupowa | `purchaseInvoice` | Faktura, na której jestem nabywcą (Podmiot2, `Subject2`) | Decyzja E1: „zakupowa”, jak w KSeF |
 | Podmiot1 / sprzedawca | `seller` | Wystawca faktury | |

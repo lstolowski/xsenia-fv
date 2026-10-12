@@ -5,7 +5,15 @@ import android.os.SystemClock
 import pl.xsenia.fv.config.ConfigRepository
 import pl.xsenia.fv.ksef.KsefConnectionChecker
 import pl.xsenia.fv.ksef.KsefEnvironment
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Dispatchers
 import pl.xsenia.fv.ksef.auth.KsefAuthenticator
+import pl.xsenia.fv.ksef.auth.KsefPublicKeyProvider
+import pl.xsenia.fv.mirror.InvoiceMirror
+import pl.xsenia.fv.sync.InvoiceSyncService
+import java.time.LocalDate
+import java.time.ZoneId
 import pl.xsenia.fv.ksef.http.KsefHttpClientFactory
 import pl.xsenia.fv.security.AppLock
 import pl.xsenia.fv.security.KeystoreCipher
@@ -29,9 +37,33 @@ class AppContainer(context: Context) {
 
     val localCache = LocalCache(context)
 
+    /** Scope of work that must survive screen changes (e.g. synchronization). */
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     private val httpClient by lazy { KsefHttpClientFactory.create(environment) }
 
-    val authenticator by lazy { KsefAuthenticator(httpClient) }
+    private val publicKeys by lazy { KsefPublicKeyProvider.fromApi(httpClient) }
+
+    val authenticator by lazy { KsefAuthenticator(httpClient, publicKeys) }
 
     val connectionChecker by lazy { KsefConnectionChecker(authenticator) }
+
+    val syncService by lazy {
+        InvoiceSyncService(
+            scope = applicationScope,
+            httpClient = httpClient,
+            publicKeys = publicKeys,
+            authenticator = authenticator,
+            tokenStore = tokenStore,
+            configRepository = configRepository,
+            mirror = InvoiceMirror(localCache.invoicesDir),
+            initialDate = MIRROR_START_DATE.atStartOfDay(POLAND).toInstant(),
+        )
+    }
+
+    companion object {
+        /** Invoices are kept locally from this date (decision R2). */
+        val MIRROR_START_DATE: LocalDate = LocalDate.of(2026, 4, 1)
+        val POLAND: ZoneId = ZoneId.of("Europe/Warsaw")
+    }
 }

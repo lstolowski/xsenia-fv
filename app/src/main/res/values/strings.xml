@@ -86,11 +86,30 @@
     <string name="settings_title">Ustawienia</string>
     <string name="settings_app_section">Aplikacja</string>
     <string name="settings_cache_section">Dane lokalne</string>
-    <string name="settings_cache_description">Pobrane z KSeF faktury przechowywane na telefonie. Po wyczyszczeniu zostaną pobrane ponownie.</string>
+    <string name="settings_cache_description">Pobrane z KSeF faktury przechowywane na telefonie (od 01.04.2026). Po wyczyszczeniu zostaną pobrane ponownie.</string>
     <string name="settings_cache_clear">Wyczyść cache</string>
     <string name="settings_cache_confirm_title">Wyczyścić cache?</string>
     <string name="settings_cache_confirm_text">Faktury zostaną ponownie pobrane z KSeF przy następnej synchronizacji.</string>
     <string name="settings_cache_cleared">Cache wyczyszczony.</string>
+
+    <!-- Sync -->
+    <string name="sync_title">Synchronizacja z KSeF</string>
+    <string name="sync_now">Odśwież z KSeF</string>
+    <string name="sync_never">Faktury nie zostały jeszcze pobrane.</string>
+    <string name="sync_last">Ostatnia synchronizacja: %1$s</string>
+    <string name="sync_counts">Faktury sprzedażowe: %1$d, zakupowe: %2$d</string>
+    <string name="sync_running">Synchronizacja…</string>
+    <string name="sync_phase_initial_sales">Pierwsze pobieranie faktur sprzedażowych…</string>
+    <string name="sync_phase_initial_purchase">Pierwsze pobieranie faktur zakupowych…</string>
+    <string name="sync_phase_checking_sales">Sprawdzanie nowych faktur sprzedażowych…</string>
+    <string name="sync_phase_checking_purchase">Sprawdzanie nowych faktur zakupowych…</string>
+    <string name="sync_phase_downloading">Pobieranie faktur: %1$d z %2$d</string>
+    <string name="sync_error_missing_token">Nie można pobrać faktur — zapisz token KSeF w ustawieniach.</string>
+    <string name="sync_error_missing_company">Nie można pobrać faktur — brak poprawnego pliku company.json (NIP firmy).</string>
+    <string name="sync_error_rate_limited">Przekroczono limit zapytań KSeF. Spróbuj ponownie za %1$s s.</string>
+    <string name="sync_error_auth">KSeF odrzucił uwierzytelnienie: %1$d %2$s</string>
+    <string name="sync_error_network">Brak połączenia z KSeF. Pokazuję faktury zapisane na telefonie. (%1$s)</string>
+    <string name="sync_error_ksef">Błąd KSeF: %1$s</string>
 
     <!-- Home (temporary until invoice lists are implemented) -->
     <string name="home_lists_coming">Listy faktur sprzedażowych i zakupowych pojawią się w kolejnej wersji.</string>

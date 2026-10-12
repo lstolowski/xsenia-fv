@@ -60,6 +60,7 @@ android {
 dependencies {
     implementation(project(":ksef"))
     implementation(project(":invoice"))
+    implementation(project(":mirror"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

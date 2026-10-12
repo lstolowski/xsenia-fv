@@ -36,7 +36,7 @@ class KsefInvoiceDownloadIntegrationTest {
 
     @Test
     fun `queries sales and purchase invoice metadata`(): Unit = runBlocking {
-        val sales = invoices.queryMetadata(InvoiceSubjectType.SELLER, InvoiceDateType.ISSUE, from, to)
+        val sales = invoices.queryMetadata(InvoiceSubjectType.SELLER, InvoiceDateType.ISSUE, from, to).invoices
         invoices.queryMetadata(InvoiceSubjectType.BUYER, InvoiceDateType.ISSUE, from, to)
 
         sales.forEach { assertEquals(config.nip, it.seller.nip) }
@@ -44,7 +44,7 @@ class KsefInvoiceDownloadIntegrationTest {
 
     @Test
     fun `downloads invoice XML and the same invoice in an export package`(): Unit = runBlocking {
-        val sales = invoices.queryMetadata(InvoiceSubjectType.SELLER, InvoiceDateType.PERMANENT_STORAGE, from, to)
+        val sales = invoices.queryMetadata(InvoiceSubjectType.SELLER, InvoiceDateType.PERMANENT_STORAGE, from, to).invoices
         assumeTrue(sales.isNotEmpty(), "no sales invoices in the TEST context since $from")
         val first = sales.first()
 

@@ -50,7 +50,16 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch { runConnectionCheck() }
     }
 
-    fun clearCache() = container.localCache.clear()
+    val sync = container.syncService.state
+
+    fun syncIfStale() = container.syncService.syncIfStale()
+
+    fun syncNow() = container.syncService.syncNow()
+
+    fun clearCache() {
+        container.localCache.clear()
+        container.syncService.onMirrorCleared()
+    }
 
     private suspend fun runConnectionCheck() {
         if (_connection.value.checking) return

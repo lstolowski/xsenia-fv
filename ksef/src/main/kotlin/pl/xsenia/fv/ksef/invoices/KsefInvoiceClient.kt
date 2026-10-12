@@ -35,7 +35,8 @@ class KsefInvoiceClient internal constructor(
         this(KsefInvoicesApi(client), tokens, publicKeys)
 
     /**
-     * Returns metadata of all invoices in `[from, to)` for the given role, oldest first, without duplicates.
+     * Returns metadata of all invoices in `[from, to)` for the given role, oldest first, without duplicates,
+     * and — for [InvoiceDateType.PERMANENT_STORAGE] — the KSeF high water mark (data up to it is complete).
      *
      * Splits the range into windows accepted by KSeF (max 100 days), follows pagination and
      * continues from the last record when KSeF truncates a result set (10 000 records).
@@ -45,16 +46,19 @@ class KsefInvoiceClient internal constructor(
         dateType: InvoiceDateType,
         from: Instant,
         to: Instant,
-    ): List<InvoiceMetadata> {
+    ): InvoiceMetadataResult {
         require(from.isBefore(to)) { "from must be before to" }
         val result = LinkedHashMap<String, InvoiceMetadata>()
+        var hwm: Instant? = null
         var windowStart = from
         while (windowStart.isBefore(to)) {
             val windowEnd = minOf(windowStart.plus(MAX_WINDOW), to)
-            queryWindow(subjectType, dateType, windowStart, windowEnd).forEach { result.putIfAbsent(it.ksefNumber, it) }
+            val window = queryWindow(subjectType, dateType, windowStart, windowEnd)
+            window.invoices.forEach { result.putIfAbsent(it.ksefNumber, it) }
+            hwm = window.permanentStorageHwmDate ?: hwm
             windowStart = windowEnd
         }
-        return result.values.toList()
+        return InvoiceMetadataResult(result.values.toList(), hwm)
     }
 
     /** Downloads the invoice XML and verifies its SHA-256 against the `x-ms-meta-hash` header, if present. */
@@ -117,7 +121,7 @@ class KsefInvoiceClient internal constructor(
         dateType: InvoiceDateType,
         from: Instant,
         to: Instant,
-    ): List<InvoiceMetadata> {
+    ): InvoiceMetadataResult {
         val invoices = mutableListOf<InvoiceMetadata>()
         var rangeFrom = from
         var pageOffset = 0
@@ -126,7 +130,7 @@ class KsefInvoiceClient internal constructor(
             val page = withAccessToken { api.queryMetadata(it, filters, pageOffset, PAGE_SIZE) }
             invoices += page.invoices
             when {
-                !page.hasMore -> return invoices
+                !page.hasMore -> return InvoiceMetadataResult(invoices, page.permanentStorageHwmDate)
                 page.isTruncated -> {
                     // Result set limit reached: restart from the date of the last record (duplicates removed by the caller).
                     rangeFrom = page.invoices.last().dateOf(dateType)

@@ -29,6 +29,9 @@
 - Data początkowa lustra: **2026-04-01** (stała w konfiguracji aplikacji).
 - Zapytania o metadane dzielone na okna ≤ 100 dni (limit API, zweryfikowany na TEST: `dateRange must not exceed 100 days`).
 - Przy obecnej skali (~10 faktur/mies.) pierwsze pobranie to ok. 60–70 faktur — eksportem paczki (jedno żądanie zamiast ~70 pobrań XML przy limicie 64/h). Synchronizacje przyrostowe pobierają pojedyncze XML.
+- Synchronizacja przyrostowa: zapytanie o metadane (`PermanentStorage`) od punktu kontrolnego do „teraz” — także zakres po HWM, by najnowsze faktury były widoczne od razu (scenariusz 2 z dokumentacji HWM); punkt kontrolny = HWM z odpowiedzi; duplikaty pomijane po numerze KSeF.
+- Automatyczna synchronizacja najwyżej co 15 minut; ręczna zawsze.
+- Implementacja: moduł `mirror` (`InvoiceMirror`, `InvoiceSynchronizer`), w aplikacji `InvoiceSyncService`.
 
 - Struktura plików (pamięć wewnętrzna aplikacji): `invoices/{sales|purchase}/{ksefNumber}.xml` + indeks `invoices/{sales|purchase}/index.json` (metadane + wyliczona data dostawy) + `sync-state.json` (znacznik ostatniej synchronizacji).
 - Synchronizacja: przy otwarciu aplikacji (jeśli minęło > N minut) i ręcznie („Odśwież z KSeF”); po wysłaniu nowej faktury jej XML trafia od razu do lustra.

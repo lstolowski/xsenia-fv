@@ -72,6 +72,12 @@ data class InvoiceMetadata(
     data class FormCode(val systemCode: String, val schemaVersion: String, val value: String)
 }
 
+/**
+ * Result of a metadata query. [permanentStorageHwmDate] is set only for [InvoiceDateType.PERMANENT_STORAGE]:
+ * all invoices stored up to it are already returned, later ones may still appear.
+ */
+class InvoiceMetadataResult(val invoices: List<InvoiceMetadata>, val permanentStorageHwmDate: Instant?)
+
 /** Invoice XML downloaded from KSeF together with its SHA-256 hash (Base64). */
 class InvoiceXml(val ksefNumber: String, val content: ByteArray, val sha256Base64: String)
 

@@ -50,13 +50,13 @@ Stan: implementacja — postęp w [docs/zadania/](docs/zadania/README.md). Szcze
 JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`). Android SDK wskazany w `local.properties` (poza gitem).
 
 - `./gradlew build` — kompilacja wszystkich modułów i wariantów, testy jednostkowe, lint (ostrzeżenia = błędy)
-- `./gradlew :ksef:test :invoice:test` — szybkie testy modułów JVM
+- `./gradlew :ksef:test :invoice:test :mirror:test` — szybkie testy modułów JVM
 - `./gradlew integrationTest` — testy z prawdziwym KSeF **TEST** (wymaga `secrets/ksef-test.properties`, bez niego testy są pomijane; nie wchodzi w `build`). Unikaj 16:00–18:00 (prace serwisowe TEST)
 - `./gradlew :app:assembleKsefTestDebug` — APK wersji testowej (KSeF TEST); `installKsefTestDebug` instaluje na emulatorze
 - Wersje aplikacji (product flavors): `ksefTest` → `pl.xsenia.fv.test`, `ksefProd` → `pl.xsenia.fv`
 - Emulator: AVD `Samsung_S23_xsenia` (Android 16, API 36)
   - PIN blokady ekranu emulatora: `1111` (wyłącznie emulator testowy, nie dotyczy prawdziwego telefonu)
-  - Odcisk palca zarejestrowany jako *Finger 1* (Extended controls → Fingerprint); z terminala: `adb -e emu finger touch 1` a potem `adb -e emu finger remove 1` (bez `remove` kolejne dotknięcia nie są rozpoznawane). Po restarcie emulatora pierwsze odblokowanie ekranu wymaga PIN-u — poproś użytkownika
+  - Odcisk palca zarejestrowany jako *Finger 1* (Extended controls → Fingerprint); z terminala: `adb -e emu finger touch 1` a potem `adb -e emu finger remove 1`. **Bywa zawodne** (odrzucenia) — po 1–2 nieudanych próbach przestań (ryzyko blokady czytnika) i poproś użytkownika o odblokowanie przez Extended controls → Touch Sensor. Po restarcie emulatora pierwsze odblokowanie ekranu wymaga PIN-u — poproś użytkownika
   - Testowe pliki danych na emulatorze: `/sdcard/Documents/xsenia-test/` (`company.json` z NIP-em kontekstu testowego)
 
 ## Konwencje językowe

@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "xsenia-fv"
 
-include(":app", ":ksef", ":invoice")
+include(":app", ":ksef", ":invoice", ":mirror")
