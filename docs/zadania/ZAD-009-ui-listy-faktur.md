@@ -1,7 +1,7 @@
 # ZAD-009. UI: listy sprzedażowa i zakupowa z filtrem i podsumowaniem
 
 - User story: US-003, US-004
-- Status: W toku — do potwierdzenia na emulatorze: odmiana „0 faktur” po przeniesieniu do kodu
+- Status: Zrobione (2026-10-12); szczegóły po dotknięciu wiersza → ZAD-010, „Nowa faktura” → ZAD-013
 - Szacunek: M
 
 ## Cel
@@ -22,7 +22,7 @@ Dwie zakładki z listą faktur wybranego miesiąca.
 ## Definicja ukończenia
 
 - [x] Testy (`InvoiceListLogicTest` 5, `PolishPluralTest` 15)
-- [ ] Sprawdzone na środowisku KSeF TEST / emulatorze (jeśli dotyczy)
+- [x] Sprawdzone na emulatorze z danymi z KSeF TEST (wrzesień: 1 faktura z dostawą 30.09, październik pusty, wyszukiwanie, wybór miesiąca, „0 faktur”)
 - [x] Zaktualizowana dokumentacja
 
 ## Uwagi

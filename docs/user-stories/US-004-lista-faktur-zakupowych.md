@@ -1,7 +1,7 @@
 # US-004. Lista faktur zakupowych
 
 - Priorytet: MVP
-- Status: Gotowa
+- Status: W realizacji (brak: szczegóły — ZAD-010; dane testowe zakupowe — ZAD-014)
 
 ## Historyjka
 
@@ -9,9 +9,9 @@ Jako **właściciel firmy** chcę **przeglądać faktury zakupowe z wybranego mi
 
 ## Kryteria akceptacji
 
-- [ ] Te same zasady co w US-003 (miesiąc po dacie dostawy, szukaj, podsumowanie), kontrahentem jest sprzedawca.
-- [ ] Faktury korygujące, zaliczkowe i inne rodzaje są widoczne i oznaczone rodzajem (tylko do odczytu).
-- [ ] Faktury z walutą inną niż PLN pokazują kwoty w swojej walucie z oznaczeniem waluty.
+- [x] Te same zasady co w US-003 (miesiąc po dacie dostawy, szukaj, podsumowanie), kontrahentem jest sprzedawca.
+- [x] Faktury korygujące, zaliczkowe i inne rodzaje są widoczne i oznaczone rodzajem (tylko do odczytu).
+- [x] Faktury z walutą inną niż PLN pokazują kwoty w swojej walucie z oznaczeniem waluty.
 
 ## Zadania
 

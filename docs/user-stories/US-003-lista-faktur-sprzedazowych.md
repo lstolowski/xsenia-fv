@@ -1,7 +1,7 @@
 # US-003. Lista faktur sprzedażowych
 
 - Priorytet: MVP
-- Status: Gotowa
+- Status: W realizacji (brak: szczegóły — ZAD-010, nowa faktura — ZAD-013)
 
 ## Historyjka
 
@@ -9,11 +9,11 @@ Jako **właściciel firmy** chcę **przeglądać faktury sprzedażowe z wybraneg
 
 ## Kryteria akceptacji
 
-- [ ] Domyślnie widzę bieżący miesiąc; mogę przełączać miesiące (poprzedni / następny / wybór).
-- [ ] Miesiąc liczony jest po **dacie dostawy**.
-- [ ] Wiersz listy: data dostawy, numer faktury, kontrahent (nazwa + NIP), netto, brutto.
-- [ ] Pole „Szukaj” filtruje listę miesiąca po fragmencie NIP lub nazwy kontrahenta (bez rozróżniania wielkości liter).
-- [ ] Pod listą podsumowanie miesiąca (po filtrze): netto, VAT, brutto.
+- [x] Domyślnie widzę bieżący miesiąc; mogę przełączać miesiące (poprzedni / następny / wybór).
+- [x] Miesiąc liczony jest po **dacie dostawy**.
+- [x] Wiersz listy: data dostawy, numer faktury, kontrahent (nazwa + NIP), netto, brutto.
+- [x] Pole „Szukaj” filtruje listę miesiąca po fragmencie NIP lub nazwy kontrahenta (bez rozróżniania wielkości liter).
+- [x] Pod listą podsumowanie miesiąca (po filtrze): netto, VAT, brutto.
 - [ ] Dotknięcie wiersza otwiera szczegóły faktury.
 - [ ] Z listy sprzedażowej mogę rozpocząć wystawianie nowej faktury.
 
