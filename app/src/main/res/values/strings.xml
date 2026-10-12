@@ -130,6 +130,9 @@
     <string name="list_nip">NIP %1$s</string>
     <string name="list_number">nr %1$s</string>
     <string name="list_net">netto %1$s</string>
+    <string name="list_unsent">Niewysłana do KSeF</string>
+    <string name="list_unsent_rejected">Odrzucona przez KSeF — do poprawy</string>
+    <string name="list_unsent_summary">Niewysłane: %1$s (brutto %2$s) — nie wliczone</string>
     <string name="totals_line">netto %1$s · VAT %2$s · brutto %3$s</string>
     <!-- Polish plural forms are chosen in code (PolishPlural), independent of the device language. -->
     <string name="invoice_count_one">%1$d faktura</string>
@@ -229,6 +232,17 @@
     <!-- New invoice -->
     <string name="new_invoice">Nowa faktura</string>
     <string name="new_invoice_title">Nowa faktura sprzedażowa</string>
+    <string name="unsent_edit_title">Edycja faktury niewysłanej</string>
+    <string name="unsent_delete">Usuń fakturę</string>
+    <string name="unsent_delete_confirm_title">Usunąć fakturę niewysłaną?</string>
+    <string name="unsent_delete_confirm_text">Faktura %1$s zostanie usunięta z telefonu. Nie była wysłana do KSeF.</string>
+    <string name="unsent_rejection">KSeF odrzucił tę fakturę: %1$d %2$s</string>
+    <string name="unsent_rejection_duplicate">Duplikat faktury o numerze KSeF %1$s.</string>
+    <string name="preview_save_unsent">Zapisz bez wysyłki do KSeF</string>
+    <string name="preview_issue_date_past">Data wystawienia (%1$s) jest wcześniejsza niż dzisiejsza. Faktura w KSeF uznawana jest za wystawioną w dniu wysłania.</string>
+    <string name="preview_use_today">Ustaw dzisiejszą datę wystawienia</string>
+    <string name="status_kept_unsent">Faktura została zapisana jako niewysłana — znajdziesz ją na liście sprzedażowej.</string>
+    <string name="status_close">Zamknij</string>
     <string name="new_invoice_preview_title">Podgląd faktury</string>
     <string name="new_invoice_status_title">Wysyłka do KSeF</string>
     <string name="new_invoice_unavailable">Wystawianie faktur jest niedostępne — popraw pliki danych (company.json, banks.json, counterparties.json) w Ustawieniach.</string>

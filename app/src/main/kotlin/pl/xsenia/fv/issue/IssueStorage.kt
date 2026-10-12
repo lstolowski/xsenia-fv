@@ -10,7 +10,15 @@ import java.nio.file.StandardCopyOption
 
 /** Invoice sent to KSeF whose result is not known yet — survives an app restart. */
 @Serializable
-data class PendingSend(val submitted: SubmittedInvoice, val invoiceNumber: String, val nip: String)
+data class PendingSend(
+    val submitted: SubmittedInvoice,
+    val invoiceNumber: String,
+    val nip: String,
+    /** Form of the invoice — needed to keep it as unsent if KSeF rejects it after an app restart. */
+    val form: InvoiceForm? = null,
+    /** Set when an unsent invoice (US-007) is being sent; it is removed once KSeF accepts the invoice. */
+    val unsentId: String? = null,
+)
 
 /**
  * Files of the invoice issuing flow in the app's private storage (not part of the invoice cache):

@@ -16,6 +16,8 @@ import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.invoices.CurrencyTotals
 import pl.xsenia.fv.invoices.InvoiceListLogic
 import pl.xsenia.fv.invoices.InvoiceRow
+import pl.xsenia.fv.invoices.UnsentSummary
+import pl.xsenia.fv.config.ConfigState
 import pl.xsenia.fv.mirror.InvoiceCategory
 import java.time.YearMonth
 
@@ -25,6 +27,7 @@ data class InvoiceListUiState(
     val query: String = "",
     val invoices: List<InvoiceRow> = emptyList(),
     val totals: List<CurrencyTotals> = emptyList(),
+    val unsentSummary: UnsentSummary? = null,
     /** Months for the picker with invoice counts, newest first. */
     val months: List<Pair<YearMonth, Int>> = emptyList(),
     /** True when the mirror holds no invoices of this category at all. */
@@ -38,8 +41,16 @@ class InvoiceListViewModel(private val category: InvoiceCategory, private val co
     private val month = MutableStateFlow(YearMonth.now())
     private val query = MutableStateFlow("")
 
-    val state: StateFlow<InvoiceListUiState> = combine(rows, month, query) { rows, month, query ->
-        if (rows == null) return@combine InvoiceListUiState(month = month, query = query)
+    /** Unsent invoices (US-007) — only on the sales list. */
+    private val unsentRows = combine(container.unsentInvoices.invoices, container.configRepository.state) { unsent, configState ->
+        if (category != InvoiceCategory.SALES) return@combine emptyList()
+        val config = (configState as? ConfigState.Loaded)?.config
+        unsent.map { InvoiceListLogic.toRow(it, config) }
+    }
+
+    val state: StateFlow<InvoiceListUiState> = combine(rows, unsentRows, month, query) { ksefRows, unsentRows, month, query ->
+        if (ksefRows == null) return@combine InvoiceListUiState(month = month, query = query)
+        val rows = ksefRows + unsentRows
         val visible = InvoiceListLogic.filter(rows, month, query)
         InvoiceListUiState(
             loading = false,
@@ -47,8 +58,9 @@ class InvoiceListViewModel(private val category: InvoiceCategory, private val co
             query = query,
             invoices = visible,
             totals = InvoiceListLogic.totals(visible),
+            unsentSummary = InvoiceListLogic.unsentSummary(visible),
             months = InvoiceListLogic.months(rows, YearMonth.from(AppContainer.MIRROR_START_DATE), YearMonth.now()),
-            mirrorEmpty = rows.isEmpty(),
+            mirrorEmpty = ksefRows.isEmpty() && unsentRows.isEmpty(),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InvoiceListUiState())
 

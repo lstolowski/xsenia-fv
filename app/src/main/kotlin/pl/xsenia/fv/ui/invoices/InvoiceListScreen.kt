@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -41,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import pl.xsenia.fv.R
 import pl.xsenia.fv.invoices.CurrencyTotals
 import pl.xsenia.fv.invoices.InvoiceRow
+import pl.xsenia.fv.invoices.UnsentSummary
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.sync.SyncUiState
 import pl.xsenia.fv.ui.components.SyncStatus
@@ -81,7 +85,7 @@ fun InvoiceListScreen(
                 },
             )
         },
-        bottomBar = { if (state.totals.isNotEmpty()) TotalsBar(state.totals) },
+        bottomBar = { if (state.totals.isNotEmpty() || state.unsentSummary != null) TotalsBar(state.totals, state.unsentSummary) },
         floatingActionButton = {
             onNewInvoice?.let {
                 ExtendedFloatingActionButton(
@@ -101,7 +105,7 @@ fun InvoiceListScreen(
                     EmptyState(state, neverSynced = sync.lastSyncAt == null)
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
-                        items(state.invoices, key = { it.ksefNumber }) { invoice ->
+                        items(state.invoices, key = { it.key }) { invoice ->
                             InvoiceListItem(invoice, onClick = { onOpenInvoice(invoice) })
                             HorizontalDivider()
                         }
@@ -159,13 +163,26 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
 
 @Composable
 private fun InvoiceListItem(invoice: InvoiceRow, onClick: () -> Unit) {
-    val typeLabel = invoiceTypeLabel(invoice.invoiceType)
+    val typeLabel = when {
+        invoice.rejected -> stringResource(R.string.list_unsent_rejected)
+        invoice.isUnsent -> stringResource(R.string.list_unsent)
+        else -> invoiceTypeLabel(invoice.invoiceType)
+    }
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
+        leadingContent = if (invoice.isUnsent) {
+            { Icon(Icons.Filled.Warning, contentDescription = stringResource(R.string.list_unsent), tint = WARNING_AMBER) }
+        } else {
+            null
+        },
         overlineContent = {
             Text(
                 listOfNotNull(stringResource(R.string.list_delivery, Formats.date(invoice.deliveryDate)), typeLabel).joinToString(" · "),
-                color = if (typeLabel != null) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = when {
+                    invoice.isUnsent -> WARNING_TEXT
+                    typeLabel != null -> MaterialTheme.colorScheme.tertiary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                },
             )
         },
         headlineContent = { Text(invoice.counterpartyName ?: stringResource(R.string.list_no_name), maxLines = 2) },
@@ -201,10 +218,24 @@ private fun invoiceTypeLabel(type: String): String? = when (type) {
     else -> type
 }
 
+// Warning colors of unsent invoices (yellow triangle with an exclamation mark), the same in both themes.
+private val WARNING_AMBER = Color(0xFFF9A825)
+private val WARNING_TEXT = Color(0xFFB26A00)
+
 @Composable
-private fun TotalsBar(totals: List<CurrencyTotals>) {
+private fun TotalsBar(totals: List<CurrencyTotals>, unsent: UnsentSummary?) {
     Surface(tonalElevation = 3.dp) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            unsent?.let {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Filled.Warning, contentDescription = null, tint = WARNING_AMBER, modifier = Modifier.size(16.dp))
+                    Text(
+                        stringResource(R.string.list_unsent_summary, invoiceCount(it.count), Formats.money(it.gross, "PLN")),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = WARNING_TEXT,
+                    )
+                }
+            }
             totals.forEach { total ->
                 Text(stringResource(R.string.totals_count, invoiceCount(total.count)), style = MaterialTheme.typography.labelMedium)
                 Text(

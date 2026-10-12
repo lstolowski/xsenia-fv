@@ -5,6 +5,9 @@ import android.os.SystemClock
 import pl.xsenia.fv.config.ConfigRepository
 import pl.xsenia.fv.issue.InvoiceSendService
 import pl.xsenia.fv.issue.IssueStorage
+import pl.xsenia.fv.issue.KsefSendBackend
+import pl.xsenia.fv.issue.UnsentInvoiceRepository
+import pl.xsenia.fv.issue.UnsentInvoiceStore
 import pl.xsenia.fv.ksef.KsefAccess
 import pl.xsenia.fv.ksef.KsefConnectionChecker
 import pl.xsenia.fv.ksef.KsefEnvironment
@@ -66,7 +69,17 @@ class AppContainer(context: Context) {
 
     val issueStorage = IssueStorage(context.filesDir)
 
-    val sendService by lazy { InvoiceSendService(applicationScope, ksefAccess, issueStorage, syncService) }
+    val unsentInvoices = UnsentInvoiceRepository(UnsentInvoiceStore(context.filesDir), applicationScope)
+
+    val sendService by lazy {
+        InvoiceSendService(
+            scope = applicationScope,
+            backend = KsefSendBackend(ksefAccess),
+            storage = issueStorage,
+            unsent = unsentInvoices,
+            onAccepted = syncService::syncNow,
+        )
+    }
 
     companion object {
         /** Invoices are kept locally from this date (decision R2). */

@@ -23,6 +23,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -30,6 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
 import pl.xsenia.fv.config.ConfigState
+import pl.xsenia.fv.invoices.InvoiceRow
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.ui.details.InvoiceDetailsScreen
 import pl.xsenia.fv.ui.details.InvoiceDetailsViewModel
@@ -91,15 +94,24 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
         },
     ) { padding ->
         NavHost(navController, startDestination = Tab.SALES.route, modifier = Modifier.padding(padding)) {
-            val openInvoice = { category: InvoiceCategory, ksefNumber: String ->
-                navController.navigate("$DETAILS_ROUTE/${category.name}/$ksefNumber")
+            val openInvoice = { category: InvoiceCategory, row: InvoiceRow ->
+                // An unsent invoice opens in the form for editing (US-007); others show their details.
+                row.unsentId?.let { navController.navigate("$NEW_INVOICE_ROUTE?unsentId=$it") }
+                    ?: navController.navigate("$DETAILS_ROUTE/${category.name}/${row.ksefNumber}")
             }
             composable(Tab.SALES.route) {
                 InvoiceListRoute(InvoiceCategory.SALES, container, viewModel, openInvoice, onNewInvoice = { navController.navigate(NEW_INVOICE_ROUTE) })
             }
             composable(Tab.PURCHASE.route) { InvoiceListRoute(InvoiceCategory.PURCHASE, container, viewModel, openInvoice, onNewInvoice = null) }
-            composable(NEW_INVOICE_ROUTE) {
-                val newInvoiceViewModel: NewInvoiceViewModel = viewModel(factory = viewModelFactory { initializer { NewInvoiceViewModel(container) } })
+            composable(
+                "$NEW_INVOICE_ROUTE?unsentId={unsentId}",
+                arguments = listOf(navArgument("unsentId") { type = NavType.StringType; nullable = true; defaultValue = null }),
+            ) { entry ->
+                val unsentId = entry.arguments?.getString("unsentId")
+                val newInvoiceViewModel: NewInvoiceViewModel = viewModel(
+                    key = "invoice-form-${unsentId ?: "new"}",
+                    factory = viewModelFactory { initializer { NewInvoiceViewModel(container, unsentId) } },
+                )
                 NewInvoiceScreen(newInvoiceViewModel, onClose = { navController.popBackStack() })
             }
             composable(Tab.SETTINGS.route) { SettingsScreen(viewModel = viewModel, onBack = null) }
@@ -121,7 +133,7 @@ private fun InvoiceListRoute(
     category: InvoiceCategory,
     container: AppContainer,
     mainViewModel: MainViewModel,
-    onOpenInvoice: (InvoiceCategory, String) -> Unit,
+    onOpenInvoice: (InvoiceCategory, InvoiceRow) -> Unit,
     onNewInvoice: (() -> Unit)?,
 ) {
     val listViewModel: InvoiceListViewModel = viewModel(
@@ -139,7 +151,7 @@ private fun InvoiceListRoute(
         onSelectMonth = listViewModel::selectMonth,
         onQueryChange = listViewModel::setQuery,
         onRefresh = mainViewModel::syncNow,
-        onOpenInvoice = { onOpenInvoice(category, it.ksefNumber) },
+        onOpenInvoice = { onOpenInvoice(category, it) },
         onNewInvoice = onNewInvoice,
     )
 }

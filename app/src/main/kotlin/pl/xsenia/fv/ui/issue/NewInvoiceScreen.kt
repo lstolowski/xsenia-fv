@@ -47,6 +47,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +63,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
 import pl.xsenia.fv.invoice.config.InvoicingConfig
 import pl.xsenia.fv.invoice.issue.DraftIssue
@@ -90,6 +92,9 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sendState by viewModel.sendState.collectAsStateWithLifecycle()
     val sending = sendState is SendState.Sending
+    val closed by viewModel.closed.collectAsStateWithLifecycle()
+    LaunchedEffect(closed) { if (closed) onClose() }
+    var confirmDelete by remember { mutableStateOf(false) }
 
     BackHandler(enabled = step == IssueStep.PREVIEW) { viewModel.backToForm() }
     BackHandler(enabled = step == IssueStep.STATUS && sending) { /* stay until KSeF answers */ }
@@ -101,7 +106,7 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
                     Text(
                         stringResource(
                             when (step) {
-                                IssueStep.FORM -> R.string.new_invoice_title
+                                IssueStep.FORM -> if (state?.unsentId != null) R.string.unsent_edit_title else R.string.new_invoice_title
                                 IssueStep.PREVIEW -> R.string.new_invoice_preview_title
                                 IssueStep.STATUS -> R.string.new_invoice_status_title
                             },
@@ -112,6 +117,13 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
                     if (!sending) {
                         IconButton(onClick = { if (step == IssueStep.PREVIEW) viewModel.backToForm() else onClose() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        }
+                    }
+                },
+                actions = {
+                    if (step == IssueStep.FORM && state?.unsentId != null) {
+                        IconButton(onClick = { confirmDelete = true }) {
+                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.unsent_delete))
                         }
                     }
                 },
@@ -134,6 +146,20 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
             }
         }
     }
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.unsent_delete_confirm_title)) },
+            text = { Text(stringResource(R.string.unsent_delete_confirm_text, state?.form?.invoiceNumber.orEmpty())) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    viewModel.deleteUnsent()
+                }) { Text(stringResource(R.string.unsent_delete)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
+        )
+    }
 }
 
 @Composable
@@ -142,6 +168,13 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
     val check = state.check
     val formIssues = if (state.showErrors) check?.formIssues.orEmpty() else emptyList()
     val draftIssues = check?.draftIssues.orEmpty().filter { state.showErrors || !it.blocking }
+
+    state.rejection?.let { rejection ->
+        SectionCard(stringResource(R.string.unsent_rejection, rejection.statusCode, rejection.description)) {
+            rejection.details.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+            rejection.originalKsefNumber?.let { Text(stringResource(R.string.unsent_rejection_duplicate, it)) }
+        }
+    }
 
     // Counterparty and bank account
     val counterparty = config.counterparties.firstOrNull { it.nip == form.counterpartyNip }
@@ -302,6 +335,13 @@ private fun PreviewContent(viewModel: NewInvoiceViewModel) {
         color = if (testEnvironment) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
         fontWeight = FontWeight.SemiBold,
     )
+    val today = LocalDate.now(AppContainer.POLAND)
+    if (invoice.issueDate.isBefore(today)) {
+        Text(stringResource(R.string.preview_issue_date_past, Formats.date(invoice.issueDate)), color = MaterialTheme.colorScheme.tertiary)
+        OutlinedButton(onClick = viewModel::useTodayAsIssueDate, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.preview_use_today))
+        }
+    }
     InvoiceDetailsContent(invoice, ksefNumber = null)
     Button(
         onClick = {
@@ -309,7 +349,8 @@ private fun PreviewContent(viewModel: NewInvoiceViewModel) {
         },
         modifier = Modifier.fillMaxWidth(),
     ) { Text(stringResource(R.string.preview_send)) }
-    OutlinedButton(onClick = viewModel::backToForm, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.preview_back)) }
+    OutlinedButton(onClick = viewModel::saveWithoutSending, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.preview_save_unsent)) }
+    TextButton(onClick = viewModel::backToForm, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.preview_back)) }
 }
 
 @Composable
@@ -328,11 +369,14 @@ private fun StatusContent(state: SendState, viewModel: NewInvoiceViewModel, onCl
             Button(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_done)) }
         }
         is SendState.Rejected -> {
-            Text(stringResource(R.string.status_rejected, state.invoiceNumber, state.statusCode, state.description), color = MaterialTheme.colorScheme.error)
-            state.details.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
-            state.originalKsefNumber?.let { Text(stringResource(R.string.status_duplicate, it)) }
+            val rejection = state.rejection
+            Text(stringResource(R.string.status_rejected, state.invoiceNumber, rejection.statusCode, rejection.description), color = MaterialTheme.colorScheme.error)
+            rejection.details.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+            rejection.originalKsefNumber?.let { Text(stringResource(R.string.status_duplicate, it)) }
+            Text(stringResource(R.string.status_kept_unsent))
             StatusMark(success = false)
             Button(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_fix)) }
+            OutlinedButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_close)) }
         }
         is SendState.Failed -> {
             Text(
@@ -340,19 +384,17 @@ private fun StatusContent(state: SendState, viewModel: NewInvoiceViewModel, onCl
                 color = MaterialTheme.colorScheme.error,
             )
             Text(ksefFailureText(state.failure))
+            if (!state.pendingInKsef) Text(stringResource(R.string.status_kept_unsent))
             StatusMark(success = false)
             Button(onClick = viewModel::retry, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_retry)) }
             if (!state.pendingInKsef) {
-                OutlinedButton(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.preview_back)) }
+                OutlinedButton(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_fix)) }
+                TextButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_close)) }
             }
         }
     }
 }
 
-/**
- * Large result mark of sending: a green circle with a check mark when KSeF accepted the invoice,
- * a red circle with a cross when it was rejected or could not be sent.
- */
 @Composable
 private fun StatusMark(success: Boolean) {
     Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {

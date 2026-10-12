@@ -1,5 +1,10 @@
 package pl.xsenia.fv.invoices
 
+import pl.xsenia.fv.invoice.config.InvoicingConfig
+import pl.xsenia.fv.invoice.issue.DraftLine
+import pl.xsenia.fv.invoice.issue.InvoiceCalculator
+import pl.xsenia.fv.issue.DecimalInput
+import pl.xsenia.fv.issue.UnsentInvoice
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.mirror.MirrorEntry
 import java.math.BigDecimal
@@ -18,7 +23,19 @@ data class InvoiceRow(
     val currency: String,
     /** KSeF invoice type: `Vat`, `Kor`, `Zal`, … */
     val invoiceType: String,
-)
+    /** Set for a sales invoice saved without sending to KSeF (US-007); [ksefNumber] is then empty. */
+    val unsentId: String? = null,
+    /** Unsent invoice that KSeF rejected the last time it was sent. */
+    val rejected: Boolean = false,
+) {
+    val isUnsent: Boolean get() = unsentId != null
+
+    /** Stable list key: KSeF number, or the local id of an unsent invoice. */
+    val key: String get() = unsentId?.let { "unsent:$it" } ?: ksefNumber
+}
+
+/** Unsent invoices of the month — shown below the totals, not included in them (decision Q2). */
+data class UnsentSummary(val count: Int, val gross: BigDecimal)
 
 /** Monthly totals in one currency. */
 data class CurrencyTotals(val currency: String, val count: Int, val net: BigDecimal, val vat: BigDecimal, val gross: BigDecimal)
@@ -48,6 +65,37 @@ object InvoiceListLogic {
         )
     }
 
+    /** Row of an unsent invoice: buyer from the config files, amounts calculated from the form lines. */
+    fun toRow(unsent: UnsentInvoice, config: InvoicingConfig?): InvoiceRow {
+        val form = unsent.form
+        val lines = form.lines.mapNotNull { line ->
+            val quantity = DecimalInput.parse(line.quantity) ?: return@mapNotNull null
+            val price = DecimalInput.parse(line.unitNetPrice) ?: return@mapNotNull null
+            DraftLine(line.name, quantity, line.unit, price)
+        }
+        val totals = InvoiceCalculator.totals(lines)
+        return InvoiceRow(
+            ksefNumber = "",
+            invoiceNumber = form.invoiceNumber,
+            deliveryDate = form.deliveryDate,
+            issueDate = form.issueDate,
+            counterpartyName = config?.counterparties?.firstOrNull { it.nip == form.counterpartyNip }?.name,
+            counterpartyNip = form.counterpartyNip,
+            netAmount = totals.net,
+            grossAmount = totals.gross,
+            currency = InvoiceCalculator.CURRENCY,
+            invoiceType = "Vat",
+            unsentId = unsent.id,
+            rejected = unsent.rejection != null,
+        )
+    }
+
+    fun unsentSummary(rows: List<InvoiceRow>): UnsentSummary? {
+        val unsent = rows.filter { it.isUnsent }
+        if (unsent.isEmpty()) return null
+        return UnsentSummary(unsent.size, unsent.fold(BigDecimal.ZERO) { sum, it -> sum + it.grossAmount })
+    }
+
     /** Invoices delivered in [month] matching [query], newest first. */
     fun filter(rows: List<InvoiceRow>, month: YearMonth, query: String): List<InvoiceRow> =
         rows.filter { YearMonth.from(it.deliveryDate) == month && matches(it, query) }
@@ -65,9 +113,9 @@ object InvoiceListLogic {
             (nipQuery.isNotEmpty() && row.counterpartyNip?.contains(nipQuery, ignoreCase = true) == true)
     }
 
-    /** Totals per currency (PLN first); VAT = gross − net in the invoice currency. */
+    /** Totals per currency (PLN first) of invoices in KSeF — unsent invoices excluded; VAT = gross − net. */
     fun totals(rows: List<InvoiceRow>): List<CurrencyTotals> =
-        rows.groupBy { it.currency }
+        rows.filterNot { it.isUnsent }.groupBy { it.currency }
             .map { (currency, invoices) ->
                 val net = invoices.fold(BigDecimal.ZERO) { sum, it -> sum + it.netAmount }
                 val gross = invoices.fold(BigDecimal.ZERO) { sum, it -> sum + it.grossAmount }

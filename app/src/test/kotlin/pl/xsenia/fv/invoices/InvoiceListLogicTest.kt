@@ -111,4 +111,30 @@ class InvoiceListLogicTest {
         assertEquals("Jan Testowy", InvoiceListLogic.toRow(InvoiceCategory.PURCHASE, entry).counterpartyName)
         assertEquals(LocalDate.parse("2026-09-30"), InvoiceListLogic.toRow(InvoiceCategory.SALES, entry).deliveryDate)
     }
+
+    @Test
+    fun `unsent invoices are listed by delivery month but excluded from totals`() {
+        val unsent = pl.xsenia.fv.issue.UnsentInvoice.create(
+            pl.xsenia.fv.issue.InvoiceForm(
+                counterpartyNip = "6691034274",
+                issueDate = LocalDate.parse("2026-10-01"),
+                deliveryDate = LocalDate.parse("2026-09-30"),
+                invoiceNumber = "04/09/2026",
+                lines = listOf(pl.xsenia.fv.issue.LineForm("Usługa testowa", "2", "szt.", "1 000,00"), pl.xsenia.fv.issue.LineForm("Błędna", "x", "szt.", "1")),
+            ),
+            Instant.EPOCH,
+        )
+        val unsentRow = InvoiceListLogic.toRow(unsent, config = null)
+        val rows = listOf(row("01/09/2026", "2026-09-15"), unsentRow)
+
+        val september = InvoiceListLogic.filter(rows, YearMonth.of(2026, 9), "")
+
+        assertEquals(listOf("04/09/2026", "01/09/2026"), september.map { it.invoiceNumber })
+        assertTrue(unsentRow.isUnsent)
+        assertEquals(BigDecimal("2000.00"), unsentRow.netAmount)
+        assertEquals(BigDecimal("2460.00"), unsentRow.grossAmount)
+        assertEquals(listOf(CurrencyTotals("PLN", 1, BigDecimal("100.00"), BigDecimal("23.00"), BigDecimal("123.00"))), InvoiceListLogic.totals(september))
+        assertEquals(UnsentSummary(1, BigDecimal("2460.00")), InvoiceListLogic.unsentSummary(september))
+        assertEquals(null, InvoiceListLogic.unsentSummary(listOf(row("01/09/2026", "2026-09-15"))))
+    }
 }
