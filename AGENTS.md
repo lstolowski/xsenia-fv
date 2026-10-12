@@ -10,6 +10,20 @@ wystawianie nowej faktury sprzedażowej VAT (bez korekt), filtrowanie list. Bez 
 
 Stan: implementacja — postęp w [docs/zadania/](docs/zadania/README.md). Szczegóły w [docs/](docs/README.md).
 
+## ⚠️ BARDZO WAŻNE: tylko środowisko testowe i tylko dane zmyślone
+
+Środowisko KSeF TEST jest **publiczne** — dane w nim są współdzielone między integratorami i mogą wyciec.
+
+- Podczas developmentu używaj **wyłącznie środowiska KSeF TEST** (testy integracyjne, wersja aplikacji `ksefTest`). Nigdy nie wywołuj DEMO ani PROD.
+- Wszystkie dane wprowadzane do KSeF TEST, a także dane w testach, przykładach, fixture'ach i dokumentacji muszą być **zmyślone**:
+  - NIP-y wyłącznie testowe (z poprawną sumą kontrolną), np.: `6691034274`, `1996845518`, `9945082500`, `9579102904`, `6973432790`, `4824062973`, `3563998415`, `8771617926`; NIP kontekstu testowego użytkownika jest w `secrets/ksef-test.properties`,
+  - nazwy i osoby: „Test”, „Testowy”, „Testowa”, „Jan Testowy”, „Testowa Sp. z o.o.” albo Lorem ipsum,
+  - adresy: np. „ul. Testowa 1”, „00-001 Testowo”; e-maile w domenie `example.com`; telefony `+48 000 000 000`,
+  - numery rachunków: zmyślone z poprawną sumą kontrolną, np. `35111111110000000000000001` — **nigdy prawdziwy rachunek użytkownika**,
+  - nazwy towarów/usług: „Usługa testowa”, Lorem ipsum.
+- Nie kopiuj do repozytorium ani do KSeF TEST żadnych prawdziwych danych użytkownika lub jego kontrahentów (także z faktur PROD).
+- Jeśli zauważysz w repozytorium dane wyglądające na prawdziwe — zgłoś to użytkownikowi.
+
 ## Struktura
 
 - `docs/analiza/` — analizy (KSeF API, warianty architektury, pytania warsztatowe)

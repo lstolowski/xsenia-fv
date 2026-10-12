@@ -69,10 +69,10 @@ Status: **rundy 1 i 2 zakończone (2026-10-11); otwarte: R13**
 | R11 | Użytkownik ma token KSeF dla środowiska TEST (NIP testowy) i certyfikat testowy — zapisane lokalnie w `secrets/ksef-test.properties` (poza gitem). Uwierzytelnienie tokenem zweryfikowane na TEST 2026-10-11. |
 | R12 | Zaakceptowane propozycje domyślne (C12, D1, D3–D7, E2, F1). |
 
-Format rachunków podany przez użytkownika:
+Format rachunków podany przez użytkownika (dane w przykładzie zastąpione zmyślonymi):
 
 ```json
-{"banks": [{"name": "Nazwa konta Alior", "bank": "Alior", "account": "85216097583216850246002152", "currency": "PLN"}]}
+{"banks": [{"name": "Konto testowe", "bank": "Bank Testowy", "account": "35111111110000000000000001", "currency": "PLN"}]}
 ```
 
 ## Pytania otwarte

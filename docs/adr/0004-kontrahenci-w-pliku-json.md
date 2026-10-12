@@ -26,25 +26,25 @@
 ```json
 {
   "company": {
-    "name": "Moja Firma Jan Kowalski",
-    "nip": "1234567890",
+    "name": "Jan Testowy Usługi Testowe",
+    "nip": "1996845518",
     "address": {
-      "line1": "ul. Przykładowa 1",
-      "line2": "00-001 Warszawa",
+      "line1": "ul. Testowa 1",
+      "line2": "00-001 Testowo",
       "country": "Polska"
     },
-    "email": "biuro@mojafirma.pl",
-    "phone": "+48 600 000 000"
+    "email": "jan.testowy@example.com",
+    "phone": "+48 000 000 000"
   }
 }
 ```
 
-### `banks.json` — rachunki bankowe (format podany przez użytkownika)
+### `banks.json` — rachunki bankowe (format podany przez użytkownika; dane w przykładzie zmyślone)
 
 ```json
 {
   "banks": [
-    { "name": "Nazwa konta Alior", "bank": "Alior", "account": "85216097583216850246002152", "currency": "PLN" }
+    { "name": "Konto testowe", "bank": "Bank Testowy", "account": "35111111110000000000000001", "currency": "PLN" }
   ]
 }
 ```
@@ -55,14 +55,14 @@
 {
   "counterparties": [
     {
-      "name": "Przykładowa Firma Sp. z o.o.",
-      "nip": "1234567890",
+      "name": "Testowa Sp. z o.o.",
+      "nip": "6691034274",
       "address": {
-        "line1": "ul. Przykładowa 1",
-        "line2": "00-001 Warszawa",
+        "line1": "ul. Testowa 1",
+        "line2": "00-001 Testowo",
         "country": "Polska"
       },
-      "email": "faktury@przyklad.pl"
+      "email": "faktury@example.com"
     }
   ]
 }
