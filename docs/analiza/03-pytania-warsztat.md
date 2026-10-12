@@ -72,7 +72,7 @@ Status: **rundy 1 i 2 zakończone (2026-10-11); otwarte: R13**
 Format rachunków podany przez użytkownika (dane w przykładzie zastąpione zmyślonymi):
 
 ```json
-{"banks": [{"name": "Konto testowe", "bank": "Bank Testowy", "account": "35111111110000000000000001", "currency": "PLN"}]}
+{"banks": [{"name": "Konto testowe Toyota", "bank": "Toyota Bank", "account": "85216097583216850246002152", "currency": "PLN"}]}
 ```
 
 ## Pytania otwarte

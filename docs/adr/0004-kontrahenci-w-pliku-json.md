@@ -44,7 +44,8 @@
 ```json
 {
   "banks": [
-    { "name": "Konto testowe", "bank": "Bank Testowy", "account": "35111111110000000000000001", "currency": "PLN" }
+    { "name": "Konto testowe Toyota", "bank": "Toyota Bank", "account": "85216097583216850246002152", "currency": "PLN" },
+    { "name": "Konto testowe Santander", "bank": "Santander Bank Polska", "account": "55109004081797992973253811", "currency": "PLN" }
   ]
 }
 ```
