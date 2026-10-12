@@ -17,6 +17,8 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Konfiguracja wystawiania | `InvoicingConfig` | Firma + rachunki + kontrahenci wczytane z plików JSON, z listą problemów (`ConfigIssue`) | ADR 0004 |
 | Faktura (treść) | `Invoice` | Faktura odczytana z XML FA(2)/FA(3) przez `InvoiceXmlParser` | |
 | Pozycja faktury | `InvoiceLine` | `FaWiersz`: nazwa `P_7`, jednostka `P_8A`, ilość `P_8B`, cena jedn. netto `P_9A`, wartość netto `P_11`, stawka `P_12` | Wartość brutto pozycji wyliczana do wyświetlenia |
+| Szkic faktury (do wystawienia) | `SalesInvoiceDraft` / `DraftLine` | Dane nowej faktury sprzedażowej przed wygenerowaniem XML | |
+| Generator XML | `Fa3XmlWriter` | Tworzy XML FA(3) ze szkicu | |
 | Termin płatności | `paymentDueDate` | `Platnosc/TerminPlatnosci/Termin` — zawsze 21 dni od daty wystawienia | |
 | Synchronizacja | `InvoiceSynchronizer` / `InvoiceSyncService` | Pobranie nowych faktur z KSeF do lokalnego lustra | ADR 0003 |
 | Lustro faktur (lokalna kopia) | `InvoiceMirror` / `MirrorEntry` | Faktury z KSeF zapisane w plikach na telefonie | ADR 0003 |

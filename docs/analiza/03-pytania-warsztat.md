@@ -68,6 +68,7 @@ Status: **rundy 1 i 2 zakończone (2026-10-11); otwarte: R13**
 | R10 | Bez mechanizmu podzielonej płatności i bez uwag/stopki. |
 | R11 | Użytkownik ma token KSeF dla środowiska TEST (NIP testowy) i certyfikat testowy — zapisane lokalnie w `secrets/ksef-test.properties` (poza gitem). Uwierzytelnienie tokenem zweryfikowane na TEST 2026-10-11. |
 | R12 | Zaakceptowane propozycje domyślne (C12, D1, D3–D7, E2, F1). |
+| Zaokrąglenia (2026-10-12) | VAT liczony od sumy netto pozycji (`P_14_1` = 23% × `P_13_1`); brutto pozycji tylko informacyjnie — przy wielu pozycjach suma brutto pozycji może różnić się o 1 gr od kwoty do zapłaty. |
 | D5 (zmiana 2026-10-12) | Bez udostępniania XML / UPO z widoku faktury — przynajmniej na razie. |
 
 Format rachunków podany przez użytkownika (dane w przykładzie zastąpione zmyślonymi):

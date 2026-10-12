@@ -1,0 +1,174 @@
+package pl.xsenia.fv.invoice.issue
+
+import pl.xsenia.fv.invoice.config.Address
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
+/**
+ * Writes a sales invoice as FA(3) XML (`schemat_FA(3)_v1-0E.xsd`).
+ *
+ * Fixed content (decisions C1–C14, R4–R10): VAT invoice in PLN, Polish buyer with NIP, rate 23%,
+ * bank transfer due in 21 days, no split payment, all annotations "no".
+ * The XML is built as text (not via javax.xml.transform) so the bytes — and thus the hash sent to KSeF —
+ * are identical on the JVM and on Android.
+ */
+object Fa3XmlWriter {
+
+    const val NAMESPACE = "http://crd.gov.pl/wzor/2025/06/25/13775/"
+    const val SYSTEM_CODE = "FA (3)"
+    const val SCHEMA_VERSION = "1-0E"
+    const val FORM_CODE = "FA"
+    private const val SYSTEM_INFO = "xsenia-fv"
+    private const val COUNTRY_CODE = "PL"
+    private const val PAYMENT_TRANSFER = "6"
+
+    // FA(3) annotation values: 1 — yes, 2 — no (for the "N" elements: 1 — the case does not apply).
+    private const val NO = "2"
+    private const val NOT_APPLICABLE = "1"
+
+    fun write(draft: SalesInvoiceDraft, createdAt: Instant): ByteArray {
+        val totals = InvoiceCalculator.totals(draft.lines)
+        val xml = XmlBuilder()
+        xml.element("Faktura", "xmlns" to NAMESPACE) {
+            element("Naglowek") {
+                element("KodFormularza", "kodSystemowy" to SYSTEM_CODE, "wersjaSchemy" to SCHEMA_VERSION) { text(FORM_CODE) }
+                value("WariantFormularza", "3")
+                value("DataWytworzeniaFa", createdAt.truncatedTo(ChronoUnit.SECONDS).toString())
+                value("SystemInfo", SYSTEM_INFO)
+            }
+            element("Podmiot1") {
+                element("DaneIdentyfikacyjne") {
+                    value("NIP", draft.seller.nip)
+                    value("Nazwa", draft.seller.name)
+                }
+                address(draft.seller.address)
+                if (draft.seller.email != null || draft.seller.phone != null) {
+                    element("DaneKontaktowe") {
+                        draft.seller.email?.let { value("Email", it) }
+                        draft.seller.phone?.let { value("Telefon", it) }
+                    }
+                }
+            }
+            element("Podmiot2") {
+                element("DaneIdentyfikacyjne") {
+                    value("NIP", draft.buyer.nip)
+                    value("Nazwa", draft.buyer.name)
+                }
+                address(draft.buyer.address)
+                draft.buyer.email?.let { email -> element("DaneKontaktowe") { value("Email", email) } }
+                // Not a local government unit, not a VAT group member.
+                value("JST", NO)
+                value("GV", NO)
+            }
+            element("Fa") {
+                value("KodWaluty", InvoiceCalculator.CURRENCY)
+                value("P_1", draft.issueDate.toString())
+                value("P_2", draft.invoiceNumber)
+                // P_6 only when the delivery date differs from the issue date.
+                if (draft.deliveryDate != draft.issueDate) value("P_6", draft.deliveryDate.toString())
+                value("P_13_1", amount(totals.net))
+                value("P_14_1", amount(totals.vat))
+                value("P_15", amount(totals.gross))
+                element("Adnotacje") {
+                    value("P_16", NO)
+                    value("P_17", NO)
+                    value("P_18", NO)
+                    value("P_18A", NO)
+                    element("Zwolnienie") { value("P_19N", NOT_APPLICABLE) }
+                    element("NoweSrodkiTransportu") { value("P_22N", NOT_APPLICABLE) }
+                    value("P_23", NO)
+                    element("PMarzy") { value("P_PMarzyN", NOT_APPLICABLE) }
+                }
+                value("RodzajFaktury", "VAT")
+                draft.lines.forEachIndexed { index, line ->
+                    element("FaWiersz") {
+                        value("NrWierszaFa", (index + 1).toString())
+                        value("P_7", line.name)
+                        value("P_8A", line.unit)
+                        value("P_8B", decimal(line.quantity))
+                        value("P_9A", decimal(line.unitNetPrice))
+                        value("P_11", amount(InvoiceCalculator.lineNet(line)))
+                        value("P_12", InvoiceCalculator.VAT_RATE_CODE)
+                    }
+                }
+                element("Platnosc") {
+                    element("TerminPlatnosci") { value("Termin", InvoiceCalculator.paymentDueDate(draft.issueDate).toString()) }
+                    value("FormaPlatnosci", PAYMENT_TRANSFER)
+                    element("RachunekBankowy") {
+                        value("NrRB", draft.bankAccount.number)
+                        draft.bankAccount.bank?.let { value("NazwaBanku", it) }
+                    }
+                }
+            }
+        }
+        return xml.toBytes()
+    }
+
+    private fun XmlBuilder.address(address: Address) = element("Adres") {
+        value("KodKraju", COUNTRY_CODE)
+        value("AdresL1", address.line1)
+        address.line2?.let { value("AdresL2", it) }
+    }
+
+    /** Money: exactly two decimals (`TKwotowy`). */
+    private fun amount(value: BigDecimal): String = value.setScale(2, RoundingMode.HALF_UP).toPlainString()
+
+    /** Quantity / unit price without trailing zeros (`TIlosci`, `TKwotowy2`). */
+    private fun decimal(value: BigDecimal): String = value.stripTrailingZeros().toPlainString()
+}
+
+/** Minimal XML writer producing UTF-8 with escaped text; values are trimmed and whitespace collapsed (xsd:token). */
+private class XmlBuilder {
+    private val out = StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    private var depth = 0
+
+    fun element(name: String, vararg attributes: Pair<String, String>, content: XmlBuilder.() -> Unit) {
+        indent()
+        out.append('<').append(name)
+        attributes.forEach { (key, value) -> out.append(' ').append(key).append("=\"").append(escape(value)).append('"') }
+        out.append('>')
+        val start = out.length
+        depth++
+        content()
+        depth--
+        if (out.length > start && out[out.length - 1] == '\n') indent()
+        out.append("</").append(name).append(">\n")
+    }
+
+    fun value(name: String, value: String) {
+        indent()
+        out.append('<').append(name).append('>').append(escape(normalize(value))).append("</").append(name).append(">\n")
+    }
+
+    fun text(value: String) {
+        out.append(escape(normalize(value)))
+    }
+
+    fun toBytes(): ByteArray = out.toString().toByteArray(Charsets.UTF_8)
+
+    private fun indent() {
+        if (out.isNotEmpty() && out[out.length - 1] != '\n') out.append('\n')
+        repeat(depth) { out.append("  ") }
+    }
+
+    private fun normalize(value: String) = value.trim().replace(WHITESPACE, " ")
+
+    private fun escape(value: String) = buildString {
+        value.forEach {
+            when (it) {
+                '&' -> append("&amp;")
+                '<' -> append("&lt;")
+                '>' -> append("&gt;")
+                '"' -> append("&quot;")
+                '\'' -> append("&apos;")
+                else -> append(it)
+            }
+        }
+    }
+
+    private companion object {
+        val WHITESPACE = Regex("\\s+")
+    }
+}
