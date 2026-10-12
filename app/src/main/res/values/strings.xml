@@ -105,7 +105,8 @@
     <string name="sync_error_missing_company">Nie można pobrać faktur — brak poprawnego pliku company.json (NIP firmy).</string>
     <string name="sync_error_rate_limited">Przekroczono limit zapytań KSeF. Spróbuj ponownie za %1$s s.</string>
     <string name="sync_error_auth">KSeF odrzucił uwierzytelnienie: %1$d %2$s</string>
-    <string name="sync_error_network">Brak połączenia z KSeF — pokazuję faktury zapisane na telefonie. (%1$s)</string>
+    <string name="sync_error_network">Brak połączenia z KSeF. (%1$s)</string>
+    <string name="sync_offline_hint">Pokazuję faktury zapisane na telefonie.</string>
     <string name="sync_error_ksef">Błąd KSeF: %1$s</string>
 
     <!-- Navigation -->

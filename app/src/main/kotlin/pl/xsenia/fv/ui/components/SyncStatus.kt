@@ -32,6 +32,7 @@ fun SyncStatus(state: SyncUiState, modifier: Modifier = Modifier) {
             else -> Text(stringResource(R.string.sync_never), style = MaterialTheme.typography.bodySmall)
         }
         state.error?.let { Text(ksefFailureText(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+        if (state.error is KsefFailure.Network) Text(stringResource(R.string.sync_offline_hint), style = MaterialTheme.typography.bodySmall)
     }
 }
 
