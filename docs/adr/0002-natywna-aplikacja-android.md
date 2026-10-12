@@ -31,7 +31,7 @@ Szczegóły: [analiza/02-warianty-architektury.md](../analiza/02-warianty-archit
 | SDK | `targetSdk` 36 (Android 16); `minSdk` 34 (Android 14) — jedno urządzenie docelowe, brak potrzeby wstecznej zgodności; `compileSdk` 37 — wymagane przez aktualne biblioteki AndroidX (nie zmienia zachowania aplikacji na Androidzie 16) |
 | Biometria | `BiometricPrompt` przy **otwarciu aplikacji** i przy **potwierdzeniu wysyłki** nowej faktury do KSeF (B4) |
 | Token KSeF | wprowadzany w aplikacji, szyfrowany kluczem z Android Keystore, wyłączony z Auto Backup |
-| Wersje aplikacji | dwa *product flavors*: `ksefTest` (KSeF TEST, `applicationId` `pl.xsenia.fv.test`, nazwa „xsenia TEST”, pomarańczowa ikona) i `ksefProd` (KSeF PROD, `pl.xsenia.fv`, zielona ikona) — można mieć obie zainstalowane jednocześnie (B7). Nazwy nie mogą zaczynać się od `test` (zastrzeżone w AGP dla źródeł testów) |
+| Wersje aplikacji | dwa *product flavors*: `ksefTest` (KSeF TEST, `applicationId` `pl.xsenia.fv.test`, nazwa „xsenia TEST”, ikona z pomarańczowym paskiem „TEST”) i `ksefProd` (KSeF PROD, `pl.xsenia.fv`, ikona bez paska) — można mieć obie zainstalowane jednocześnie (B7). Nazwy nie mogą zaczynać się od `test` (zastrzeżone w AGP dla źródeł testów) |
 | Dystrybucja | APK instalowany ręcznie (B8), podpisywany stałym kluczem trzymanym poza repozytorium |
 | Testy | emulator Android Studio (B6); moduły `ksef`/`invoice` testowane na JVM |
 | Dane lokalne | pliki w pamięci aplikacji + DataStore, bez Room/SQLite (B5) |
