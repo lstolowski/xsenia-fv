@@ -1,5 +1,6 @@
 package pl.xsenia.fv.ksef.auth
 
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import pl.xsenia.fv.ksef.KsefProtocolException
@@ -17,6 +18,11 @@ class KsefPublicKey(val id: String?, val key: PublicKey)
 
 fun interface KsefPublicKeyProvider {
     suspend fun publicKey(usage: PublicKeyUsage): KsefPublicKey
+
+    companion object {
+        /** Provider reading Ministry of Finance certificates from KSeF (fetched once, then cached). */
+        fun fromApi(client: HttpClient): KsefPublicKeyProvider = ApiPublicKeyProvider(KsefAuthApi(client))
+    }
 }
 
 /** Fetches the KSeF public key certificates once and picks the newest one currently valid for a given usage. */

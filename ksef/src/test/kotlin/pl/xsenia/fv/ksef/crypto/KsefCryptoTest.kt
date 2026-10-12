@@ -45,4 +45,20 @@ class KsefCryptoTest {
         assertTrue(key is RSAPublicKey)
         assertEquals(2048, (key as RSAPublicKey).modulus.bitLength())
     }
+
+    @Test
+    fun `AES-256-CBC round trip with PKCS7 padding`() {
+        val key = KsefCrypto.generateSymmetricKey()
+        val data = "Faktura testowa".toByteArray() // 15 bytes -> one padded 16-byte block
+
+        val encrypted = KsefCrypto.encryptAes256Cbc(data, key)
+
+        assertEquals(16, encrypted.size)
+        assertEquals("Faktura testowa", String(KsefCrypto.decryptAes256Cbc(encrypted, key)))
+    }
+
+    @Test
+    fun `SHA-256 in Base64`() {
+        assertEquals("47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=", KsefCrypto.sha256Base64(ByteArray(0)))
+    }
 }

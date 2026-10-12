@@ -1,13 +1,25 @@
 package pl.xsenia.fv.ksef.crypto
 
+import java.security.MessageDigest
 import java.security.PublicKey
+import java.security.SecureRandom
 import java.security.cert.CertificateFactory
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.MGF1ParameterSpec
 import java.util.Base64
 import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.OAEPParameterSpec
 import javax.crypto.spec.PSource
+import javax.crypto.spec.SecretKeySpec
+
+/** AES-256 key and 128-bit IV used to encrypt invoices and export packages (AES-256-CBC, PKCS#7). */
+class SymmetricKey(val key: ByteArray, val iv: ByteArray) {
+    init {
+        require(key.size == 32) { "AES-256 key must have 32 bytes" }
+        require(iv.size == 16) { "IV must have 16 bytes" }
+    }
+}
 
 /** Cryptographic operations required by the KSeF API. */
 object KsefCrypto {
@@ -30,6 +42,25 @@ object KsefCrypto {
     /** Encrypts `{ksefToken}|{timestampMs}` for `POST /auth/ksef-token`. */
     fun encryptKsefToken(ksefToken: String, challengeTimestampMs: Long, publicKey: PublicKey): ByteArray =
         encryptRsaOaepSha256("$ksefToken|$challengeTimestampMs".toByteArray(Charsets.UTF_8), publicKey)
+
+    private val random = SecureRandom()
+
+    fun generateSymmetricKey(): SymmetricKey =
+        SymmetricKey(ByteArray(32).also(random::nextBytes), ByteArray(16).also(random::nextBytes))
+
+    // PKCS5Padding in JCA is PKCS#7 for 16-byte blocks.
+    fun encryptAes256Cbc(data: ByteArray, key: SymmetricKey): ByteArray = aes(Cipher.ENCRYPT_MODE, data, key)
+
+    fun decryptAes256Cbc(data: ByteArray, key: SymmetricKey): ByteArray = aes(Cipher.DECRYPT_MODE, data, key)
+
+    fun sha256Base64(data: ByteArray): String =
+        Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256").digest(data))
+
+    private fun aes(mode: Int, data: ByteArray, key: SymmetricKey): ByteArray {
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(mode, SecretKeySpec(key.key, "AES"), IvParameterSpec(key.iv))
+        return cipher.doFinal(data)
+    }
 
     /** Reads the public key from a Base64-encoded DER X.509 certificate, as returned by KSeF. */
     fun publicKeyFromCertificate(certificateBase64: String): PublicKey {

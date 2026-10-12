@@ -9,7 +9,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-003](ZAD-003-ksef-uwierzytelnianie.md) | Klient KSeF: uwierzytelnianie tokenem i odświeżanie | US-002 | Zrobione |
 | [ZAD-004](ZAD-004-pliki-json-konfiguracji.md) | Pliki JSON: firma, rachunki, kontrahenci — model i walidacja | US-001, US-006 | Zrobione |
 | [ZAD-005](ZAD-005-bezpieczenstwo-i-ustawienia.md) | Aplikacja: token w Keystore, biometria, wybór folderu, ustawienia | US-001 | Zrobione |
-| [ZAD-006](ZAD-006-ksef-pobieranie-faktur.md) | Klient KSeF: metadane, pobieranie XML, eksport paczki | US-002 | Do zrobienia |
+| [ZAD-006](ZAD-006-ksef-pobieranie-faktur.md) | Klient KSeF: metadane, pobieranie XML, eksport paczki | US-002 | Zrobione |
 | [ZAD-007](ZAD-007-parser-xml-faktury.md) | Parser XML FA(2)/FA(3) → model faktury, data dostawy | US-002, US-005 | Do zrobienia |
 | [ZAD-008](ZAD-008-lustro-i-synchronizacja.md) | Lokalne lustro faktur i synchronizacja | US-002 | Do zrobienia |
 | [ZAD-009](ZAD-009-ui-listy-faktur.md) | UI: listy sprzedażowa i zakupowa z filtrem i podsumowaniem | US-003, US-004 | Do zrobienia |

@@ -30,5 +30,7 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Sesja interaktywna | `onlineSession` | Sesja KSeF do wysyłki pojedynczych faktur | |
 | UPO | `upo` | Urzędowe Poświadczenie Odbioru | |
 | FA(3) | `fa3` | Obowiązujący schemat XML faktury ustrukturyzowanej | |
-| Metadane faktury | `invoiceMetadata` | Dane faktury z listy KSeF (bez pełnej treści XML) | |
+| Metadane faktury | `InvoiceMetadata` | Dane faktury z listy KSeF (bez pełnej treści XML) | |
+| Eksport paczki | `exportInvoices` / `InvoiceExport` | Asynchroniczne pobranie wielu faktur (XML + `_metadata.json`) w zaszyfrowanej paczce ZIP | |
+| Rola podmiotu | `InvoiceSubjectType` (`SELLER` = Podmiot1, `BUYER` = Podmiot2) | Sprzedażowe = `SELLER`, zakupowe = `BUYER` | |
 | Szkic faktury | `invoiceDraft` | Niewysłana faktura zapisana lokalnie | |

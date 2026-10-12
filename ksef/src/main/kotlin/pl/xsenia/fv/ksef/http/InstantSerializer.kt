@@ -9,7 +9,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 
 /** KSeF date-times are ISO-8601 with an explicit offset (e.g. `2026-10-11T15:05:54.7178209+00:00`). */
-internal object InstantSerializer : KSerializer<Instant> {
+object InstantSerializer : KSerializer<Instant> {
     override val descriptor = PrimitiveSerialDescriptor("KsefInstant", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): Instant = OffsetDateTime.parse(decoder.decodeString()).toInstant()

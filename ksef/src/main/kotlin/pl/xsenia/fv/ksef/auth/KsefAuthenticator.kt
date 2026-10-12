@@ -23,7 +23,8 @@ class KsefAuthenticator internal constructor(
     private val timeout: Duration = 2.minutes,
 ) {
 
-    constructor(client: HttpClient) : this(KsefAuthApi(client), ApiPublicKeyProvider(KsefAuthApi(client)))
+    constructor(client: HttpClient, publicKeys: KsefPublicKeyProvider = KsefPublicKeyProvider.fromApi(client)) :
+        this(KsefAuthApi(client), publicKeys)
 
     suspend fun authenticate(nip: String, ksefToken: String): KsefAuthTokens {
         require(NIP_PATTERN.matches(nip)) { "NIP must have 10 digits" }
