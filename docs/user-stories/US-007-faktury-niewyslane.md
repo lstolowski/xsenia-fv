@@ -1,7 +1,7 @@
 # US-007. Faktury sprzedażowe zapisane bez wysyłki do KSeF
 
 - Priorytet: MVP (przed ZAD-015)
-- Status: Szkic — do potwierdzenia pytania P1–P7
+- Status: Gotowa (decyzje z warsztatu 2026-10-12)
 - Zgłoszone: 2026-10-12
 
 ## Historyjka
@@ -20,18 +20,24 @@ Wystawienie faktury zawsze kończy się wysyłką do KSeF. Nieudana wysyłka (b�
 - [ ] Dotknięcie faktury niewysłanej otwiera **formularz** wypełniony jej danymi (zamiast widoku szczegółów); można zmienić wszystko: kontrahenta, rachunek, daty, numer, pozycje (dodawać, usuwać, zmieniać ceny).
 - [ ] Z formularza: „Podgląd” → na końcu **„Wyślij do KSeF”** albo **„Zapisz bez wysyłki do KSeF”**.
 - [ ] Po przyjęciu przez KSeF faktura przestaje być niewysłana: znika ostrzeżenie, jest zwykłą fakturą z numerem KSeF (z lustra), a jej lokalna kopia robocza jest usuwana.
-- [ ] Faktury, której wysyłka nie powiodła się przed dotarciem do KSeF (błąd sieci / KSeF), nie traci się — zostaje jako niewysłana (do edycji i ponownej wysyłki).
+- [ ] Faktury, której wysyłka nie powiodła się przed dotarciem do KSeF (błąd sieci / KSeF) albo którą KSeF odrzucił, nie traci się — zostaje jako niewysłana (do edycji i ponownej wysyłki); przy odrzuconej formularz pokazuje powód odrzucenia.
+- [ ] Faktury niewysłane rezerwują numer (sugestia i duplikaty) i nie są wliczane do „Razem” (osobna linia „Niewysłane: …”).
+- [ ] Przy wysyłce z datą wystawienia wcześniejszą niż dziś — ostrzeżenie z wyborem: „Ustaw dzisiejszą datę” albo wysyłka z zapisaną datą; data dostawy bez zmian.
 - [ ] Faktura już przyjęta do przetwarzania przez KSeF (czekamy na numer KSeF) **nie** jest edytowalna — jej status jest dokańczany jak dotychczas.
 
-## Propozycje do potwierdzenia
+## Decyzje (warsztat 2026-10-12)
 
-- **P1. Wiele faktur niewysłanych naraz** — tak, dowolna liczba (każda z własnym identyfikatorem).
-- **P2. Numeracja** — numery faktur niewysłanych **rezerwują** numer: są brane pod uwagę przy sugestii kolejnego numeru i przy wykrywaniu duplikatu (np. niewysłana `04/09/2026` → następna sugestia `05/09/2026`). Edytowana faktura nie koliduje sama ze sobą.
-- **P3. Podsumowanie miesiąca** — faktury niewysłane **nie są wliczane** do sum „Razem” (to nie są jeszcze faktury w KSeF); pod podsumowaniem osobna informacja „Niewysłane: n (brutto …)”.
-- **P4. Usuwanie** — fakturę niewysłaną można usunąć (przycisk w formularzu, z potwierdzeniem).
-- **P5. Szkic „Nowej faktury”** — automatyczny zapis szkicu nowej faktury zostaje (jak dziś, jeden szkic); „Zapisz bez wysyłki” zamienia go w fakturę niewysłaną. Edycja faktury niewysłanej zapisuje się na bieżąco w niej samej.
-- **P6. Biometria** — wymagana tylko przy wysyłce do KSeF; zapis bez wysyłki — bez biometrii (aplikacja jest już odblokowana).
-- **P7. „Wyczyść cache”** w ustawieniach **nie usuwa** faktur niewysłanych (to nie są dane z KSeF — nie dałoby się ich odtworzyć).
+| Nr | Decyzja |
+|---|---|
+| P1 | Dowolna liczba faktur niewysłanych naraz (każda z własnym identyfikatorem). |
+| P2 / Q1 | Faktura niewysłana **rezerwuje numer**: jest brana pod uwagę w sugestii kolejnego numeru i w wykrywaniu duplikatów (np. niewysłana `04/09/2026` → sugestia `05/09/2026`); edytowana faktura nie koliduje sama ze sobą. |
+| P3 / Q2 | Faktury niewysłane **nie są wliczane** do „Razem”; pod podsumowaniem osobna linia „Niewysłane: n (brutto …)”. |
+| P4 | Fakturę niewysłaną można usunąć z formularza (z potwierdzeniem). |
+| P5 / Q3 | Faktura niewysłana powstaje **tylko** po „Zapisz bez wysyłki do KSeF” na podglądzie. Szkic „Nowej faktury” zapisuje się w tle jak dotychczas (jeden, niewidoczny na liście). Edycja faktury niewysłanej zapisuje się na bieżąco w niej samej. |
+| P6 | Biometria tylko przy wysyłce do KSeF; zapis bez wysyłki — bez biometrii. |
+| P7 | „Wyczyść cache” nie usuwa faktur niewysłanych. |
+| Q4 | Faktura, której wysyłka nie powiodła się przed dotarciem do KSeF (sieć / KSeF) **oraz** faktura **odrzucona** przez KSeF (np. 450, 440) — zapisywana automatycznie jako niewysłana; przy odrzuconej zapisany **powód odrzucenia**, widoczny w formularzu edycji. |
+| Q5 | Przy wysyłce faktury z datą wystawienia wcześniejszą niż dziś podgląd **ostrzega** i proponuje „Ustaw dzisiejszą datę”; można też **zostawić zapisaną datę** i wysłać. **Data dostawy nie jest zmieniana.** |
 
 ## Zadania
 

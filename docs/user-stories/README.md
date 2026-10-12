@@ -11,4 +11,4 @@ Z każdej historyjki rozpisujemy zadania w [../zadania/](../zadania/README.md).
 | [US-004](US-004-lista-faktur-zakupowych.md) | Lista faktur zakupowych | MVP | Zrobiona |
 | [US-005](US-005-szczegoly-faktury.md) | Szczegóły faktury | MVP | Zrobiona |
 | [US-006](US-006-wystawienie-faktury-sprzedazowej.md) | Wystawienie nowej faktury sprzedażowej | MVP | Zrobiona |
-| [US-007](US-007-faktury-niewyslane.md) | Faktury sprzedażowe zapisane bez wysyłki do KSeF | MVP | Szkic |
+| [US-007](US-007-faktury-niewyslane.md) | Faktury sprzedażowe zapisane bez wysyłki do KSeF | MVP | Gotowa |
