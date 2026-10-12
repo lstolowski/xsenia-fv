@@ -7,7 +7,7 @@ Z każdej historyjki rozpisujemy zadania w [../zadania/](../zadania/README.md).
 |---|---|---|---|
 | [US-001](US-001-bezpieczne-uruchomienie.md) | Bezpieczne uruchomienie i konfiguracja | MVP | Zrobiona |
 | [US-002](US-002-synchronizacja-faktur.md) | Synchronizacja faktur z KSeF | MVP | Gotowa |
-| [US-003](US-003-lista-faktur-sprzedazowych.md) | Lista faktur sprzedażowych | MVP | W realizacji |
+| [US-003](US-003-lista-faktur-sprzedazowych.md) | Lista faktur sprzedażowych | MVP | Zrobiona |
 | [US-004](US-004-lista-faktur-zakupowych.md) | Lista faktur zakupowych | MVP | W realizacji |
 | [US-005](US-005-szczegoly-faktury.md) | Szczegóły faktury | MVP | Zrobiona |
-| [US-006](US-006-wystawienie-faktury-sprzedazowej.md) | Wystawienie nowej faktury sprzedażowej | MVP | Gotowa |
+| [US-006](US-006-wystawienie-faktury-sprzedazowej.md) | Wystawienie nowej faktury sprzedażowej | MVP | Zrobiona |

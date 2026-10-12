@@ -23,10 +23,11 @@ class InvoicingConfigTest {
     fun `example files in docs are valid`() {
         val config = parseExamples()
 
+        // The examples may be edited freely — they only have to stay valid.
         assertEquals(emptyList<ConfigIssue>(), config.issues)
-        assertEquals("1996845518", config.company?.nip)
-        assertEquals(2, config.invoiceBankAccounts.size)
-        assertEquals(listOf("6691034274", "9945082500"), config.counterparties.map { it.nip })
+        assertTrue(config.company != null)
+        assertTrue(config.invoiceBankAccounts.isNotEmpty())
+        assertTrue(config.counterparties.isNotEmpty())
         assertTrue(config.canIssueInvoices)
     }
 

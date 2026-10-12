@@ -3,6 +3,9 @@ package pl.xsenia.fv
 import android.content.Context
 import android.os.SystemClock
 import pl.xsenia.fv.config.ConfigRepository
+import pl.xsenia.fv.issue.InvoiceSendService
+import pl.xsenia.fv.issue.IssueStorage
+import pl.xsenia.fv.ksef.KsefAccess
 import pl.xsenia.fv.ksef.KsefConnectionChecker
 import pl.xsenia.fv.ksef.KsefEnvironment
 import kotlinx.coroutines.CoroutineScope
@@ -48,18 +51,22 @@ class AppContainer(context: Context) {
 
     val connectionChecker by lazy { KsefConnectionChecker(authenticator) }
 
+    val ksefAccess by lazy { KsefAccess(httpClient, publicKeys, authenticator, tokenStore) }
+
     val syncService by lazy {
         InvoiceSyncService(
             scope = applicationScope,
-            httpClient = httpClient,
-            publicKeys = publicKeys,
-            authenticator = authenticator,
+            ksef = ksefAccess,
             tokenStore = tokenStore,
             configRepository = configRepository,
             mirror = InvoiceMirror(localCache.invoicesDir),
             initialDate = MIRROR_START_DATE.atStartOfDay(POLAND).toInstant(),
         )
     }
+
+    val issueStorage = IssueStorage(context.filesDir)
+
+    val sendService by lazy { InvoiceSendService(applicationScope, ksefAccess, issueStorage, syncService) }
 
     companion object {
         /** Invoices are kept locally from this date (decision R2). */

@@ -19,11 +19,7 @@ Stan: implementacja — postęp w [docs/zadania/](docs/zadania/README.md). Szcze
   - NIP-y wyłącznie testowe (z poprawną sumą kontrolną), np.: `6691034274`, `1996845518`, `9945082500`, `9579102904`, `6973432790`, `4824062973`, `3563998415`, `8771617926`; NIP kontekstu testowego użytkownika jest w `secrets/ksef-test.properties`,
   - nazwy i osoby: „Test”, „Testowy”, „Testowa”, „Jan Testowy”, „Testowa Sp. z o.o.” albo Lorem ipsum,
   - adresy: np. „ul. Testowa 1”, „00-001 Testowo”; e-maile w domenie `example.com`; telefony `+48 000 000 000`,
-  - numery rachunków: wyłącznie testowe (poprawna suma kontrolna) — **nigdy prawdziwy rachunek użytkownika**:
-    - `PL71101075753723914707418989` — Narodowy Bank Polski
-    - `PL85216097583216850246002152` — Toyota Bank
-    - `PL22161029092633573189646018` — SGB-Bank
-    - `PL55109004081797992973253811` — Santander Bank Polska
+  - numery rachunków: wyłącznie testowe (poprawna suma kontrolna) — **nigdy prawdziwy rachunek użytkownika**: znajdz je w docs/przyklady/banks.json
 
     (w plikach JSON i polu `NrRB` faktury — 26 cyfr bez prefiksu `PL`),
   - nazwy towarów/usług: „Usługa testowa”, Lorem ipsum.

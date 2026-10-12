@@ -1,7 +1,7 @@
 # US-004. Lista faktur zakupowych
 
 - Priorytet: MVP
-- Status: W realizacji (brak: szczegóły — ZAD-010; dane testowe zakupowe — ZAD-014)
+- Status: W realizacji (brak danych testowych zakupowych — ZAD-014)
 
 ## Historyjka
 

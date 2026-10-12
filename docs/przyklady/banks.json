@@ -1,6 +1,8 @@
 {
   "banks": [
     { "name": "Konto testowe Toyota", "bank": "Toyota Bank", "account": "85216097583216850246002152", "currency": "PLN" },
-    { "name": "Konto testowe Santander", "bank": "Santander Bank Polska", "account": "55109004081797992973253811", "currency": "PLN" }
+    { "name": "Konto testowe Santander", "bank": "Santander Bank Polska", "account": "55109004081797992973253811", "currency": "PLN" },
+    { "name": "Konto testowe SGB-Bank", "bank": "SGB-Bank", "account": "22161029092633573189646018", "currency": "PLN" },
+    { "name": "Konto testowe NBP", "bank": "NBP", "account": "71101075753723914707418989", "currency": "PLN" }
   ]
 }

@@ -34,10 +34,13 @@ import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.ui.details.InvoiceDetailsScreen
 import pl.xsenia.fv.ui.details.InvoiceDetailsViewModel
 import pl.xsenia.fv.ui.invoices.InvoiceListScreen
+import pl.xsenia.fv.ui.issue.NewInvoiceScreen
+import pl.xsenia.fv.ui.issue.NewInvoiceViewModel
 import pl.xsenia.fv.ui.invoices.InvoiceListViewModel
 import pl.xsenia.fv.ui.settings.SettingsScreen
 
 private const val DETAILS_ROUTE = "invoice"
+private const val NEW_INVOICE_ROUTE = "new-invoice"
 
 private enum class Tab(val route: String, val label: Int, val icon: ImageVector) {
     SALES("sales", R.string.nav_sales, Icons.AutoMirrored.Filled.Send),
@@ -55,10 +58,15 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
     val configIssues = (configState as? ConfigState.Loaded)?.config?.issues?.size ?: 0
 
     // Runs after every unlock (this screen is recreated); the service skips it if synced < 15 min ago.
-    LaunchedEffect(Unit) { viewModel.syncIfStale() }
+    LaunchedEffect(Unit) {
+        viewModel.syncIfStale()
+        // An invoice sent before the app was closed: finish checking its status.
+        container.sendService.resumeIfPending()
+    }
 
     Scaffold(
         bottomBar = {
+            if (Tab.entries.none { it.route == currentRoute }) return@Scaffold
             NavigationBar {
                 Tab.entries.forEach { tab ->
                     NavigationBarItem(
@@ -86,8 +94,14 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
             val openInvoice = { category: InvoiceCategory, ksefNumber: String ->
                 navController.navigate("$DETAILS_ROUTE/${category.name}/$ksefNumber")
             }
-            composable(Tab.SALES.route) { InvoiceListRoute(InvoiceCategory.SALES, container, viewModel, openInvoice) }
-            composable(Tab.PURCHASE.route) { InvoiceListRoute(InvoiceCategory.PURCHASE, container, viewModel, openInvoice) }
+            composable(Tab.SALES.route) {
+                InvoiceListRoute(InvoiceCategory.SALES, container, viewModel, openInvoice, onNewInvoice = { navController.navigate(NEW_INVOICE_ROUTE) })
+            }
+            composable(Tab.PURCHASE.route) { InvoiceListRoute(InvoiceCategory.PURCHASE, container, viewModel, openInvoice, onNewInvoice = null) }
+            composable(NEW_INVOICE_ROUTE) {
+                val newInvoiceViewModel: NewInvoiceViewModel = viewModel(factory = viewModelFactory { initializer { NewInvoiceViewModel(container) } })
+                NewInvoiceScreen(newInvoiceViewModel, onClose = { navController.popBackStack() })
+            }
             composable(Tab.SETTINGS.route) { SettingsScreen(viewModel = viewModel, onBack = null) }
             composable("$DETAILS_ROUTE/{category}/{ksefNumber}") { entry ->
                 val category = InvoiceCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
@@ -108,6 +122,7 @@ private fun InvoiceListRoute(
     container: AppContainer,
     mainViewModel: MainViewModel,
     onOpenInvoice: (InvoiceCategory, String) -> Unit,
+    onNewInvoice: (() -> Unit)?,
 ) {
     val listViewModel: InvoiceListViewModel = viewModel(
         key = category.name,
@@ -125,5 +140,6 @@ private fun InvoiceListRoute(
         onQueryChange = listViewModel::setQuery,
         onRefresh = mainViewModel::syncNow,
         onOpenInvoice = { onOpenInvoice(category, it.ksefNumber) },
+        onNewInvoice = onNewInvoice,
     )
 }

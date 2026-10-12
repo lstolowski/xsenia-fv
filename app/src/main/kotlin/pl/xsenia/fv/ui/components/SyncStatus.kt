@@ -14,7 +14,7 @@ import pl.xsenia.fv.R
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.mirror.SyncPhase
 import pl.xsenia.fv.mirror.SyncProgress
-import pl.xsenia.fv.sync.SyncError
+import pl.xsenia.fv.ksef.KsefFailure
 import pl.xsenia.fv.sync.SyncUiState
 import pl.xsenia.fv.ui.format.Formats
 
@@ -31,7 +31,7 @@ fun SyncStatus(state: SyncUiState, modifier: Modifier = Modifier) {
                 Text(stringResource(R.string.sync_last, Formats.dateTime(state.lastSyncAt)), style = MaterialTheme.typography.bodySmall)
             else -> Text(stringResource(R.string.sync_never), style = MaterialTheme.typography.bodySmall)
         }
-        state.error?.let { Text(errorText(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+        state.error?.let { Text(ksefFailureText(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
     }
 }
 
@@ -46,12 +46,13 @@ private fun progressText(progress: SyncProgress?): String {
     }
 }
 
+/** Polish message for a KSeF problem (sync and sending). */
 @Composable
-private fun errorText(error: SyncError): String = when (error) {
-    SyncError.MissingToken -> stringResource(R.string.sync_error_missing_token)
-    SyncError.MissingCompany -> stringResource(R.string.sync_error_missing_company)
-    is SyncError.RateLimited -> stringResource(R.string.sync_error_rate_limited, error.retryAfterSeconds?.toString() ?: "?")
-    is SyncError.AuthenticationFailed -> stringResource(R.string.sync_error_auth, error.statusCode, error.description)
-    is SyncError.Network -> stringResource(R.string.sync_error_network, error.message.orEmpty())
-    is SyncError.Ksef -> stringResource(R.string.sync_error_ksef, error.message.orEmpty())
+fun ksefFailureText(error: KsefFailure): String = when (error) {
+    KsefFailure.MissingToken -> stringResource(R.string.sync_error_missing_token)
+    KsefFailure.MissingCompany -> stringResource(R.string.sync_error_missing_company)
+    is KsefFailure.RateLimited -> stringResource(R.string.sync_error_rate_limited, error.retryAfterSeconds?.toString() ?: "?")
+    is KsefFailure.AuthenticationFailed -> stringResource(R.string.sync_error_auth, error.statusCode, error.description)
+    is KsefFailure.Network -> stringResource(R.string.sync_error_network, error.message.orEmpty())
+    is KsefFailure.Ksef -> stringResource(R.string.sync_error_ksef, error.message.orEmpty())
 }

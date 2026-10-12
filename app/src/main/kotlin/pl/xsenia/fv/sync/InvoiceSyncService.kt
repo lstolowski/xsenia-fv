@@ -12,39 +12,25 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.xsenia.fv.config.ConfigRepository
 import pl.xsenia.fv.config.ConfigState
-import pl.xsenia.fv.ksef.KsefAuthenticationException
-import pl.xsenia.fv.ksef.KsefException
-import pl.xsenia.fv.ksef.KsefRateLimitException
-import pl.xsenia.fv.ksef.auth.KsefAuthenticator
-import pl.xsenia.fv.ksef.auth.KsefPublicKeyProvider
-import pl.xsenia.fv.ksef.auth.KsefTokenManager
-import pl.xsenia.fv.ksef.invoices.KsefInvoiceClient
+import pl.xsenia.fv.ksef.KsefAccess
+import pl.xsenia.fv.ksef.KsefFailure
+import pl.xsenia.fv.ksef.KsefFailureException
+import pl.xsenia.fv.ksef.toKsefFailure
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.mirror.InvoiceMirror
 import pl.xsenia.fv.mirror.InvoiceSynchronizer
 import pl.xsenia.fv.mirror.KsefInvoiceSource
 import pl.xsenia.fv.mirror.SyncProgress
 import pl.xsenia.fv.security.KsefTokenStore
-import io.ktor.client.HttpClient
-import java.io.IOException
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-
-sealed interface SyncError {
-    data object MissingToken : SyncError
-    data object MissingCompany : SyncError
-    data class RateLimited(val retryAfterSeconds: Long?) : SyncError
-    data class AuthenticationFailed(val statusCode: Int, val description: String) : SyncError
-    data class Network(val message: String?) : SyncError
-    data class Ksef(val message: String?) : SyncError
-}
 
 data class SyncUiState(
     val running: Boolean = false,
     val progress: SyncProgress? = null,
     val lastSyncAt: Instant? = null,
-    val error: SyncError? = null,
+    val error: KsefFailure? = null,
     val invoiceCounts: Map<InvoiceCategory, Int> = emptyMap(),
     /** Incremented after every change of the mirror, so lists know when to reload. */
     val mirrorVersion: Int = 0,
@@ -56,9 +42,7 @@ data class SyncUiState(
  */
 class InvoiceSyncService(
     private val scope: CoroutineScope,
-    private val httpClient: HttpClient,
-    private val publicKeys: KsefPublicKeyProvider,
-    private val authenticator: KsefAuthenticator,
+    private val ksef: KsefAccess,
     private val tokenStore: KsefTokenStore,
     private val configRepository: ConfigRepository,
     val mirror: InvoiceMirror,
@@ -92,16 +76,8 @@ class InvoiceSyncService(
                 null
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: KsefRateLimitException) {
-                SyncError.RateLimited(e.retryAfter?.inWholeSeconds)
-            } catch (e: KsefAuthenticationException) {
-                SyncError.AuthenticationFailed(e.statusCode, e.description)
-            } catch (e: KsefException) {
-                SyncError.Ksef(e.message)
-            } catch (e: IOException) {
-                SyncError.Network(e.message)
-            } catch (e: MissingSetupException) {
-                e.error
+            } catch (e: Exception) {
+                e.toKsefFailure() ?: throw e
             }
             refreshFromMirror()
             _state.update { it.copy(running = false, progress = null, error = error) }
@@ -115,8 +91,8 @@ class InvoiceSyncService(
 
     private suspend fun synchronize() {
         val config = configRepository.state.first { it != ConfigState.Loading }
-        val nip = (config as? ConfigState.Loaded)?.config?.company?.nip ?: throw MissingSetupException(SyncError.MissingCompany)
-        if (tokenStore.read() == null) throw MissingSetupException(SyncError.MissingToken)
+        val nip = (config as? ConfigState.Loaded)?.config?.company?.nip ?: throw KsefFailureException(KsefFailure.MissingCompany)
+        if (tokenStore.read() == null) throw KsefFailureException(KsefFailure.MissingToken)
 
         withContext(Dispatchers.IO) {
             synchronizerFor(nip).sync { progress -> _state.update { it.copy(progress = progress) } }
@@ -125,10 +101,7 @@ class InvoiceSyncService(
 
     private fun synchronizerFor(nip: String): InvoiceSynchronizer {
         synchronizer?.takeIf { synchronizerNip == nip }?.let { return it }
-        val tokens = KsefTokenManager(authenticator, nip, ksefToken = {
-            tokenStore.read() ?: throw MissingSetupException(SyncError.MissingToken)
-        })
-        val source = KsefInvoiceSource(KsefInvoiceClient(httpClient, tokens, publicKeys))
+        val source = KsefInvoiceSource(ksef.invoiceClient(nip))
         return InvoiceSynchronizer(source, mirror, initialDate, clock).also {
             synchronizer = it
             synchronizerNip = nip
@@ -141,6 +114,4 @@ class InvoiceSyncService(
         }
         _state.update { it.copy(invoiceCounts = counts, lastSyncAt = lastSync, mirrorVersion = it.mirrorVersion + 1) }
     }
-
-    private class MissingSetupException(val error: SyncError) : Exception()
 }
