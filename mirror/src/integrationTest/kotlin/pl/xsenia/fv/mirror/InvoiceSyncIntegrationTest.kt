@@ -13,6 +13,7 @@ import pl.xsenia.fv.ksef.auth.KsefTokenManager
 import pl.xsenia.fv.ksef.http.KsefHttpClientFactory
 import pl.xsenia.fv.ksef.invoices.KsefInvoiceClient
 import pl.xsenia.fv.ksef.support.KsefTestConfig
+import pl.xsenia.fv.ksef.support.skipOnRateLimit
 import java.io.File
 import java.time.Instant
 
@@ -32,7 +33,7 @@ class InvoiceSyncIntegrationTest {
     fun closeClient() = httpClient.close()
 
     @Test
-    fun `synchronizes TEST invoices and then only checks for new ones`(): Unit = runBlocking {
+    fun `synchronizes TEST invoices and then only checks for new ones`(): Unit = skipOnRateLimit { runBlocking {
         val mirror = InvoiceMirror(dir)
         val synchronizer = InvoiceSynchronizer(source, mirror, initialDate = Instant.parse("2026-09-30T22:00:00Z"))
         val phases = mutableListOf<SyncPhase>()
@@ -54,5 +55,5 @@ class InvoiceSyncIntegrationTest {
 
         assertEquals(0, second.added[InvoiceCategory.SALES])
         assertEquals(sales.size, mirror.entries(InvoiceCategory.SALES).size)
-    }
+    } }
 }

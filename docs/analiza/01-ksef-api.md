@@ -107,6 +107,8 @@ Metadane zawierają: numer KSeF, numer faktury, daty, sprzedawca (NIP, nazwa), n
 
 W godz. 20:00–06:00 limity pobierania są wyższe. Po przekroczeniu: `429` z informacją, kiedy ponowić.
 
+**Obserwacja (2026-10-12):** na środowisku TEST limit `POST /invoices/query/metadata` dla naszego kontekstu wynosił **20/h** (jak na PROD, mimo zapowiedzi „×10”) — przekroczony przez równoczesne testy integracyjne, synchronizacje na emulatorze i generator danych z jednego adresu IP. Testy integracyjne traktują HTTP 429 jako pominięcie (`skipOnRateLimit`).
+
 **Wniosek:** 20 zapytań o listę na godzinę to mało przy „klikaniu” po miesiącach i odświeżaniu. Potrzebny **cache** (pamięć serwera lub urządzenia) — lista miesiąca i XML faktury są praktycznie niezmienne. Ręczny przycisk „Odśwież z KSeF”.
 
 ## 8. Kod QR (KOD I)

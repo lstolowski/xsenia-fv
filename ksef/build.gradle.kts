@@ -27,7 +27,7 @@ dependencies {
 
     // KsefTestConfig — shared by the integration tests of all modules.
     testFixturesImplementation(platform(libs.junit.bom))
-    testFixturesImplementation(libs.junit.jupiter)
+    testFixturesApi(libs.junit.jupiter)
 }
 
 testing {

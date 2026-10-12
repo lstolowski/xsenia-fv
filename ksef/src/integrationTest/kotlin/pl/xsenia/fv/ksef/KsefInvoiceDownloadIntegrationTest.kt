@@ -15,6 +15,7 @@ import pl.xsenia.fv.ksef.invoices.InvoiceDateType
 import pl.xsenia.fv.ksef.invoices.InvoiceSubjectType
 import pl.xsenia.fv.ksef.invoices.KsefInvoiceClient
 import pl.xsenia.fv.ksef.support.KsefTestConfig
+import pl.xsenia.fv.ksef.support.skipOnRateLimit
 import pl.xsenia.fv.invoice.xml.InvoiceXmlParser
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -35,15 +36,15 @@ class KsefInvoiceDownloadIntegrationTest {
     fun closeClient() = httpClient.close()
 
     @Test
-    fun `queries sales and purchase invoice metadata`(): Unit = runBlocking {
+    fun `queries sales and purchase invoice metadata`(): Unit = skipOnRateLimit { runBlocking {
         val sales = invoices.queryMetadata(InvoiceSubjectType.SELLER, InvoiceDateType.ISSUE, from, to).invoices
         invoices.queryMetadata(InvoiceSubjectType.BUYER, InvoiceDateType.ISSUE, from, to)
 
         sales.forEach { assertEquals(config.nip, it.seller.nip) }
-    }
+    } }
 
     @Test
-    fun `downloads invoice XML and the same invoice in an export package`(): Unit = runBlocking {
+    fun `downloads invoice XML and the same invoice in an export package`(): Unit = skipOnRateLimit { runBlocking {
         val sales = invoices.queryMetadata(InvoiceSubjectType.SELLER, InvoiceDateType.PERMANENT_STORAGE, from, to).invoices
         assumeTrue(sales.isNotEmpty(), "no sales invoices in the TEST context since $from")
         val first = sales.first()
@@ -66,5 +67,5 @@ class KsefInvoiceDownloadIntegrationTest {
         assertTrue(export.invoices.any { it.ksefNumber == first.ksefNumber }, "export metadata should contain the invoice")
         val exportedXml = requireNotNull(export.xmlByKsefNumber[first.ksefNumber]) { "export should contain the invoice XML" }
         assertEquals(first.invoiceHash, KsefCrypto.sha256Base64(exportedXml))
-    }
+    } }
 }
