@@ -49,6 +49,7 @@ JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Co
 - `./gradlew build` — kompilacja wszystkich modułów i wariantów, testy jednostkowe, lint (ostrzeżenia = błędy)
 - `./gradlew :ksef:test :invoice:test :mirror:test` — szybkie testy modułów JVM
 - `./gradlew integrationTest -PsendInvoices` — dodatkowo test **wysyłający fakturę** do KSeF TEST (każde uruchomienie tworzy nową, nieusuwalną fakturę testową)
+- `./gradlew :ksef:integrationTest --tests '*PurchaseTestDataGenerator*' -PcreatePurchaseInvoices` — tworzy 5 zmyślonych faktur **zakupowych** od drugiego kontekstu TEST (`ksef.supplier.*` w secrets)
 - `./gradlew integrationTest` — testy z prawdziwym KSeF **TEST** (wymaga `secrets/ksef-test.properties`, bez niego testy są pomijane; nie wchodzi w `build`). Unikaj 16:00–18:00 (prace serwisowe TEST)
 - `./gradlew :app:assembleKsefTestDebug` — APK wersji testowej (KSeF TEST); `installKsefTestDebug` instaluje na emulatorze
 - Wersje aplikacji (product flavors): `ksefTest` → `pl.xsenia.fv.test`, `ksefProd` → `pl.xsenia.fv`

@@ -15,9 +15,15 @@ class KsefTestConfig private constructor(
     val environment: KsefEnvironment,
     val nip: String,
     val ksefToken: String,
+    /** Optional second TEST context — a fictitious supplier issuing purchase invoices to [nip]. */
+    val supplier: Context?,
 ) {
-    // Never expose the token in test reports or logs.
-    override fun toString(): String = "KsefTestConfig(environment=$environment, nip=$nip, ksefToken=***)"
+    class Context(val nip: String, val ksefToken: String) {
+        override fun toString(): String = "Context(nip=$nip, ksefToken=***)"
+    }
+
+    // Never expose the tokens in test reports or logs.
+    override fun toString(): String = "KsefTestConfig(environment=$environment, nip=$nip, ksefToken=***, supplier=$supplier)"
 
     companion object {
         const val SECRETS_FILE_PROPERTY = "ksef.secretsFile"
@@ -52,7 +58,11 @@ class KsefTestConfig private constructor(
             val nip = properties.required("ksef.nip")
             check(NIP_PATTERN.matches(nip)) { "ksef.nip must have 10 digits" }
 
-            return KsefTestConfig(KsefEnvironment.TEST, nip, properties.required("ksef.token"))
+            val supplier = properties.getProperty("ksef.supplier.nip")?.trim()?.takeIf { it.isNotEmpty() }?.let { supplierNip ->
+                check(NIP_PATTERN.matches(supplierNip)) { "ksef.supplier.nip must have 10 digits" }
+                Context(supplierNip, properties.required("ksef.supplier.token"))
+            }
+            return KsefTestConfig(KsefEnvironment.TEST, nip, properties.required("ksef.token"), supplier)
         }
 
         private fun Properties.required(key: String): String =

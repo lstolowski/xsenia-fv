@@ -61,6 +61,8 @@ testing {
                     )
                     // Tests creating invoices in KSeF TEST run only on request: ./gradlew integrationTest -PsendInvoices
                     systemProperty("ksef.sendInvoices", providers.gradleProperty("sendInvoices").isPresent.toString())
+                    // Creates fictitious purchase invoices (second TEST context): ./gradlew :ksef:integrationTest -PcreatePurchaseInvoices
+                    systemProperty("ksef.createPurchaseInvoices", providers.gradleProperty("createPurchaseInvoices").isPresent.toString())
                     // Results depend on an external service, so never treat them as up to date or cached.
                     outputs.upToDateWhen { false }
                     outputs.cacheIf { false }
