@@ -1,0 +1,22 @@
+{
+  "counterparties": [
+    {
+      "name": "Testowa Sp. z o.o.",
+      "nip": "6691034274",
+      "address": {
+        "line1": "ul. Testowa 6",
+        "line2": "00-002 Testowo",
+        "country": "Polska"
+      },
+      "email": "faktury@example.com"
+    },
+    {
+      "name": "Lorem Ipsum Testowy S.A.",
+      "nip": "9945082500",
+      "address": {
+        "line1": "ul. Dolor Sit Amet 12/3",
+        "line2": "00-003 Testowo"
+      }
+    }
+  ]
+}

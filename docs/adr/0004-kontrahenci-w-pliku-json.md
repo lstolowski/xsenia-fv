@@ -74,10 +74,11 @@ Zasady:
 - Pola wymagane: `name`, `nip`, `address.line1` (company i counterparties); `name`, `account` (banks). Pozostałe opcjonalne (`email`, `phone`, `address.line2`, `bank`).
 - `address.line1` / `address.line2` → `AdresL1` / `AdresL2` w FA(3).
 - `address.country` jest informacyjne. Kod kraju w XML (`KodKraju`) to zawsze `PL` — nabywcy wyłącznie polscy (C1).
-- `account` — 26 cyfr (NRB), walidowany sumą kontrolną; na fakturze trafia do `Platnosc/RachunekBankowy/NrRB` (a `bank` do `NazwaBanku`). W formularzu wybór konta z listy, domyślnie pierwsze.
+- `nip` — 10 cyfr z sumą kontrolną; akceptowane spacje, myślniki i prefiks `PL` (normalizowane).
+- `account` — 26 cyfr (NRB), walidowany sumą kontrolną; akceptowane spacje i prefiks `PL` (normalizowane); na fakturze trafia do `Platnosc/RachunekBankowy/NrRB` (a `bank` do `NazwaBanku`). W formularzu wybór konta z listy, domyślnie pierwsze.
 - `currency` — faktury wystawiamy tylko w PLN (C3). Konta o innej walucie są pomijane na liście wyboru.
 - Walidacja przy wczytaniu: poprawność JSON, wymagane pola, suma kontrolna NIP i NRB. Błędy pokazywane czytelnie (plik, pozycja, pole); przeglądanie faktur działa dalej, a wystawienie faktury jest zablokowane do czasu poprawienia `company.json` / `banks.json`.
-- Nazwa pliku i pola w JSON po angielsku (R8); szablony plików dołączone do repozytorium (`docs/przyklady/`) przy implementacji.
+- Nazwa pliku i pola w JSON po angielsku (R8); wzory plików w [`docs/przyklady/`](../przyklady/README.md).
 
 ## Konsekwencje
 

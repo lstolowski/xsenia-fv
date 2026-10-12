@@ -14,6 +14,7 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Moja firma | `company` | Dane sprzedawcy z pliku `company.json` | ADR 0004 |
 | Rachunek bankowy / konto | `bankAccount` | Pozycja z pliku `banks.json` (`NrRB` w FA(3)) | ADR 0004 |
 | Kontrahenci (plik) | `counterparties` | Plik `counterparties.json` z danymi nabywców | ADR 0004 |
+| Konfiguracja wystawiania | `InvoicingConfig` | Firma + rachunki + kontrahenci wczytane z plików JSON, z listą problemów (`ConfigIssue`) | ADR 0004 |
 | Pozycja faktury | `invoiceLine` | `FaWiersz`: nazwa `P_7`, jednostka `P_8A`, ilość `P_8B`, cena jedn. netto `P_9A`, wartość netto `P_11`, stawka `P_12` | Wartość brutto pozycji wyliczana do wyświetlenia |
 | Termin płatności | `paymentDueDate` | `Platnosc/TerminPlatnosci/Termin` — zawsze 21 dni od daty wystawienia | |
 | Synchronizacja | `sync` | Pobranie nowych faktur z KSeF do lokalnego lustra | ADR 0003 |
