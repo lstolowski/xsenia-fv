@@ -19,7 +19,7 @@ Jako **właściciel firmy** chcę **wystawić nową fakturę sprzedażową VAT i
 - [ ] Szkic jest zapisywany na bieżąco i przetrwa zamknięcie aplikacji.
 - [ ] Przed wysyłką widzę podgląd faktury w takiej formie jak w szczegółach; „Wyślij do KSeF” wymaga potwierdzenia biometrią.
 - [ ] Po wysyłce widzę status (wysłana → przyjęta z numerem KSeF / odrzucona z czytelną przyczyną); status przetrwa zamknięcie aplikacji.
-- [ ] Po przyjęciu faktura pojawia się na liście sprzedażowej, a szkic jest usuwany; UPO dostępne w szczegółach.
+- [ ] Po przyjęciu faktura pojawia się na liście sprzedażowej, a szkic jest usuwany; UPO zapisane lokalnie (bez udostępniania — decyzja 2026-10-12).
 
 ## Zadania
 

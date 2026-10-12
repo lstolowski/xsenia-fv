@@ -26,6 +26,16 @@ object Formats {
         return "$number ${if (currency == "PLN") "zł" else currency}"
     }
 
+    /** Quantity without trailing zeros, Polish decimal comma: `2,5`, `1`. */
+    fun quantity(value: BigDecimal): String =
+        NumberFormat.getNumberInstance(POLISH).apply { maximumFractionDigits = 6 }.format(value.stripTrailingZeros())
+
+    /** 26-digit NRB grouped as on Polish invoices: `85 2160 9758 3216 8502 4600 2152`; other numbers unchanged. */
+    fun bankAccount(number: String): String {
+        if (number.length != 26 || !number.all(Char::isDigit)) return number
+        return number.take(2) + " " + number.drop(2).chunked(4).joinToString(" ")
+    }
+
     fun date(date: LocalDate): String = DATE.format(date)
 
     fun dateTime(instant: Instant): String = DATE_TIME.format(instant.atZone(ZoneId.systemDefault()))

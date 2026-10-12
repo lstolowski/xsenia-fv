@@ -143,4 +143,85 @@
     <string name="invoice_type_upr">Uproszczona</string>
     <string name="invoice_type_kor_zal">Korekta zaliczkowej</string>
     <string name="invoice_type_kor_roz">Korekta rozliczeniowej</string>
+
+    <!-- Invoice details -->
+    <string name="details_title">Szczegóły faktury</string>
+    <string name="details_not_found">Nie znaleziono faktury w danych zapisanych na telefonie.</string>
+    <string name="details_parse_error">Nie udało się odczytać treści faktury (%1$s). Poniżej dane z listy KSeF.</string>
+    <string name="details_ksef_number">Numer KSeF: %1$s</string>
+    <string name="details_issue_date">Data wystawienia: %1$s</string>
+    <string name="details_issue_place">Miejsce wystawienia: %1$s</string>
+    <string name="details_delivery_date">Data dostawy / wykonania usługi: %1$s</string>
+    <string name="details_period">Okres: %1$s – %2$s</string>
+    <string name="details_currency">Waluta: %1$s</string>
+    <string name="details_seller">Sprzedawca</string>
+    <string name="details_buyer">Nabywca</string>
+    <string name="details_other_party">Podmiot trzeci (rola %1$s)</string>
+    <string name="details_eu_vat">NIP UE: %1$s</string>
+    <string name="details_other_id">Identyfikator: %1$s</string>
+    <string name="details_lines">Pozycje</string>
+    <string name="details_line_state_before">Stan przed korektą</string>
+    <string name="details_line_quantity">%1$s %2$s × %3$s netto</string>
+    <string name="details_line_quantity_gross">%1$s %2$s × %3$s brutto</string>
+    <string name="details_line_values">netto %1$s · VAT %2$s · brutto %3$s</string>
+    <string name="details_line_delivery">Data dostawy: %1$s</string>
+    <string name="details_summary">Podsumowanie</string>
+    <string name="details_summary_rate">%1$s: netto %2$s · VAT %3$s</string>
+    <string name="details_summary_rate_no_vat">%1$s: netto %2$s</string>
+    <string name="details_total_net">Razem netto</string>
+    <string name="details_total_vat">Razem VAT</string>
+    <string name="details_total_gross">Do zapłaty (brutto)</string>
+    <string name="details_payment">Płatność</string>
+    <string name="details_payment_method">Forma płatności: %1$s</string>
+    <string name="details_payment_due">Termin płatności: %1$s</string>
+    <string name="details_payment_paid">Zapłacono %1$s</string>
+    <string name="details_payment_paid_no_date">Zapłacono</string>
+    <string name="details_bank_account">Rachunek: %1$s</string>
+    <string name="details_annotations">Adnotacje</string>
+    <string name="details_split_payment">Mechanizm podzielonej płatności</string>
+    <string name="details_reverse_charge">Odwrotne obciążenie</string>
+    <string name="details_cash_method">Metoda kasowa</string>
+    <string name="details_self_invoicing">Samofakturowanie</string>
+    <string name="details_margin">Procedura marży</string>
+    <string name="details_exemption">Zwolnienie z VAT: %1$s</string>
+    <string name="details_correction">Korekta</string>
+    <string name="details_correction_reason">Przyczyna: %1$s</string>
+    <string name="details_correction_type">Skutek korekty: %1$s</string>
+    <string name="details_corrected_invoice">Korygowana faktura: %1$s z %2$s</string>
+    <string name="details_additional">Dodatkowe informacje</string>
+    <string name="details_metadata_summary">netto %1$s · VAT %2$s · brutto %3$s</string>
+
+    <string name="invoice_kind_vat">Faktura VAT</string>
+    <string name="invoice_kind_kor">Faktura korygująca</string>
+    <string name="invoice_kind_zal">Faktura zaliczkowa</string>
+    <string name="invoice_kind_roz">Faktura rozliczeniowa</string>
+    <string name="invoice_kind_upr">Faktura uproszczona</string>
+    <string name="invoice_kind_kor_zal">Korekta faktury zaliczkowej</string>
+    <string name="invoice_kind_kor_roz">Korekta faktury rozliczeniowej</string>
+
+    <string name="correction_type_1">w dacie faktury korygowanej</string>
+    <string name="correction_type_2">w dacie korekty</string>
+    <string name="correction_type_3">w innej dacie</string>
+
+    <string name="payment_method_1">gotówka</string>
+    <string name="payment_method_2">karta</string>
+    <string name="payment_method_3">bon</string>
+    <string name="payment_method_4">czek</string>
+    <string name="payment_method_5">kredyt</string>
+    <string name="payment_method_6">przelew</string>
+    <string name="payment_method_7">płatność mobilna</string>
+
+    <string name="vat_category_standard">Stawka 23%</string>
+    <string name="vat_category_reduced_8">Stawka 8%</string>
+    <string name="vat_category_reduced_5">Stawka 5%</string>
+    <string name="vat_category_taxi">Taxi (ryczałt)</string>
+    <string name="vat_category_oss">Procedura OSS</string>
+    <string name="vat_category_zero_domestic">0% (kraj)</string>
+    <string name="vat_category_zero_wdt">0% (WDT)</string>
+    <string name="vat_category_zero_export">0% (eksport)</string>
+    <string name="vat_category_exempt">Zwolnione</string>
+    <string name="vat_category_np_abroad">Niepodlegające (poza krajem)</string>
+    <string name="vat_category_np_art100">Niepodlegające (art. 100)</string>
+    <string name="vat_category_reverse_charge">Odwrotne obciążenie</string>
+    <string name="vat_category_margin">Procedura marży</string>
 </resources>

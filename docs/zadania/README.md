@@ -13,7 +13,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-007](ZAD-007-parser-xml-faktury.md) | Parser XML FA(2)/FA(3) → model faktury, data dostawy | US-002, US-005 | Zrobione |
 | [ZAD-008](ZAD-008-lustro-i-synchronizacja.md) | Lokalne lustro faktur i synchronizacja | US-002 | Zrobione |
 | [ZAD-009](ZAD-009-ui-listy-faktur.md) | UI: listy sprzedażowa i zakupowa z filtrem i podsumowaniem | US-003, US-004 | Zrobione |
-| [ZAD-010](ZAD-010-ui-szczegoly-faktury.md) | UI: szczegóły faktury i udostępnianie XML/UPO | US-005 | Do zrobienia |
+| [ZAD-010](ZAD-010-ui-szczegoly-faktury.md) | UI: szczegóły faktury (bez udostępniania) | US-005 | Zrobione |
 | [ZAD-011](ZAD-011-generator-xml-fa3.md) | Generator XML FA(3), wyliczenia, sugestia numeru i daty dostawy | US-006 | Do zrobienia |
 | [ZAD-012](ZAD-012-ksef-sesja-interaktywna.md) | Klient KSeF: sesja interaktywna, status, UPO | US-006 | Do zrobienia |
 | [ZAD-013](ZAD-013-ui-nowa-faktura.md) | UI: formularz nowej faktury, podgląd, biometria, śledzenie wysyłki | US-006 | Do zrobienia |
