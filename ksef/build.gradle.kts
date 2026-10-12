@@ -42,6 +42,7 @@ testing {
             useJUnitJupiter(junitVersion)
             dependencies {
                 implementation(project())
+                implementation(project(":invoice"))
                 implementation(libs.kotlinx.coroutines.test)
             }
             targets.all {

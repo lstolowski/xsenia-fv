@@ -15,6 +15,7 @@ import pl.xsenia.fv.ksef.invoices.InvoiceDateType
 import pl.xsenia.fv.ksef.invoices.InvoiceSubjectType
 import pl.xsenia.fv.ksef.invoices.KsefInvoiceClient
 import pl.xsenia.fv.ksef.support.KsefTestConfig
+import pl.xsenia.fv.invoice.xml.InvoiceXmlParser
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -50,6 +51,16 @@ class KsefInvoiceDownloadIntegrationTest {
         val xml = invoices.downloadInvoiceXml(first.ksefNumber)
         assertEquals(first.invoiceHash, xml.sha256Base64, "XML hash should match metadata")
         assertTrue(xml.content.toString(Charsets.UTF_8).contains("<P_2>${first.invoiceNumber}</P_2>"), "XML should contain the invoice number")
+
+        // The XML was produced by another system (e.g. Aplikacja Podatnika) — the parser must agree with KSeF metadata.
+        val parsed = InvoiceXmlParser.parse(xml.content)
+        assertEquals(first.invoiceNumber, parsed.invoiceNumber)
+        assertEquals(first.issueDate, parsed.issueDate)
+        assertEquals(first.seller.nip, parsed.seller.nip)
+        assertEquals(first.buyer.identifier.value, parsed.buyer.nip)
+        assertEquals(0, first.grossAmount.compareTo(parsed.grossTotal), "gross amount")
+        assertEquals(0, first.netAmount.compareTo(parsed.netTotal), "net amount")
+        assertEquals(0, first.vatAmount.compareTo(parsed.vatTotal), "VAT amount")
 
         val export = invoices.exportInvoices(InvoiceSubjectType.SELLER, InvoiceDateType.PERMANENT_STORAGE, from, to)
         assertTrue(export.invoices.any { it.ksefNumber == first.ksefNumber }, "export metadata should contain the invoice")

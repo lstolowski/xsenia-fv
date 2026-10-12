@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fictitious test data only: purchase invoice with several VAT rates and per-line delivery dates. -->
+<Faktura xmlns="http://crd.gov.pl/wzor/2025/06/25/13775/">
+  <Naglowek>
+    <KodFormularza kodSystemowy="FA (3)" wersjaSchemy="1-0E">FA</KodFormularza>
+    <WariantFormularza>3</WariantFormularza>
+    <DataWytworzeniaFa>2026-10-05T12:00:00Z</DataWytworzeniaFa>
+  </Naglowek>
+  <Podmiot1>
+    <DaneIdentyfikacyjne>
+      <NIP>3563998415</NIP>
+      <Nazwa>Lorem Ipsum Testowy S.A.</Nazwa>
+    </DaneIdentyfikacyjne>
+    <Adres>
+      <KodKraju>PL</KodKraju>
+      <AdresL1>ul. Dolor Sit Amet 12/3</AdresL1>
+      <AdresL2>00-003 Testowo</AdresL2>
+    </Adres>
+  </Podmiot1>
+  <Podmiot2>
+    <DaneIdentyfikacyjne>
+      <NIP>9945082500</NIP>
+      <Nazwa>Jan Testowy Usługi Testowe</Nazwa>
+    </DaneIdentyfikacyjne>
+    <JST>2</JST>
+    <GV>2</GV>
+  </Podmiot2>
+  <Fa>
+    <KodWaluty>PLN</KodWaluty>
+    <P_1>2026-10-05</P_1>
+    <P_2>FV/TEST/123</P_2>
+    <P_13_1>100.00</P_13_1>
+    <P_14_1>23.00</P_14_1>
+    <P_13_2>50.00</P_13_2>
+    <P_14_2>4.00</P_14_2>
+    <P_13_7>10.00</P_13_7>
+    <P_15>187.00</P_15>
+    <Adnotacje>
+      <P_16>2</P_16>
+      <P_17>2</P_17>
+      <P_18>2</P_18>
+      <P_18A>2</P_18A>
+      <Zwolnienie>
+        <P_19>1</P_19>
+        <P_19A>Art. 43 ust. 1 pkt 37 ustawy o VAT (test)</P_19A>
+      </Zwolnienie>
+      <NoweSrodkiTransportu>
+        <P_22N>1</P_22N>
+      </NoweSrodkiTransportu>
+      <P_23>2</P_23>
+      <PMarzy>
+        <P_PMarzyN>1</P_PMarzyN>
+      </PMarzy>
+    </Adnotacje>
+    <RodzajFaktury>VAT</RodzajFaktury>
+    <FaWiersz>
+      <NrWierszaFa>1</NrWierszaFa>
+      <P_6A>2026-09-10</P_6A>
+      <P_7>Lorem ipsum 23%</P_7>
+      <P_8A>godz.</P_8A>
+      <P_8B>2.5</P_8B>
+      <P_9A>40.00</P_9A>
+      <P_11>100.00</P_11>
+      <P_12>23</P_12>
+    </FaWiersz>
+    <FaWiersz>
+      <NrWierszaFa>2</NrWierszaFa>
+      <P_6A>2026-09-28</P_6A>
+      <P_7>Dolor sit 8%</P_7>
+      <P_8A>szt.</P_8A>
+      <P_8B>5</P_8B>
+      <P_9A>10.00</P_9A>
+      <P_11>50.00</P_11>
+      <P_12>8</P_12>
+    </FaWiersz>
+    <FaWiersz>
+      <NrWierszaFa>3</NrWierszaFa>
+      <P_6A>2026-09-15</P_6A>
+      <P_7>Amet zwolnione</P_7>
+      <P_8A>usł.</P_8A>
+      <P_8B>1</P_8B>
+      <P_9A>10.00</P_9A>
+      <P_11>10.00</P_11>
+      <P_12>zw</P_12>
+    </FaWiersz>
+    <Platnosc>
+      <Zaplacono>1</Zaplacono>
+      <DataZaplaty>2026-10-05</DataZaplaty>
+      <FormaPlatnosci>2</FormaPlatnosci>
+    </Platnosc>
+  </Fa>
+</Faktura>
