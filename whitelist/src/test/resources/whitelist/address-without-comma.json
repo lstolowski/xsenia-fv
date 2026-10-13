@@ -1,0 +1,29 @@
+{
+  "result": {
+    "subject": {
+      "name": "TESTOWO ROLNIK",
+      "nip": "6973432790",
+      "statusVat": "Czynny",
+      "regon": "000000000",
+      "pesel": null,
+      "krs": null,
+      "residenceAddress": null,
+      "workingAddress": "TESTOWO 15",
+      "representatives": [],
+      "authorizedClerks": [],
+      "partners": [],
+      "registrationLegalDate": "2017-01-02",
+      "registrationDenialBasis": null,
+      "registrationDenialDate": null,
+      "restorationBasis": null,
+      "restorationDate": null,
+      "removalBasis": null,
+      "removalDate": null,
+      "exemptionSmeDate": null,
+      "accountNumbers": [],
+      "hasVirtualAccounts": false
+    },
+    "requestId": "Test5-000aaaa",
+    "requestDateTime": "13-10-2026 15:00:00"
+  }
+}

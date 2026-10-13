@@ -1,0 +1,29 @@
+{
+  "result": {
+    "subject": {
+      "name": "TESTOWY DOLOR SPÓŁKA JAWNA",
+      "nip": "9579102904",
+      "statusVat": "Czynny",
+      "regon": "000000000",
+      "pesel": null,
+      "krs": null,
+      "residenceAddress": "TESTOWA 99, 00-099 TESTOWO",
+      "workingAddress": "TESTOWA 8, 00-004 TESTOWO",
+      "representatives": [],
+      "authorizedClerks": [],
+      "partners": [],
+      "registrationLegalDate": "2017-01-02",
+      "registrationDenialBasis": null,
+      "registrationDenialDate": null,
+      "restorationBasis": null,
+      "restorationDate": null,
+      "removalBasis": null,
+      "removalDate": null,
+      "exemptionSmeDate": null,
+      "accountNumbers": [],
+      "hasVirtualAccounts": false
+    },
+    "requestId": "Test3-000aaaa",
+    "requestDateTime": "13-10-2026 15:00:00"
+  }
+}

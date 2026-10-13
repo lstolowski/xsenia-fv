@@ -106,6 +106,7 @@ dependencies {
     implementation(project(":ksef"))
     implementation(project(":invoice"))
     implementation(project(":mirror"))
+    implementation(project(":whitelist"))
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.core.ktx)
@@ -128,6 +129,7 @@ dependencies {
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.ktor.client.mock)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 

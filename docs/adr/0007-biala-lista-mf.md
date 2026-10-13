@@ -11,7 +11,8 @@
 - API jest publiczne, bez uwierzytelnienia. Limit (KAS, strona „Jak korzystać z wykazu”): **100 zapytań dziennie** (do 30 podmiotów w jednym zapytaniu); po przekroczeniu dostęp może być zablokowany do północy.
 - Sprawdzone 2026-10-13 na prawdziwych odpowiedziach:
   - `result.subject`: `name`, `nip`, `statusVat` („Czynny”, „Zwolniony”, …), `regon`, `krs`, `residenceAddress`, `workingAddress`, `accountNumbers[]` (NRB, 26 cyfr), daty rejestracji/wykreślenia i inne,
-  - nazwa i adres **wielkimi literami**, adres w jednym napisie „ULICA NR, KOD MIEJSCOWOŚĆ”, bez „ul.” u części podmiotów,
+  - nazwa i adres **wielkimi literami**, adres w jednym napisie „ULICA NR, KOD MIEJSCOWOŚĆ”, bez „ul.”; u spółek i urzędów w `workingAddress`,
+  - duże firmy mają dziesiątki–setki rachunków (`hasVirtualAccounts: true` — rachunki wirtualne),
   - dla osoby fizycznej (JDG) `name` to imię i nazwisko, nie nazwa firmy; adres w `residenceAddress`, `workingAddress` bywa `null`,
   - nieznany NIP → `200` z `subject: null`; błędy → `400` z `{"code": "WL-1xx", "message": "…"}` (np. `WL-113` — zła długość NIP, `WL-103` — data z przyszłości).
 - API nie zna testowych NIP-ów, a środowisko testowe `wl-test.mf.gov.pl` nie zwraca danych (sprawdzone 2026-10-13) — logiki nie da się testować na danych zmyślonych w prawdziwym API.
@@ -43,7 +44,7 @@
 - Adres: `workingAddress`, a gdy brak — `residenceAddress`; podział po **ostatnim** przecinku: `line1` = część przed, `line2` = część po; bez przecinka — całość w `line1`, `line2` puste. `country` = „Polska”.
 - Status VAT inny niż „Czynny” → ikona ostrzeżenia i komunikat **„Firma nie jest czynnym podatnikiem”** (Q2: 4). Status nie jest zapisywany — widoczny w formularzu po pobraniu.
 - `subject: null` → „Nie znaleziono firmy w Białej liście”, pola bez zmian.
-- Rachunki (tylko „Moja firma”, Q3: A): po pobraniu okno z rachunkami z rejestru do zaznaczenia (rachunki już zapisane — oznaczone i pominięte); zaznaczone są dodawane z nazwą „Rachunek …{ostatnie 4 cyfry}”, pustym bankiem i walutą PLN — do uzupełnienia ręcznie.
+- Rachunki (tylko „Moja firma”, Q3: A): po pobraniu przewijane okno z rachunkami z rejestru do zaznaczenia (domyślnie nic nie jest zaznaczone) (rachunki już zapisane — oznaczone i pominięte); zaznaczone są dodawane z nazwą „Rachunek …{ostatnie 4 cyfry}”, pustym bankiem i walutą PLN — do uzupełnienia ręcznie.
 
 ### Ruch i prywatność
 

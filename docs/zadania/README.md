@@ -24,7 +24,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-018](ZAD-018-wyglad-payment-ui.md) | Wygląd w stylu „Payment UI” | US-008 | Zrobione |
 | [ZAD-019](ZAD-019-stawki-vat-model.md) | Stawki VAT w modelu faktury: kalkulator, XML FA(3), reverse charge | US-009 | Zrobione |
 | [ZAD-020](ZAD-020-formularz-stawki-jednostki-uklad.md) | Formularz: listy stawki VAT i jednostki, nowa kolejność sekcji | US-009 | Zrobione |
-| [ZAD-021](ZAD-021-klient-bialej-listy.md) | Klient Białej listy MF: pobieranie danych firmy po NIP-ie | US-010 | Do zrobienia |
+| [ZAD-021](ZAD-021-klient-bialej-listy.md) | Klient Białej listy MF: pobieranie danych firmy po NIP-ie | US-010 | Zrobione |
 | [ZAD-022](ZAD-022-profil-firmy-magazyn.md) | Profil firmy: model, magazyn per NIP, migracja, usunięcie plików JSON | US-010 | Do zrobienia |
 | [ZAD-023](ZAD-023-ui-moja-firma.md) | UI: sekcja „Moja firma” — podgląd, edycja, pobieranie, rachunki | US-010 | Do zrobienia |
 | [ZAD-024](ZAD-024-ui-kontrahenci.md) | UI: „Kontrahenci” — lista, formularz, pobieranie; „+ Nowy kontrahent” w fakturze | US-010 | Do zrobienia |

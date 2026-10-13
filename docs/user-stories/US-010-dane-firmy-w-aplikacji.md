@@ -1,7 +1,7 @@
 # US-010. Moja firma, rachunki i kontrahenci w Ustawieniach, z pobieraniem danych po NIP-ie
 
 - Priorytet: MVP
-- Status: Gotowa
+- Status: W realizacji
 - Zgłoszone: 2026-10-13 (po testach na telefonie)
 
 ## Historyjka
@@ -12,7 +12,7 @@ Jako **właściciel firmy** chcę **wprowadzać i edytować dane mojej firmy, je
 
 ### Pobieranie danych po NIP-ie (Biała lista MF)
 
-- [ ] Jeden serwis pobiera dane firmy po NIP-ie z `https://wl-api.mf.gov.pl/api/search/nip/{nip}?date={yyyy-MM-dd}` (NIP bez myślników, data „dziś”) i jest używany w formularzach „Moja firma”, „Kontrahent” i przy pierwszym uruchomieniu — [ADR 0007](../adr/0007-biala-lista-mf.md).
+- [x] Jeden serwis pobiera dane firmy po NIP-ie z `https://wl-api.mf.gov.pl/api/search/nip/{nip}?date={yyyy-MM-dd}` (NIP bez myślników, data „dziś”) i jest używany w formularzach „Moja firma”, „Kontrahent” i przy pierwszym uruchomieniu — [ADR 0007](../adr/0007-biala-lista-mf.md).
 - [ ] Obok pola NIP jest ikona pobierania. Po dotknięciu: nazwa i adres zostają **nadpisane** danymi z rejestru (pisownia jak w rejestrze), adres rozbity na dwie linie; pozostałe pola bez zmian i nadal edytowalne.
 - [ ] Gdy firma nie jest czynnym podatnikiem VAT — ikona ostrzeżenia i komunikat „Firma nie jest czynnym podatnikiem”.
 - [ ] Gdy rejestr nie zna NIP-u — „Nie znaleziono firmy w Białej liście”; niepoprawny NIP (suma kontrolna) — komunikat bez wysyłania zapytania; brak sieci, limit zapytań, błąd serwera — czytelne komunikaty po polsku.

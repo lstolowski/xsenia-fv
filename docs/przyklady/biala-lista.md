@@ -1,6 +1,6 @@
 # Zmyślone odpowiedzi API Białej listy MF
 
-Do mocków klienta Białej listy (ZAD-021, [ADR 0007](../adr/0007-biala-lista-mf.md)). Struktura i pisownia (wielkie litery, adres w jednym napisie, brak „ul.” u części podmiotów) **odwzorowują prawdziwe odpowiedzi** `GET https://wl-api.mf.gov.pl/api/search/nip/{nip}?date={yyyy-MM-dd}` sprawdzone 2026-10-13; wszystkie wartości są zmyślone.
+Do mocków klienta Białej listy (ZAD-021, [ADR 0007](../adr/0007-biala-lista-mf.md)). Struktura i pisownia (wielkie litery, adres w jednym napisie bez „ul.”, u spółek i urzędów adres w `workingAddress`, u osób fizycznych w `residenceAddress`; duże firmy mają dziesiątki–setki rachunków i `hasVirtualAccounts: true`) **odwzorowują prawdziwe odpowiedzi** `GET https://wl-api.mf.gov.pl/api/search/nip/{nip}?date={yyyy-MM-dd}` sprawdzone 2026-10-13; wszystkie wartości są zmyślone.
 
 Prawdziwe API nie zna testowych NIP-ów (zwraca `subject: null`), a środowisko `wl-test.mf.gov.pl` nie ma danych — dlatego logikę testujemy wyłącznie na tych odpowiedziach.
 
@@ -53,12 +53,12 @@ Oczekiwany wynik: nazwa „JAN TESTOWY” (dla JDG to imię i nazwisko, nazwę f
   "statusVat": "Czynny",
   "krs": "0000000000",
   "residenceAddress": null,
-  "workingAddress": "UL. TESTOWA 6, 00-002 TESTOWO",
+  "workingAddress": "TESTOWA 6, 00-002 TESTOWO",
   "accountNumbers": ["22161029092633573189646018"]
 }
 ```
 
-Oczekiwany wynik: adres z `workingAddress` — `line1` = „UL. TESTOWA 6”, `line2` = „00-002 TESTOWO”.
+Oczekiwany wynik: adres z `workingAddress` — `line1` = „TESTOWA 6”, `line2` = „00-002 TESTOWO”.
 
 ## 3. Obie formy adresu — pierwszeństwo `workingAddress`
 

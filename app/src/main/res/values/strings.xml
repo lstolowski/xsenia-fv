@@ -317,4 +317,13 @@
     <string name="status_failure_icon">Faktura nie została przyjęta</string>
     <string name="status_fix">Popraw fakturę</string>
     <string name="status_retry">Spróbuj ponownie</string>
+
+    <!-- Company lookup in the MF White List (ADR 0007) -->
+    <string name="lookup_invalid_nip">Niepoprawny NIP — sprawdź, czy ma 10 cyfr i nie ma literówki.</string>
+    <string name="lookup_not_found">Nie znaleziono firmy w Białej liście.</string>
+    <string name="lookup_inactive_vat_payer">Firma nie jest czynnym podatnikiem</string>
+    <string name="lookup_network">Brak połączenia z Białą listą. Sprawdź internet i spróbuj ponownie.</string>
+    <string name="lookup_rate_limited">Wyczerpany dzienny limit zapytań do Białej listy. Spróbuj jutro.</string>
+    <string name="lookup_server">Biała lista nie odpowiada (błąd %1$d). Spróbuj później.</string>
+    <string name="lookup_api_error">Biała lista odrzuciła zapytanie: %1$s (%2$s).</string>
 </resources>

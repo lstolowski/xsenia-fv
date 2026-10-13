@@ -14,4 +14,4 @@ Z każdej historyjki rozpisujemy zadania w [../zadania/](../zadania/README.md).
 | [US-007](US-007-faktury-niewyslane.md) | Faktury sprzedażowe zapisane bez wysyłki do KSeF | MVP | Zrobiona |
 | [US-008](US-008-wyglad-payment-ui.md) | Wygląd aplikacji według szablonu „Payment UI” | MVP | Zrobiona |
 | [US-009](US-009-stawki-vat-jednostki.md) | Stawki VAT, jednostki z listy i nowy układ formularza faktury | MVP | Zrobiona |
-| [US-010](US-010-dane-firmy-w-aplikacji.md) | Moja firma, rachunki i kontrahenci w Ustawieniach, z pobieraniem danych po NIP-ie | MVP | Gotowa |
+| [US-010](US-010-dane-firmy-w-aplikacji.md) | Moja firma, rachunki i kontrahenci w Ustawieniach, z pobieraniem danych po NIP-ie | MVP | W realizacji |

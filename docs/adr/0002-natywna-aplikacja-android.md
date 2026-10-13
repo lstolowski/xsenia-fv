@@ -27,7 +27,7 @@ Szczegóły: [analiza/02-warianty-architektury.md](../analiza/02-warianty-archit
 
 | Obszar | Decyzja |
 |---|---|
-| Moduły | `ksef` (klient API, kryptografia), `invoice` (model, XML FA(3), parser, pliki JSON), `mirror` (lokalna kopia faktur i synchronizacja) — czysty Kotlin/JVM; `app` — UI Android |
+| Moduły | `ksef` (klient API, kryptografia), `invoice` (model, XML FA(3), parser, pliki JSON), `mirror` (lokalna kopia faktur i synchronizacja), `whitelist` (Biała lista MF, ADR 0007) — czysty Kotlin/JVM; `app` — UI Android |
 | SDK | `targetSdk` 36 (Android 16); `minSdk` 34 (Android 14) — jedno urządzenie docelowe, brak potrzeby wstecznej zgodności; `compileSdk` 37 — wymagane przez aktualne biblioteki AndroidX (nie zmienia zachowania aplikacji na Androidzie 16) |
 | Biometria | `BiometricPrompt` przy **otwarciu aplikacji** i przy **potwierdzeniu wysyłki** nowej faktury do KSeF (B4) |
 | Token KSeF | wprowadzany w aplikacji, szyfrowany kluczem z Android Keystore, wyłączony z Auto Backup |

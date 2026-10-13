@@ -1,0 +1,32 @@
+{
+  "result": {
+    "subject": {
+      "name": "JAN TESTOWY",
+      "nip": "1996845518",
+      "statusVat": "Czynny",
+      "regon": "000000000",
+      "pesel": null,
+      "krs": null,
+      "residenceAddress": "TESTOWA 1, 00-001 TESTOWO",
+      "workingAddress": null,
+      "representatives": [],
+      "authorizedClerks": [],
+      "partners": [],
+      "registrationLegalDate": "2017-01-02",
+      "registrationDenialBasis": null,
+      "registrationDenialDate": null,
+      "restorationBasis": null,
+      "restorationDate": null,
+      "removalBasis": null,
+      "removalDate": null,
+      "exemptionSmeDate": null,
+      "accountNumbers": [
+        "85216097583216850246002152",
+        "55109004081797992973253811"
+      ],
+      "hasVirtualAccounts": false
+    },
+    "requestId": "Test1-000aaaa",
+    "requestDateTime": "13-10-2026 15:00:00"
+  }
+}

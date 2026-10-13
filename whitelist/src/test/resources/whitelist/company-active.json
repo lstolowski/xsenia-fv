@@ -1,0 +1,31 @@
+{
+  "result": {
+    "subject": {
+      "name": "TESTOWA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ",
+      "nip": "6691034274",
+      "statusVat": "Czynny",
+      "regon": "000000000",
+      "pesel": null,
+      "krs": "0000000000",
+      "residenceAddress": null,
+      "workingAddress": "TESTOWA 6, 00-002 TESTOWO",
+      "representatives": [],
+      "authorizedClerks": [],
+      "partners": [],
+      "registrationLegalDate": "2017-01-02",
+      "registrationDenialBasis": null,
+      "registrationDenialDate": null,
+      "restorationBasis": null,
+      "restorationDate": null,
+      "removalBasis": null,
+      "removalDate": null,
+      "exemptionSmeDate": null,
+      "accountNumbers": [
+        "22161029092633573189646018"
+      ],
+      "hasVirtualAccounts": false
+    },
+    "requestId": "Test2-000aaaa",
+    "requestDateTime": "13-10-2026 15:00:00"
+  }
+}

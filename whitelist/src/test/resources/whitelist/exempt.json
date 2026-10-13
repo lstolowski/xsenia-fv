@@ -1,0 +1,31 @@
+{
+  "result": {
+    "subject": {
+      "name": "LOREM IPSUM TESTOWY",
+      "nip": "9945082500",
+      "statusVat": "Zwolniony",
+      "regon": "000000000",
+      "pesel": null,
+      "krs": null,
+      "residenceAddress": null,
+      "workingAddress": "DOLOR SIT AMET 12/3, 00-003 TESTOWO",
+      "representatives": [],
+      "authorizedClerks": [],
+      "partners": [],
+      "registrationLegalDate": "2017-01-02",
+      "registrationDenialBasis": null,
+      "registrationDenialDate": null,
+      "restorationBasis": null,
+      "restorationDate": null,
+      "removalBasis": null,
+      "removalDate": null,
+      "exemptionSmeDate": null,
+      "accountNumbers": [
+        "71101075753723914707418989"
+      ],
+      "hasVirtualAccounts": false
+    },
+    "requestId": "Test4-000aaaa",
+    "requestDateTime": "13-10-2026 15:00:00"
+  }
+}

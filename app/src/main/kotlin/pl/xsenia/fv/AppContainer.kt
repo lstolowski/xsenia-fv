@@ -11,6 +11,7 @@ import pl.xsenia.fv.issue.UnsentInvoiceStore
 import pl.xsenia.fv.ksef.KsefAccess
 import pl.xsenia.fv.ksef.KsefConnectionChecker
 import pl.xsenia.fv.ksef.KsefEnvironment
+import pl.xsenia.fv.lookup.CompanyLookupService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ import pl.xsenia.fv.security.KsefTokenStore
 import pl.xsenia.fv.settings.AppSettings
 import pl.xsenia.fv.settings.settingsDataStore
 import pl.xsenia.fv.storage.LocalCache
+import pl.xsenia.fv.whitelist.WhiteListClient
 
 /** Manual dependency container, created once per process by [XseniaApplication]. */
 class AppContainer(context: Context) {
@@ -66,6 +68,9 @@ class AppContainer(context: Context) {
             initialDate = MIRROR_START_DATE.atStartOfDay(POLAND).toInstant(),
         )
     }
+
+    /** Company data by NIP from the MF White List (ADR 0007) — used by the company and counterparty forms. */
+    val companyLookup by lazy { CompanyLookupService(WhiteListClient.create(), today = { LocalDate.now(POLAND) }) }
 
     val issueStorage = IssueStorage(context.filesDir)
 
