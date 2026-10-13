@@ -4,6 +4,8 @@
 - Status: Zrobiona (2026-10-12)
 - Zgłoszone: 2026-10-12
 
+> Od [US-010](US-010-dane-firmy-w-aplikacji.md) dane mojej firmy, rachunki i kontrahenci są wprowadzane w aplikacji, a nie w plikach JSON ([ADR 0006](../adr/0006-dane-firmy-w-aplikacji.md)). Treść poniżej opisuje stan z chwili realizacji.
+
 ## Historyjka
 
 Jako **właściciel firmy** chcę **wybierać stawkę VAT i jednostkę każdej pozycji z listy oraz mieć numer faktury i rachunek w wygodniejszych miejscach formularza**, aby **wystawiać też faktury z obniżonym VAT lub bez VAT i szybciej wypełniać formularz**.

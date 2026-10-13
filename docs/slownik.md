@@ -11,10 +11,14 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Data wystawienia | `issueDate` | Pole `P_1` | |
 | Data dostawy | `deliveryDate` | Data dokonania dostawy / wykonania usługi: `P_6` → `OkresFa/P_6_Do` → najpóźniejsza `P_6A` → `P_1` | Podstawa filtra miesiąca i numeracji |
 | Kwota netto / VAT / brutto | `netAmount` / `vatAmount` / `grossAmount` | Sumy faktury (`P_13_1` / `P_14_1` / `P_15`) | |
-| Moja firma | `company` | Dane sprzedawcy z pliku `company.json` | ADR 0004 |
-| Rachunek bankowy / konto | `bankAccount` | Pozycja z pliku `banks.json` (`NrRB` w FA(3)) | ADR 0004 |
-| Kontrahenci (plik) | `counterparties` | Plik `counterparties.json` z danymi nabywców | ADR 0004 |
-| Konfiguracja wystawiania | `InvoicingConfig` | Firma + rachunki + kontrahenci wczytane z plików JSON, z listą problemów (`ConfigIssue`) | ADR 0004 |
+| Moja firma | `company` | Dane sprzedawcy (Podmiot1) wprowadzane w Ustawieniach → „Moja firma”; NIP = NIP z tokena KSeF | ADR 0006 (dawniej plik `company.json`, ADR 0004) |
+| Profil firmy | `profile` (`ProfileRepository`) | Wszystkie dane jednej mojej firmy w `profiles/{nip}/`: firma, rachunki, kontrahenci, szkic, niewysłane, lustro; aktywny profil = NIP z tokena | ADR 0006; w UI bez przełączania firm |
+| Rachunek bankowy / konto | `bankAccount` | Rachunek mojej firmy (`NrRB` w FA(3)); wiele na firmę, pierwszy domyślny na fakturze | ADR 0006 (dawniej plik `banks.json`) |
+| Kontrahenci | `counterparties` | Lista nabywców w Ustawieniach → „Kontrahenci”; NIP niezmienny po utworzeniu | ADR 0006 (dawniej plik `counterparties.json`) |
+| Konfiguracja wystawiania | `InvoicingConfig` | Firma + rachunki + kontrahenci wczytane z plików JSON, z listą problemów (`ConfigIssue`) | ADR 0004 — **wycofywane** w ZAD-022 (zastępuje je profil firmy) |
+| Biała lista (wykaz podatników VAT) | `whitelist` (`WhiteListClient`) | API MF `wl-api.mf.gov.pl` — dane firmy po NIP-ie: nazwa, adres, status VAT, rachunki | ADR 0007 |
+| Pobieranie danych po NIP-ie | `CompanyLookupService` | Wypełnienie formularza „Moja firma” / „Kontrahent” danymi z Białej listy (ikona pobierania obok NIP-u) | ADR 0007 |
+| Status VAT | `vatStatus` | `statusVat` z Białej listy: „Czynny”, „Zwolniony”, …; inny niż czynny → „Firma nie jest czynnym podatnikiem” | ADR 0007 |
 | Faktura (treść) | `Invoice` | Faktura odczytana z XML FA(2)/FA(3) przez `InvoiceXmlParser` | |
 | Pozycja faktury | `InvoiceLine` | `FaWiersz`: nazwa `P_7`, jednostka `P_8A`, ilość `P_8B`, cena jedn. netto `P_9A`, wartość netto `P_11`, stawka `P_12` | Wartość brutto pozycji wyliczana do wyświetlenia |
 | Stawka VAT | `VatRate` (`RATE_23`, `RATE_8`, `RATE_5`, `RATE_0`, `NOT_TAXABLE`) | Stawka pozycji (`P_12`): `23`, `8`, `5`, `0 KR`, `np II` | ADR 0005 |

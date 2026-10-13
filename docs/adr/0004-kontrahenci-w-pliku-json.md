@@ -1,6 +1,8 @@
 # 0004. Dane firmy, rachunki i kontrahenci w ręcznie edytowanych plikach JSON
 
-- Status: Zaakceptowany
+> ⚠️ **Nieaktualny** (od 2026-10-13). Pliki `company.json`, `banks.json`, `counterparties.json` i wybór folderu zostają usunięte — dane mojej firmy, rachunki i kontrahenci są wprowadzane w aplikacji: [ADR 0006](0006-dane-firmy-w-aplikacji.md). Wzory plików usunięto z `docs/przyklady/`. Treść poniżej zostaje jako historia decyzji.
+
+- Status: Zastąpiony przez 0006
 - Data: 2026-10-11
 
 ## Kontekst

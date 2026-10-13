@@ -1,5 +1,7 @@
 # 0005. Stawki VAT i jednostki w pozycjach faktury; układ formularza nowej faktury
 
+> ⚠️ **Częściowo nieaktualne** (od 2026-10-13): wzmianki o plikach `company.json` i `counterparties.json` — dane firmy i kontrahentów są w aplikacji ([ADR 0006](0006-dane-firmy-w-aplikacji.md)). Decyzje o stawkach VAT, jednostkach i układzie formularza obowiązują.
+
 - Status: Zaakceptowany
 - Data: 2026-10-12
 - Zastępuje decyzję C2 („stawka VAT zawsze 23%”) i częściowo R10 („bez uwag”) z [warsztatu](../analiza/03-pytania-warsztat.md)

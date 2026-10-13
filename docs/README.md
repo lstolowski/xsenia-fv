@@ -7,7 +7,7 @@
 | [user-stories/](user-stories/README.md) | Historyjki użytkownika (co i po co) |
 | [zadania/](zadania/README.md) | Zadania implementacyjne (jak) — rozpisywane z user stories |
 | [srodowisko/](srodowisko/) | Przygotowanie środowiska deweloperskiego |
-| [przyklady/](przyklady/README.md) | Wzory plików `company.json`, `banks.json`, `counterparties.json` |
+| [przyklady/](przyklady/README.md) | Zmyślone dane do developmentu: NIP-y, firma, kontrahenci, rachunki, odpowiedzi Białej listy |
 | [slownik.md](slownik.md) | Słownik pojęć i mapowanie na nazwy w kodzie |
 
 ## Analiza

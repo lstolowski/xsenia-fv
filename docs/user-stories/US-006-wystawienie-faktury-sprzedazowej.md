@@ -3,6 +3,8 @@
 - Priorytet: MVP
 - Status: Zrobiona (2026-10-12)
 
+> Od [US-010](US-010-dane-firmy-w-aplikacji.md) dane mojej firmy, rachunki i kontrahenci są wprowadzane w aplikacji, a nie w plikach JSON ([ADR 0006](../adr/0006-dane-firmy-w-aplikacji.md)). Treść poniżej opisuje stan z chwili realizacji.
+
 ## Historyjka
 
 Jako **właściciel firmy** chcę **wystawić nową fakturę sprzedażową VAT i wysłać ją do KSeF z telefonu**, aby **zafakturować klienta w minutę, bez oficjalnej aplikacji KSeF**.

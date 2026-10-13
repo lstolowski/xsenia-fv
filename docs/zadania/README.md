@@ -24,5 +24,14 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-018](ZAD-018-wyglad-payment-ui.md) | Wygląd w stylu „Payment UI” | US-008 | Zrobione |
 | [ZAD-019](ZAD-019-stawki-vat-model.md) | Stawki VAT w modelu faktury: kalkulator, XML FA(3), reverse charge | US-009 | Zrobione |
 | [ZAD-020](ZAD-020-formularz-stawki-jednostki-uklad.md) | Formularz: listy stawki VAT i jednostki, nowa kolejność sekcji | US-009 | Zrobione |
+| [ZAD-021](ZAD-021-klient-bialej-listy.md) | Klient Białej listy MF: pobieranie danych firmy po NIP-ie | US-010 | Do zrobienia |
+| [ZAD-022](ZAD-022-profil-firmy-magazyn.md) | Profil firmy: model, magazyn per NIP, migracja, usunięcie plików JSON | US-010 | Do zrobienia |
+| [ZAD-023](ZAD-023-ui-moja-firma.md) | UI: sekcja „Moja firma” — podgląd, edycja, pobieranie, rachunki | US-010 | Do zrobienia |
+| [ZAD-024](ZAD-024-ui-kontrahenci.md) | UI: „Kontrahenci” — lista, formularz, pobieranie; „+ Nowy kontrahent” w fakturze | US-010 | Do zrobienia |
+| [ZAD-025](ZAD-025-pierwsze-uruchomienie-braki.md) | Pierwsze uruchomienie (token → Moja firma) i braki w formularzu faktury | US-010 | Do zrobienia |
+
+Weryfikacja na urządzeniu fizycznym (2026-10-13): użytkownik sprawdził zadania 001–020 (poza 002 — infrastruktura testów integracyjnych) na swoim telefonie z KSeF TEST — aplikacja działa i wygląda poprawnie.
 
 Kolejność realizacji (F1): 001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010 → 011 → 012 → 013; 014 równolegle z 009; 016 → 017 (US-007, przed 015); 019 → 020 (US-009, przed 015); 015 na końcu.
+
+US-010: 021 → 022 → 023 → 024 → 025 (021 i 022 mogą iść równolegle).

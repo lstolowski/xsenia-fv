@@ -2,6 +2,7 @@
 
 - Status: Zaakceptowany
 - Data: 2026-10-11
+- Zmieniony 2026-10-13: lustro leży w katalogu profilu firmy `profiles/{nip}/invoices/` ([ADR 0006](0006-dane-firmy-w-aplikacji.md))
 
 ## Kontekst
 

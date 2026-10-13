@@ -3,6 +3,8 @@
 - Priorytet: MVP
 - Status: Zrobiona (2026-10-12)
 
+> Od [US-010](US-010-dane-firmy-w-aplikacji.md) dane mojej firmy, rachunki i kontrahenci są wprowadzane w aplikacji, a nie w plikach JSON ([ADR 0006](../adr/0006-dane-firmy-w-aplikacji.md)). Treść poniżej opisuje stan z chwili realizacji.
+
 ## Historyjka
 
 Jako **właściciel firmy** chcę **jednorazowo skonfigurować aplikację (token KSeF, folder z plikami JSON) i otwierać ją biometrią**, aby **nikt poza mną nie miał dostępu do moich faktur ani możliwości ich wystawiania**.

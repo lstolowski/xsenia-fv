@@ -26,8 +26,4 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    // Example configuration files in the docs are validated by tests.
-    val examplesDir = rootProject.layout.projectDirectory.dir("docs/przyklady")
-    inputs.dir(examplesDir)
-    systemProperty("examplesDir", examplesDir.asFile.absolutePath)
 }

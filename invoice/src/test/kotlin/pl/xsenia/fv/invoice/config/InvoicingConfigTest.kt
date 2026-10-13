@@ -4,14 +4,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.nio.file.Files
-import java.nio.file.Path
 
 class InvoicingConfigTest {
 
-    private val examplesDir: Path = Path.of(requireNotNull(System.getProperty("examplesDir")) { "examplesDir not set by Gradle" })
-
-    private fun example(name: String) = Files.readString(examplesDir.resolve(name))
+    private fun example(name: String) =
+        requireNotNull(javaClass.getResource("/config/$name")) { "missing test resource $name" }.readText()
 
     private fun parseExamples(
         company: String? = example("company.json"),
@@ -20,7 +17,7 @@ class InvoicingConfigTest {
     ) = InvoicingConfig.parse(company, banks, counterparties)
 
     @Test
-    fun `example files in docs are valid`() {
+    fun `example files are valid`() {
         val config = parseExamples()
 
         // The examples may be edited freely — they only have to stay valid.

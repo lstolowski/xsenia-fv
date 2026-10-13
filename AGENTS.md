@@ -15,14 +15,8 @@ Stan: implementacja — postęp w [docs/zadania/](docs/zadania/README.md). Szcze
 Środowisko KSeF TEST jest **publiczne** — dane w nim są współdzielone między integratorami i mogą wyciec.
 
 - Podczas developmentu używaj **wyłącznie środowiska KSeF TEST** (testy integracyjne, wersja aplikacji `ksefTest`). Nigdy nie wywołuj DEMO ani PROD.
-- Wszystkie dane wprowadzane do KSeF TEST, a także dane w testach, przykładach, fixture'ach i dokumentacji muszą być **zmyślone**:
-  - NIP-y wyłącznie testowe (z poprawną sumą kontrolną), np.: `6691034274`, `1996845518`, `9945082500`, `9579102904`, `6973432790`, `4824062973`, `3563998415`, `8771617926`; NIP kontekstu testowego użytkownika jest w `secrets/ksef-test.properties`,
-  - nazwy i osoby: „Test”, „Testowy”, „Testowa”, „Jan Testowy”, „Testowa Sp. z o.o.” albo Lorem ipsum,
-  - adresy: np. „ul. Testowa 1”, „00-001 Testowo”; e-maile w domenie `example.com`; telefony `+48 000 000 000`,
-  - numery rachunków: wyłącznie testowe (poprawna suma kontrolna) — **nigdy prawdziwy rachunek użytkownika**: znajdz je w docs/przyklady/banks.json
-
-    (w plikach JSON i polu `NrRB` faktury — 26 cyfr bez prefiksu `PL`),
-  - nazwy towarów/usług: „Usługa testowa”, Lorem ipsum.
+- Wszystkie dane wprowadzane do KSeF TEST, a także dane w testach, przykładach, fixture'ach i dokumentacji muszą być **zmyślone**: testowe NIP-y i numery rachunków (z poprawną sumą kontrolną), zmyślone nazwy, osoby, adresy, e-maile, telefony i nazwy usług. **Gotowe przykłady są w [docs/przyklady/](docs/przyklady/README.md)** — korzystaj z nich i tam dopisuj nowe; nie umieszczaj przykładów danych w AGENTS.md. NIP kontekstu testowego użytkownika jest w `secrets/ksef-test.properties`.
+- **Nigdy nie używaj prawdziwego rachunku ani NIP-u użytkownika** w repozytorium (kod, testy, dokumentacja). Prawdziwe NIP-y wolno sprawdzać w API Białej listy MF tylko w trakcie sesji (np. do podejrzenia formatu odpowiedzi) — do repozytorium trafiają wyłącznie zmyślone odpowiedzi.
 - Nie kopiuj do repozytorium ani do KSeF TEST żadnych prawdziwych danych użytkownika lub jego kontrahentów (także z faktur PROD).
 - Jeśli zauważysz w repozytorium dane wyglądające na prawdziwe — zgłoś to użytkownikowi.
 - Zgoda użytkownika (2026-10-12): testy integracyjne i testy na emulatorze **mogą wysyłać faktury do KSeF TEST** (kontekst NIP z `secrets/ksef-test.properties`), wyłącznie z danymi zmyślonymi jak wyżej. Faktur w KSeF nie da się usunąć — wysyłaj tylko tyle, ile potrzeba.
@@ -33,6 +27,7 @@ Stan: implementacja — postęp w [docs/zadania/](docs/zadania/README.md). Szcze
 - `docs/adr/` — Architecture Decision Records
 - `docs/user-stories/` — historyjki użytkownika
 - `docs/zadania/` — rozpisane zadania implementacyjne
+- `docs/przyklady/` — zmyślone dane do developmentu (NIP-y, firma, kontrahenci, rachunki, odpowiedzi Białej listy)
 - `docs/srodowisko/` — przygotowanie środowiska deweloperskiego (Android Studio, emulator)
 - `docs/slownik.md` — słownik pojęć (obowiązująca terminologia)
 - `secrets/` — lokalne dane dostępowe (token KSeF TEST itp.), **ignorowane przez git**; wzór w `*.example`
@@ -57,7 +52,7 @@ JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Co
 - Emulator: AVD `Samsung_S23_xsenia` (Android 16, API 36)
   - PIN blokady ekranu emulatora: `1111` (wyłącznie emulator testowy, nie dotyczy prawdziwego telefonu)
   - Odcisk palca zarejestrowany jako *Finger 1* (Extended controls → Fingerprint); z terminala: `adb -e emu finger touch 1` a potem `adb -e emu finger remove 1`. **Bywa zawodne** (odrzucenia) — po 1–2 nieudanych próbach przestań (ryzyko blokady czytnika) i poproś użytkownika o odblokowanie przez Extended controls → Touch Sensor. Po restarcie emulatora pierwsze odblokowanie ekranu wymaga PIN-u — poproś użytkownika
-  - Testowe pliki danych na emulatorze: `/sdcard/Documents/xsenia-test/` (`company.json` z NIP-em kontekstu testowego)
+  - Dane testowe na emulatorze: do czasu ZAD-022 pliki w `/sdcard/Documents/xsenia-test/` (`company.json` z NIP-em kontekstu testowego); od US-010 — „Moja firma”, rachunki i kontrahenci wpisani w aplikacji (wartości z [docs/przyklady/](docs/przyklady/README.md))
 
 ## Konwencje językowe
 
@@ -77,3 +72,4 @@ JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Co
 - Dokumentacja integracji KSeF API 2.0: https://github.com/CIRFMF/ksef-docs
 - OpenAPI (TEST): https://api-test.ksef.mf.gov.pl/docs/v2
 - Schemat faktury FA(3): `faktury/schemy/FA/schemat_FA(3)_v1-0E.xsd` w repozytorium ksef-docs
+- API Białej listy MF (wykaz podatników VAT, pobieranie danych firmy po NIP): https://wl-api.mf.gov.pl — [ADR 0007](docs/adr/0007-biala-lista-mf.md)
