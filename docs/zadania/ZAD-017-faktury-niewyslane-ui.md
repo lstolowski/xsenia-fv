@@ -23,6 +23,7 @@ Zapis faktury bez wysyłki z podglądu, oznaczenie na liście sprzedażowej, edy
 
 - [x] Testy
 - [x] Sprawdzone na emulatorze z KSeF TEST (zapis bez wysyłki → edycja → wysyłka → faktura z numerem KSeF na liście bez ostrzeżenia)
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja / słownik
 
 ## Uwagi

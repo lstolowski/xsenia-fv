@@ -23,6 +23,7 @@ Dwie zakładki z listą faktur wybranego miesiąca.
 
 - [x] Testy (`InvoiceListLogicTest` 5, `PolishPluralTest` 15)
 - [x] Sprawdzone na emulatorze z danymi z KSeF TEST (wrzesień: 1 faktura z dostawą 30.09, październik pusty, wyszukiwanie, wybór miesiąca, „0 faktur”)
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja
 
 ## Uwagi

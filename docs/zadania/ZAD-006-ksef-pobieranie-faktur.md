@@ -21,6 +21,7 @@ Moduł `ksef` pobiera listy i treść faktur.
 
 - [x] Testy
 - [x] Sprawdzone na środowisku KSeF TEST
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja / słownik
 
 ## Uwagi

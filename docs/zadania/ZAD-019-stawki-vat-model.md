@@ -22,4 +22,5 @@ Szkic faktury (`SalesInvoiceDraft`) obsługuje stawki 23%, 8%, 5%, 0% i „np”
 
 - [x] Testy: kalkulator (mieszane stawki, zaokrąglenia), XML zgodny z XSD FA(3) i odczytany parserem (kategorie, adnotacja odwrotnego obciążenia, uwagi)
 - [x] Sprawdzone na środowisku KSeF TEST: jedna faktura z pozycjami 23%, 8%, 5%, 0% i „np” przyjęta
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja / słownik

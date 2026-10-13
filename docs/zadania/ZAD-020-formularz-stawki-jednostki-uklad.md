@@ -20,4 +20,5 @@ Formularz nowej faktury ma listy rozwijane „Jednostka” i „Stawka VAT” w 
 
 - [x] Testy (`InvoiceFormCheck`: stawka i jednostka trafiają do szkicu; domyślne wartości)
 - [x] Sprawdzone na emulatorze: listy, kolejność sekcji, sumy przy mieszanych stawkach
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja / słownik

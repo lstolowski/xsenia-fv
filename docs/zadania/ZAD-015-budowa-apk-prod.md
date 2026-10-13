@@ -24,4 +24,5 @@ Podpisany APK `prod` gotowy do ręcznej instalacji na S23.
 
 - [x] Testy: `./gradlew build` (z wariantami release i R8) zielony; `releaseApk` bez klucza kończy się czytelnym błędem
 - [x] Sprawdzone na emulatorze: `releaseApkTest` podpisany kluczem debug (podpis v2 zweryfikowany), zainstalowany jako aktualizacja — biometria, synchronizacja z KSeF TEST (także pełna po wyczyszczeniu cache: eksport, szyfrowanie, ZIP), listy, szczegóły (korekta, EUR), formularz, podgląd, zapis szkicu; bez błędów w logach (2026-10-13). Wersji PROD nie uruchamiano (zakaz łączenia z KSeF PROD w developmencie)
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja: README.md, AGENTS.md, docs/srodowisko/

@@ -28,4 +28,5 @@ Moduł `ksef` uzyskuje i odnawia `accessToken` na podstawie tokena KSeF.
 
 - [x] Testy
 - [x] Sprawdzone na środowisku KSeF TEST (2026-10-11, ~2,8 s na logowanie + odświeżenie)
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja / słownik

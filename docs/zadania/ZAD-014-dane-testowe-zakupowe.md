@@ -26,4 +26,5 @@ Na NIP testowym muszą istnieć faktury zakupowe, aby przetestować listę zakup
 
 - [x] Testy
 - [x] Sprawdzone na emulatorze: lista zakupowa wrzesień (3 faktury, korekta oznaczona) i październik (PLN + osobno EUR), szczegóły korekty i faktury wielostawkowej
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja (AGENTS.md)

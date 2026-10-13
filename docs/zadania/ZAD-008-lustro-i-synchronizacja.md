@@ -19,6 +19,7 @@ Implementacja ADR 0003 w aplikacji.
 
 - [x] Testy (11 jednostkowych na sztucznym źródle; integracyjny na KSeF TEST: pierwsza synchronizacja + kolejna bez pobrań)
 - [x] Sprawdzone na emulatorze z KSeF TEST: 1 faktura sprzedażowa, data dostawy 2026-09-30 z XML, ręczne odświeżenie bez ponownych pobrań
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja (ADR 0002, ADR 0003, AGENTS.md)
 
 ## Uwagi

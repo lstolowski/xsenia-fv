@@ -20,4 +20,5 @@ Czytelny widok faktury na telefonie.
 
 - [x] Testy (`FormatsTest` — kwoty, ilości, rachunki, daty)
 - [x] Sprawdzone na emulatorze na fakturze z KSeF TEST
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja (US-005, decyzja o udostępnianiu)

@@ -22,6 +22,7 @@ Pierwsze uruchomienie, ekran Ustawienia i blokada biometryczna.
 
 - [x] Testy (`AppLockTest`)
 - [x] Sprawdzone na środowisku KSeF TEST / emulatorze
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja (AGENTS.md — obsługa odcisku na emulatorze, dane testowe)
 
 ## Decyzje

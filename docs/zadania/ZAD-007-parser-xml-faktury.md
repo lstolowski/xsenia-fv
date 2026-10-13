@@ -20,6 +20,7 @@ Moduł `invoice` zamienia XML faktury na model do widoku szczegółów.
 
 - [x] Testy (10 parsera + 5 walidacji XSD)
 - [x] Sprawdzone na środowisku KSeF TEST
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja
 
 ## Uwagi

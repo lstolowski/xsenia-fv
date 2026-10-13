@@ -22,6 +22,7 @@ Kompletny przepływ wystawienia faktury w aplikacji.
 
 - [x] Testy (`DecimalInputTest` 13, `InvoiceFormCheckTest` 4, `InvoiceFormDefaultsTest` 4)
 - [x] Sprawdzone na emulatorze z KSeF TEST: faktura `01/09/2026` (Testowa Sp. z o.o., 123,00 zł) przyjęta, numer KSeF, UPO zapisane, faktura na liście września, następna sugestia `02/09/2026`
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja
 
 ## Uwagi

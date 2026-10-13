@@ -24,4 +24,5 @@ Projekt budujący się z terminala i w Android Studio, z modułami i dwiema wers
 
 - [x] Testy (`KsefEnvironmentTest`)
 - [x] Sprawdzone na emulatorze
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja (ADR 0002, AGENTS.md)

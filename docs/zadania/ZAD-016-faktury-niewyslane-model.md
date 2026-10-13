@@ -21,6 +21,7 @@ Faktury sprzedażowe zapisane bez wysyłki przechowywane na telefonie, edytowaln
 
 - [x] Testy
 - [x] Sprawdzone na emulatorze z KSeF TEST
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja / słownik
 
 ## Uwagi

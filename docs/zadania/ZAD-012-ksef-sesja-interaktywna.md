@@ -21,6 +21,7 @@ Wysyłka pojedynczej faktury do KSeF.
 
 - [x] Testy (5 jednostkowych na `MockEngine`: przebieg z odszyfrowaniem wysłanej faktury, odrzucenie, duplikat, przekroczenie czasu + `awaitResult`, brak UPO)
 - [x] Sprawdzone na środowisku KSeF TEST
+- [x] Sprawdzone przez użytkownika na urządzeniu fizycznym z KSeF TEST (2026-10-13): działa i wygląda poprawnie
 - [x] Zaktualizowana dokumentacja (AGENTS.md — zgoda na wysyłkę na TEST, `-PsendInvoices`)
 
 ## Uwagi
