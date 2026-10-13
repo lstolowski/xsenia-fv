@@ -15,3 +15,4 @@ Z każdej historyjki rozpisujemy zadania w [../zadania/](../zadania/README.md).
 | [US-008](US-008-wyglad-payment-ui.md) | Wygląd aplikacji według szablonu „Payment UI” | MVP | Zrobiona |
 | [US-009](US-009-stawki-vat-jednostki.md) | Stawki VAT, jednostki z listy i nowy układ formularza faktury | MVP | Zrobiona |
 | [US-010](US-010-dane-firmy-w-aplikacji.md) | Moja firma, rachunki i kontrahenci w Ustawieniach, z pobieraniem danych po NIP-ie | MVP | Zrobiona |
+| [US-011](US-011-faktury-w-walucie-obcej.md) | Faktury w walucie obcej (EUR, USD, GBP) z kursem NBP | MVP | Gotowa |

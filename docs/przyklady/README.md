@@ -10,6 +10,7 @@ Wszystkie NIP-y i numery rachunków mają poprawną sumę kontrolną, ale nie na
 | [kontrahenci.md](kontrahenci.md) | testowi kontrahenci (nabywcy) |
 | [rachunki.md](rachunki.md) | testowe rachunki bankowe (NRB) |
 | [biala-lista.md](biala-lista.md) | zmyślone odpowiedzi API Białej listy MF (do mocków, ADR 0007) |
+| [kursy-nbp.md](kursy-nbp.md) | przykładowe odpowiedzi API kursów NBP (do mocków, ADR 0008) |
 
 Dane osobowe i adresowe:
 

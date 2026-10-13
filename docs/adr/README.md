@@ -12,3 +12,4 @@ Statusy: `Proponowany` → `Zaakceptowany` | `Odrzucony`; później ewentualnie 
 | [0005](0005-stawki-vat-i-jednostki.md) | Stawki VAT i jednostki w pozycjach faktury; układ formularza | Zaakceptowany (wzmianki o plikach JSON nieaktualne) |
 | [0006](0006-dane-firmy-w-aplikacji.md) | Dane mojej firmy, rachunki i kontrahenci w aplikacji (profil firmy) | Zaakceptowany |
 | [0007](0007-biala-lista-mf.md) | Pobieranie danych firmy po NIP-ie z Białej listy MF | Zaakceptowany |
+| [0008](0008-kursy-walut-nbp.md) | Faktury w walucie obcej i kursy walut z API NBP | Zaakceptowany |
