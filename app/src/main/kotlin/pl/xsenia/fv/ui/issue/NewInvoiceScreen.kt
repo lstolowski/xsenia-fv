@@ -91,6 +91,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
 import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.profile.ProfileGap
 import pl.xsenia.fv.invoice.issue.DraftIssue
 import pl.xsenia.fv.invoice.issue.DraftIssueType
 import pl.xsenia.fv.invoice.issue.DraftLine
@@ -124,7 +125,7 @@ import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewCounterparty: () -> Unit) {
+fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewCounterparty: () -> Unit, onOpenCompany: () -> Unit) {
     val step by viewModel.step.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sendState by viewModel.sendState.collectAsStateWithLifecycle()
@@ -177,8 +178,8 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewC
                 current == null -> LoadingScreen()
                 step == IssueStep.STATUS -> StatusContent(sendState, viewModel, onClose)
                 step == IssueStep.PREVIEW -> PreviewContent(viewModel)
-                current.profile?.canIssueInvoices != true ->
-                    Text(stringResource(R.string.new_invoice_unavailable), color = MaterialTheme.colorScheme.error)
+                current.profile == null -> LoadingScreen()
+                !current.profile.canIssueInvoices -> ProfileGapsContent(current.profile.gaps, onOpenCompany, onNewCounterparty)
                 else -> FormContent(current, current.profile, viewModel, onNewCounterparty)
             }
         }
@@ -569,6 +570,30 @@ private fun StatusMark(success: Boolean) {
                 tint = Color.White,
                 modifier = Modifier.size(92.dp),
             )
+        }
+    }
+}
+
+/** What is missing before an invoice can be issued, each with „Uzupełnij” (ZAD-025). */
+@Composable
+private fun ProfileGapsContent(gaps: List<ProfileGap>, onOpenCompany: () -> Unit, onNewCounterparty: () -> Unit) {
+    SectionCard(stringResource(R.string.gaps_title)) {
+        gaps.forEach { gap ->
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    stringResource(
+                        when (gap) {
+                            ProfileGap.COMPANY -> R.string.gap_company
+                            ProfileGap.BANK_ACCOUNT -> R.string.gap_bank_account
+                            ProfileGap.COUNTERPARTY -> R.string.gap_counterparty
+                        },
+                    ),
+                    modifier = Modifier.weight(1f),
+                )
+                SecondaryButton(onClick = if (gap == ProfileGap.COUNTERPARTY) onNewCounterparty else onOpenCompany) {
+                    Text(stringResource(R.string.action_fill))
+                }
+            }
         }
     }
 }

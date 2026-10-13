@@ -51,19 +51,25 @@ import pl.xsenia.fv.ui.components.SecondaryButton
 import pl.xsenia.fv.ui.components.Tile
 import pl.xsenia.fv.ui.format.Formats
 
-/** „Moja firma” form (ZAD-023): NIP from the token with the White List lookup, company fields, bank accounts. */
+/**
+ * „Moja firma” form (ZAD-023): NIP from the token with the White List lookup, company fields, bank accounts.
+ * In the first-run setup (ZAD-025) [onAddAccount] and [onEditAccount] are null: accounts are only listed
+ * (those picked from the White List), the others are added later in Settings.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompanyFormScreen(
     viewModel: CompanyFormViewModel,
     onClose: () -> Unit,
-    onAddAccount: () -> Unit,
-    onEditAccount: (String) -> Unit,
+    onAddAccount: (() -> Unit)?,
+    onEditAccount: ((String) -> Unit)?,
     title: String = stringResource(R.string.company_form_title),
+    intro: String? = null,
+    onSaved: () -> Unit = onClose,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val saved by viewModel.saved.collectAsStateWithLifecycle()
-    LaunchedEffect(saved) { if (saved) onClose() }
+    LaunchedEffect(saved) { if (saved) onSaved() }
     var confirmDiscard by remember { mutableStateOf(false) }
     val dirty = state?.dirty == true
     BackHandler(enabled = dirty) { confirmDiscard = true }
@@ -89,6 +95,7 @@ fun CompanyFormScreen(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            intro?.let { Text(it) }
             CompanyFields(current, viewModel)
             PrimaryButton(onClick = viewModel::save, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_save)) }
 
@@ -96,10 +103,16 @@ fun CompanyFormScreen(
             if (current.bankAccounts.isEmpty()) {
                 Text(stringResource(R.string.bank_accounts_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            current.bankAccounts.forEach { account -> BankAccountTile(account, onClick = { onEditAccount(account.number) }) }
-            SecondaryButton(onClick = onAddAccount, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Filled.Add, contentDescription = null)
-                Text(stringResource(R.string.bank_account_add))
+            current.bankAccounts.forEach { account ->
+                BankAccountTile(account, onClick = onEditAccount?.let { edit -> { edit(account.number) } })
+            }
+            if (onAddAccount != null) {
+                SecondaryButton(onClick = onAddAccount, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Filled.Add, contentDescription = null)
+                    Text(stringResource(R.string.bank_account_add))
+                }
+            } else {
+                Text(stringResource(R.string.company_accounts_later), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         current.registryAccounts?.let { accounts ->
@@ -152,11 +165,13 @@ private fun CompanyFields(state: CompanyFormUiState, viewModel: CompanyFormViewM
 }
 
 @Composable
-private fun BankAccountTile(account: BankAccount, onClick: () -> Unit) {
+private fun BankAccountTile(account: BankAccount, onClick: (() -> Unit)?) {
     Tile(onClick = onClick) {
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) { BankAccountText(account) }
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (onClick != null) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }

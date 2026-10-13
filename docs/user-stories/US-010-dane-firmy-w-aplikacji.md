@@ -1,7 +1,7 @@
 # US-010. Moja firma, rachunki i kontrahenci w Ustawieniach, z pobieraniem danych po NIP-ie
 
 - Priorytet: MVP
-- Status: W realizacji
+- Status: Zrobiona (2026-10-13)
 - Zgłoszone: 2026-10-13 (po testach na telefonie)
 
 ## Historyjka
@@ -34,11 +34,11 @@ Jako **właściciel firmy** chcę **wprowadzać i edytować dane mojej firmy, je
 
 ### Pierwsze uruchomienie i pliki JSON
 
-- [ ] Pierwsze uruchomienie: token KSeF → „Moja firma” (NIP z tokena, dane z Białej listy pobierane automatycznie, wybór rachunków z rejestru, zapis) → ekran główny. Kontrahentów dodaję później.
-- [ ] Gdy do wystawienia faktury czegoś brakuje (dane firmy, rachunek PLN, kontrahent), formularz „Nowa faktura” to pokazuje i ma przycisk „Uzupełnij”.
+- [x] Pierwsze uruchomienie: token KSeF → „Moja firma” (NIP z tokena, dane z Białej listy pobierane automatycznie, wybór rachunków z rejestru, zapis) → ekran główny. Kontrahentów dodaję później.
+- [x] Gdy do wystawienia faktury czegoś brakuje (dane firmy, rachunek PLN, kontrahent), formularz „Nowa faktura” to pokazuje i ma przycisk „Uzupełnij”.
 - [x] Aplikacja nie czyta już plików `company.json`, `banks.json`, `counterparties.json`; wybór folderu znika z konfiguracji i Ustawień. Danych z plików nie importujemy.
 - [x] Istniejący szkic, faktury niewysłane i pobrane faktury zostają zachowane po aktualizacji.
-- [ ] Wystawienie faktury z danymi wprowadzonymi w aplikacji jest przyjmowane przez KSeF TEST (dane zmyślone).
+- [x] Wystawienie faktury z danymi wprowadzonymi w aplikacji jest przyjmowane przez KSeF TEST (dane zmyślone) — faktura `09/09/2026` przyjęta 2026-10-13 (ZAD-025).
 
 ## Uwagi / pytania
 

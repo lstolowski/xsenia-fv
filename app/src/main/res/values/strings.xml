@@ -214,7 +214,6 @@
     <string name="status_close">Zamknij</string>
     <string name="new_invoice_preview_title">Podgląd faktury</string>
     <string name="new_invoice_status_title">Wysyłka do KSeF</string>
-    <string name="new_invoice_unavailable">Wystawianie faktur jest niedostępne — uzupełnij dane firmy, rachunek bankowy (PLN) i kontrahenta.</string>
     <string name="field_counterparty">Kontrahent</string>
     <string name="field_counterparty_choose">Wybierz kontrahenta</string>
     <string name="form_section_dates">Daty i numer</string>
@@ -358,4 +357,14 @@
     <string name="counterparty_delete">Usuń kontrahenta</string>
     <string name="counterparty_delete_title">Usunąć kontrahenta?</string>
     <string name="counterparty_delete_text">Kontrahent „%1$s” zostanie usunięty z listy.</string>
+
+    <!-- First-run setup and missing data (ZAD-025) -->
+    <string name="setup_company_title">Konfiguracja — Moja firma</string>
+    <string name="setup_company_intro">Dane firmy pobraliśmy z Białej listy na podstawie NIP-u z tokena. Sprawdź je (u osoby prowadzącej działalność dopisz nazwę firmy), wybierz rachunki i zapisz.</string>
+    <string name="company_accounts_later">Inne rachunki dodasz później w Ustawieniach → Moja firma.</string>
+    <string name="gaps_title">Do wystawienia faktury brakuje:</string>
+    <string name="gap_company">danych firmy</string>
+    <string name="gap_bank_account">rachunku bankowego w PLN</string>
+    <string name="gap_counterparty">kontrahenta</string>
+    <string name="action_fill">Uzupełnij</string>
 </resources>

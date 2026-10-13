@@ -136,6 +136,7 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
                     newInvoiceViewModel,
                     onClose = { navController.popIfOn(NEW_INVOICE_ROUTE) },
                     onNewCounterparty = { navController.navigate(COUNTERPARTY_ROUTE) },
+                    onOpenCompany = { navController.navigate(COMPANY_ROUTE) },
                 )
             }
             composable(Tab.SETTINGS.route) {

@@ -2,6 +2,10 @@ package pl.xsenia.fv.issue
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import pl.xsenia.fv.invoice.profile.Address
+import pl.xsenia.fv.invoice.profile.BankAccount
+import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.profile.Counterparty
 import java.time.LocalDate
 
 class InvoiceFormDefaultsTest {
@@ -48,5 +52,26 @@ class InvoiceFormDefaultsTest {
         val draft = InvoiceForm(issueDate = LocalDate.parse("2026-10-01"), deliveryDate = LocalDate.parse("2026-09-30"), invoiceNumber = "01/09/2026", datesEdited = true)
 
         assertEquals("02/09/2026", InvoiceFormDefaults.refresh(draft, LocalDate.parse("2026-10-20"), existing).invoiceNumber)
+    }
+
+    @Test
+    fun `defaults added later fill only empty choices`() {
+        // Fictitious data only (docs/przyklady/).
+        val profile = CompanyProfile(
+            nip = "1996845518",
+            bankAccounts = listOf(
+                BankAccount("Konto testowe NBP", "NBP", "71101075753723914707418989", "EUR"),
+                BankAccount("Konto testowe Toyota", "Toyota Bank", "85216097583216850246002152"),
+            ),
+            counterparties = listOf(Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6"))),
+        )
+        val empty = InvoiceFormDefaults.newForm(profile = null, today = LocalDate.parse("2026-10-12"), existingNumbers = existing)
+
+        val filled = InvoiceFormDefaults.fillMissing(empty, profile)
+        assertEquals("6691034274", filled.counterpartyNip)
+        assertEquals("85216097583216850246002152", filled.bankAccountNumber)
+
+        val chosen = empty.copy(counterpartyNip = "9945082500", bankAccountNumber = "55109004081797992973253811")
+        assertEquals(chosen, InvoiceFormDefaults.fillMissing(chosen, profile))
     }
 }

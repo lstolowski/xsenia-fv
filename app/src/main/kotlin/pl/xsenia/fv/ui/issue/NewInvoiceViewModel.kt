@@ -115,6 +115,10 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
             val sending = sendState.value
             if (sending !is SendState.Idle && (id == null || id == sending.unsentIdOrNull())) _step.value = IssueStep.STATUS
         }
+        // Data completed after the form was opened ("Uzupełnij", "+ Nowy kontrahent"): fill in what is still empty.
+        viewModelScope.launch {
+            session.profile.profile.filterNotNull().collect { profile -> update { InvoiceFormDefaults.fillMissing(it, profile) } }
+        }
         // Auto-save after every change: into the unsent invoice being edited, otherwise into the new-invoice draft.
         viewModelScope.launch {
             form.filterNotNull().drop(1).debounce(400).collect { saveCurrent(it) }

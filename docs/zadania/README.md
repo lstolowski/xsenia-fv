@@ -28,7 +28,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-022](ZAD-022-profil-firmy-magazyn.md) | Profil firmy: model, magazyn per NIP, migracja, usunięcie plików JSON | US-010 | Zrobione |
 | [ZAD-023](ZAD-023-ui-moja-firma.md) | UI: sekcja „Moja firma” — podgląd, edycja, pobieranie, rachunki | US-010 | Zrobione |
 | [ZAD-024](ZAD-024-ui-kontrahenci.md) | UI: „Kontrahenci” — lista, formularz, pobieranie; „+ Nowy kontrahent” w fakturze | US-010 | Zrobione |
-| [ZAD-025](ZAD-025-pierwsze-uruchomienie-braki.md) | Pierwsze uruchomienie (token → Moja firma) i braki w formularzu faktury | US-010 | Do zrobienia |
+| [ZAD-025](ZAD-025-pierwsze-uruchomienie-braki.md) | Pierwsze uruchomienie (token → Moja firma) i braki w formularzu faktury | US-010 | Zrobione |
 
 Weryfikacja na urządzeniu fizycznym (2026-10-13): użytkownik sprawdził zadania 001–020 (poza 002 — infrastruktura testów integracyjnych) na swoim telefonie z KSeF TEST — aplikacja działa i wygląda poprawnie.
 

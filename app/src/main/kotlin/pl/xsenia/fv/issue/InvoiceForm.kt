@@ -58,6 +58,15 @@ object InvoiceFormDefaults {
     }
 
     /**
+     * Defaults that were not available when the form was opened (no account or counterparty yet): the first PLN account
+     * and the only counterparty. Choices already made are kept.
+     */
+    fun fillMissing(form: InvoiceForm, profile: CompanyProfile): InvoiceForm = form.copy(
+        counterpartyNip = form.counterpartyNip ?: profile.counterparties.singleOrNull()?.nip,
+        bankAccountNumber = form.bankAccountNumber ?: profile.invoiceBankAccounts.firstOrNull()?.number,
+    )
+
+    /**
      * A draft opened on a later day: dates not chosen by the user are moved to today's defaults and an
      * unedited number is suggested again (other invoices may have been issued meanwhile).
      */
