@@ -19,3 +19,4 @@
 ## Środowisko
 
 - [android-studio-macos.md](srodowisko/android-studio-macos.md) — instalacja Android Studio, SDK i emulatora z biometrią
+- [instalacja-apk-telefon.md](srodowisko/instalacja-apk-telefon.md) — instalacja podpisanego APK na telefonie (Auto Blocker, nieznane źródła, aktualizacje)

@@ -18,7 +18,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-012](ZAD-012-ksef-sesja-interaktywna.md) | Klient KSeF: sesja interaktywna, status, UPO | US-006 | Zrobione |
 | [ZAD-013](ZAD-013-ui-nowa-faktura.md) | UI: formularz nowej faktury, podgląd, biometria, śledzenie wysyłki | US-006 | Zrobione |
 | [ZAD-014](ZAD-014-dane-testowe-zakupowe.md) | Dane testowe: faktury zakupowe na KSeF TEST | US-004 | Zrobione |
-| [ZAD-015](ZAD-015-budowa-apk-prod.md) | Budowa i podpisanie APK produkcyjnego | wszystkie | Do zrobienia |
+| [ZAD-015](ZAD-015-budowa-apk-prod.md) | Budowa i podpisanie APK produkcyjnego | wszystkie | Zrobione |
 | [ZAD-016](ZAD-016-faktury-niewyslane-model.md) | Faktury niewysłane: model, magazyn, numeracja | US-007 | Zrobione |
 | [ZAD-017](ZAD-017-faktury-niewyslane-ui.md) | Faktury niewysłane: UI listy, edycji, zapisu i usuwania | US-007 | Zrobione |
 | [ZAD-018](ZAD-018-wyglad-payment-ui.md) | Wygląd w stylu „Payment UI” | US-008 | Zrobione |

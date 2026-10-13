@@ -52,6 +52,7 @@ JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Co
 - `./gradlew :ksef:integrationTest --tests '*PurchaseTestDataGenerator*' -PcreatePurchaseInvoices` — tworzy 5 zmyślonych faktur **zakupowych** od drugiego kontekstu TEST (`ksef.supplier.*` w secrets)
 - `./gradlew integrationTest` — testy z prawdziwym KSeF **TEST** (wymaga `secrets/ksef-test.properties`, bez niego testy są pomijane; nie wchodzi w `build`). Unikaj 16:00–18:00 (prace serwisowe TEST)
 - `./gradlew :app:assembleKsefTestDebug` — APK wersji testowej (KSeF TEST); `installKsefTestDebug` instaluje na emulatorze
+- `./gradlew releaseApk` — podpisany APK produkcyjny (R8) w `build/dist/`; klucz w `secrets/keystore.properties` (poza gitem, instrukcja w README.md). `releaseApkTest` — to samo dla KSeF TEST. Klucza produkcyjnego nie generuj ani nie odczytuj — do sprawdzenia buildu release użyj klucza debug: `-Pxsenia.signingProperties=<plik poza repo>`
 - Wersje aplikacji (product flavors): `ksefTest` → `pl.xsenia.fv.test`, `ksefProd` → `pl.xsenia.fv`
 - Emulator: AVD `Samsung_S23_xsenia` (Android 16, API 36)
   - PIN blokady ekranu emulatora: `1111` (wyłącznie emulator testowy, nie dotyczy prawdziwego telefonu)

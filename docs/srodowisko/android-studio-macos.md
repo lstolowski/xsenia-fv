@@ -165,13 +165,9 @@ adb devices
 
 Oczekiwane: `emulator-5554   device`.
 
-## 8. Telefon (później — instalacja APK ręcznie)
+## 8. Telefon — instalacja APK
 
-Testujemy na emulatorze. Gotowy APK zainstalujesz na S23 tak:
-1. Prześlij plik `.apk` na telefon (kabel, chmura, e-mail do siebie).
-2. Otwórz go w „Moje pliki”.
-3. Za pierwszym razem zezwól aplikacji „Moje pliki” na instalowanie nieznanych aplikacji (**Ustawienia → Aplikacje → Specjalny dostęp → Instalowanie nieznanych aplikacji**).
-4. Na One UI 8 może być włączona **Auto Blocker** (Ustawienia → Zabezpieczenia i prywatność → Auto Blocker), która blokuje instalację spoza sklepów. Na czas instalacji trzeba ją wyłączyć, a potem włączyć ponownie.
+Testujemy na emulatorze. Podpisany APK buduje `./gradlew releaseApk` ([README.md](../../README.md)); instalacja na S23: [instalacja-apk-telefon.md](instalacja-apk-telefon.md).
 
 ## Rozwiązywanie problemów
 
