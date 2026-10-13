@@ -43,7 +43,7 @@
 - Pisownia **jak w rejestrze** (wielkie litery, bez zamiany na małe — Q2: 2a); poprawki ręcznie.
 - Adres: `workingAddress`, a gdy brak — `residenceAddress`; podział po **ostatnim** przecinku: `line1` = część przed, `line2` = część po; bez przecinka — całość w `line1`, `line2` puste. `country` = „Polska”.
 - Status VAT inny niż „Czynny” → ikona ostrzeżenia i komunikat **„Firma nie jest czynnym podatnikiem”** (Q2: 4). Status nie jest zapisywany — widoczny w formularzu po pobraniu.
-- `subject: null` → „Nie znaleziono firmy w Białej liście”, pola bez zmian.
+- `subject: null` → „Nie znaleziono firmy w Rejestrze WL”, pola bez zmian.
 - Rachunki (tylko „Moja firma”, Q3: A): po pobraniu przewijane okno z rachunkami z rejestru do zaznaczenia (domyślnie nic nie jest zaznaczone) (rachunki już zapisane — oznaczone i pominięte); zaznaczone są dodawane z nazwą „Rachunek …{ostatnie 4 cyfry}”, pustym bankiem i walutą PLN — do uzupełnienia ręcznie.
 
 ### Ruch i prywatność

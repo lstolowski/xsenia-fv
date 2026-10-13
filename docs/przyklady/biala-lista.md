@@ -108,7 +108,7 @@ Oczekiwany wynik: `line1` = „TESTOWO 15”, `line2` puste.
 {"result": {"subject": null, "requestId": "Test6-000aaaa", "requestDateTime": "13-10-2026 15:00:00"}}
 ```
 
-Oczekiwany wynik: „Nie znaleziono firmy w Białej liście”, pola formularza bez zmian.
+Oczekiwany wynik: „Nie znaleziono firmy w Rejestrze WL”, pola formularza bez zmian.
 
 ## 7. Błędy API
 

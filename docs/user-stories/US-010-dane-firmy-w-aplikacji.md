@@ -15,7 +15,7 @@ Jako **właściciel firmy** chcę **wprowadzać i edytować dane mojej firmy, je
 - [x] Jeden serwis pobiera dane firmy po NIP-ie z `https://wl-api.mf.gov.pl/api/search/nip/{nip}?date={yyyy-MM-dd}` (NIP bez myślników, data „dziś”) i jest używany w formularzach „Moja firma”, „Kontrahent” i przy pierwszym uruchomieniu — [ADR 0007](../adr/0007-biala-lista-mf.md).
 - [x] Obok pola NIP jest ikona pobierania. Po dotknięciu: nazwa i adres zostają **nadpisane** danymi z rejestru (pisownia jak w rejestrze), adres rozbity na dwie linie; pozostałe pola bez zmian i nadal edytowalne.
 - [x] Gdy firma nie jest czynnym podatnikiem VAT — ikona ostrzeżenia i komunikat „Firma nie jest czynnym podatnikiem”.
-- [x] Gdy rejestr nie zna NIP-u — „Nie znaleziono firmy w Białej liście”; niepoprawny NIP (suma kontrolna) — komunikat bez wysyłania zapytania; brak sieci, limit zapytań, błąd serwera — czytelne komunikaty po polsku.
+- [x] Gdy rejestr nie zna NIP-u — „Nie znaleziono firmy w Rejestrze WL”; niepoprawny NIP (suma kontrolna) — komunikat bez wysyłania zapytania; brak sieci, limit zapytań, błąd serwera — czytelne komunikaty po polsku.
 
 ### Moja firma
 
