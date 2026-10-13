@@ -1,6 +1,6 @@
 package pl.xsenia.fv.invoices
 
-import pl.xsenia.fv.invoice.config.InvoicingConfig
+import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.InvoiceCalculator
 import pl.xsenia.fv.issue.DecimalInput
@@ -65,8 +65,8 @@ object InvoiceListLogic {
         )
     }
 
-    /** Row of an unsent invoice: buyer from the config files, amounts calculated from the form lines. */
-    fun toRow(unsent: UnsentInvoice, config: InvoicingConfig?): InvoiceRow {
+    /** Row of an unsent invoice: buyer from the company profile, amounts calculated from the form lines. */
+    fun toRow(unsent: UnsentInvoice, profile: CompanyProfile?): InvoiceRow {
         val form = unsent.form
         val lines = form.lines.mapNotNull { line ->
             val quantity = DecimalInput.parse(line.quantity) ?: return@mapNotNull null
@@ -79,7 +79,7 @@ object InvoiceListLogic {
             invoiceNumber = form.invoiceNumber,
             deliveryDate = form.deliveryDate,
             issueDate = form.issueDate,
-            counterpartyName = config?.counterparties?.firstOrNull { it.nip == form.counterpartyNip }?.name,
+            counterpartyName = profile?.counterparties?.firstOrNull { it.nip == form.counterpartyNip }?.name,
             counterpartyNip = form.counterpartyNip,
             netAmount = totals.net,
             grossAmount = totals.gross,

@@ -75,8 +75,8 @@ Opcja 1 we wszystkich trzech punktach (decyzje użytkownika Q1, Q5 z 2026-10-13)
 
 ### Moduły
 
-- Model, walidacja i magazyn profilu (pliki JSON) — czysty Kotlin w module `invoice` (pakiet `profile`), testowany na JVM.
-- W aplikacji `ProfileRepository` (aktywny profil, `StateFlow` danych) zastępuje `ConfigRepository`.
+- Model (`CompanyProfile`), walidacja (`ProfileValidator`) i magazyn profilu (`CompanyProfileStore`, pliki JSON z polem `version`) — czysty Kotlin w module `invoice` (pakiet `profile`), testowany na JVM.
+- W aplikacji: `ProfileManager` wybiera aktywny profil z NIP-u tokena i tworzy `ProfileSession` — kontekst firmy z `ProfileRepository` (`StateFlow` danych, zastępuje `ConfigRepository`), szkicem, fakturami niewysłanymi, lustrem, synchronizacją i wysyłką. Ekran główny jest budowany dla sesji (`key(nip)`), więc inny NIP to nowe ekrany i ViewModele.
 
 ## Konsekwencje
 

@@ -16,52 +16,20 @@
     <string name="action_save">Zapisz</string>
     <string name="action_cancel">Anuluj</string>
     <string name="action_continue">Dalej</string>
-    <string name="loading">Wczytywanie…</string>
 
     <!-- Setup -->
     <string name="setup_title">Konfiguracja</string>
-    <string name="setup_intro">Przed pierwszym użyciem wskaż folder z plikami danych i wprowadź token KSeF.</string>
-    <string name="setup_step_folder">1. Folder z danymi</string>
-    <string name="setup_step_token">2. Token KSeF</string>
+    <string name="setup_intro">Przed pierwszym użyciem wprowadź token KSeF. NIP zapisany w tokenie wskazuje firmę, w imieniu której działa aplikacja.</string>
+    <string name="setup_step_token">Token KSeF</string>
 
-    <!-- Folder -->
-    <string name="folder_section_title">Folder z danymi</string>
-    <string name="folder_not_selected">Nie wybrano folderu z plikami company.json, banks.json i counterparties.json.</string>
-    <string name="folder_inaccessible">Brak dostępu do wybranego folderu. Wskaż go ponownie.</string>
-    <string name="folder_selected">Folder: %1$s</string>
-    <string name="folder_select">Wybierz folder</string>
-    <string name="folder_change">Zmień folder</string>
-    <string name="folder_reload">Odśwież</string>
-    <string name="config_company">Firma: %1$s (NIP %2$s)</string>
-    <string name="config_company_missing">Firma: brak poprawnych danych w company.json</string>
-    <string name="config_bank_accounts">Rachunki PLN: %1$d</string>
-    <string name="config_counterparties">Kontrahenci: %1$d</string>
-    <string name="config_can_issue">Można wystawiać faktury.</string>
-    <string name="config_cannot_issue">Wystawianie faktur niedostępne — popraw pliki danych.</string>
-    <string name="config_issues_title">Problemy w plikach (%1$d)</string>
 
     <!-- Config issues -->
-    <string name="config_issue_entry">pozycja %1$d</string>
-    <string name="config_issue_entry_name">„%1$s”</string>
-    <string name="config_issue_file_missing">brak pliku w folderze</string>
-    <string name="config_issue_invalid_json">niepoprawny format JSON (%1$s)</string>
-    <string name="config_issue_missing_field">brak wymaganego pola „%1$s”</string>
-    <string name="config_issue_invalid_type">pole „%1$s” ma niepoprawny typ</string>
-    <string name="config_issue_entry_not_object">pozycja nie jest obiektem JSON</string>
-    <string name="config_issue_invalid_nip">niepoprawny NIP</string>
-    <string name="config_issue_invalid_account">niepoprawny numer rachunku</string>
-    <string name="config_issue_invalid_currency">niepoprawny kod waluty</string>
-    <string name="config_issue_invalid_email">niepoprawny adres e-mail</string>
-    <string name="config_issue_too_long">pole „%1$s” jest za długie (%2$s)</string>
-    <string name="config_issue_empty_list">lista jest pusta</string>
-    <string name="config_issue_duplicate_nip">NIP powtarza się — pozycja pominięta</string>
 
     <!-- Token -->
     <string name="token_section_title">Token KSeF</string>
     <string name="token_not_set">Token nie jest zapisany.</string>
     <string name="token_set">Token zapisany (zaszyfrowany).</string>
     <string name="token_set_for_nip">Token zapisany (zaszyfrowany) dla NIP %1$s.</string>
-    <string name="token_nip_mismatch">Uwaga: token dotyczy NIP %1$s, a w company.json jest NIP %2$s.</string>
     <string name="token_enter">Wprowadź token</string>
     <string name="token_change">Zmień token</string>
     <string name="token_dialog_title">Token KSeF</string>
@@ -69,13 +37,14 @@
     <string name="token_field_label">Token</string>
     <string name="token_show">Pokaż</string>
     <string name="token_hide">Ukryj</string>
+    <string name="token_missing_nip">Token nie zawiera NIP-u firmy (fragment „|nip-…|”). Wygeneruj token w kontekście NIP firmy.</string>
 
     <!-- Connection check -->
     <string name="connection_check">Sprawdź połączenie</string>
     <string name="connection_checking">Łączenie z KSeF…</string>
     <string name="connection_success">Połączenie z KSeF działa — token poprawny.</string>
     <string name="connection_missing_token">Najpierw zapisz token KSeF.</string>
-    <string name="connection_missing_company">Najpierw wskaż folder z poprawnym plikiem company.json (NIP firmy).</string>
+    <string name="connection_missing_nip">Token nie zawiera NIP-u firmy — wprowadź token wygenerowany w kontekście NIP.</string>
     <string name="connection_auth_failed">KSeF odrzucił uwierzytelnienie: %1$d %2$s</string>
     <string name="connection_rate_limited">Przekroczono limit zapytań KSeF. Spróbuj ponownie za %1$s s.</string>
     <string name="connection_network_error">Brak połączenia z KSeF: %1$s</string>
@@ -102,7 +71,6 @@
     <string name="sync_phase_checking_purchase">Sprawdzanie nowych faktur zakupowych…</string>
     <string name="sync_phase_downloading">Pobieranie faktur: %1$d z %2$d</string>
     <string name="sync_error_missing_token">Nie można pobrać faktur — zapisz token KSeF w ustawieniach.</string>
-    <string name="sync_error_missing_company">Nie można pobrać faktur — brak poprawnego pliku company.json (NIP firmy).</string>
     <string name="sync_error_rate_limited">Przekroczono limit zapytań KSeF. Spróbuj ponownie za %1$s s.</string>
     <string name="sync_error_auth">KSeF odrzucił uwierzytelnienie: %1$d %2$s</string>
     <string name="sync_error_network">Brak połączenia z KSeF. (%1$s)</string>
@@ -246,7 +214,7 @@
     <string name="status_close">Zamknij</string>
     <string name="new_invoice_preview_title">Podgląd faktury</string>
     <string name="new_invoice_status_title">Wysyłka do KSeF</string>
-    <string name="new_invoice_unavailable">Wystawianie faktur jest niedostępne — popraw pliki danych (company.json, banks.json, counterparties.json) w Ustawieniach.</string>
+    <string name="new_invoice_unavailable">Wystawianie faktur jest niedostępne — uzupełnij dane firmy, rachunek bankowy (PLN) i kontrahenta.</string>
     <string name="field_counterparty">Kontrahent</string>
     <string name="field_counterparty_choose">Wybierz kontrahenta</string>
     <string name="form_section_dates">Daty i numer</string>

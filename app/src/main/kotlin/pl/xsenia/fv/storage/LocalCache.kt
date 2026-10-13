@@ -1,16 +1,13 @@
 package pl.xsenia.fv.storage
 
 import android.content.Context
-import java.io.File
 
-/** Local copies of KSeF data (invoice mirror, ADR 0003). Everything here can be re-downloaded from KSeF. */
+/** Temporary files in the app cache directory (e.g. downloaded invoice packages) — safe to delete at any time. */
 class LocalCache(context: Context) {
 
-    val invoicesDir: File = File(context.filesDir, "invoices")
-    private val cacheDir: File = context.cacheDir
+    private val cacheDir = context.cacheDir
 
     fun clear() {
-        invoicesDir.deleteRecursively()
         cacheDir.listFiles()?.forEach { it.deleteRecursively() }
     }
 }

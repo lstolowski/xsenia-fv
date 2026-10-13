@@ -36,8 +36,8 @@ Jako **właściciel firmy** chcę **wprowadzać i edytować dane mojej firmy, je
 
 - [ ] Pierwsze uruchomienie: token KSeF → „Moja firma” (NIP z tokena, dane z Białej listy pobierane automatycznie, wybór rachunków z rejestru, zapis) → ekran główny. Kontrahentów dodaję później.
 - [ ] Gdy do wystawienia faktury czegoś brakuje (dane firmy, rachunek PLN, kontrahent), formularz „Nowa faktura” to pokazuje i ma przycisk „Uzupełnij”.
-- [ ] Aplikacja nie czyta już plików `company.json`, `banks.json`, `counterparties.json`; wybór folderu znika z konfiguracji i Ustawień. Danych z plików nie importujemy.
-- [ ] Istniejący szkic, faktury niewysłane i pobrane faktury zostają zachowane po aktualizacji.
+- [x] Aplikacja nie czyta już plików `company.json`, `banks.json`, `counterparties.json`; wybór folderu znika z konfiguracji i Ustawień. Danych z plików nie importujemy.
+- [x] Istniejący szkic, faktury niewysłane i pobrane faktury zostają zachowane po aktualizacji.
 - [ ] Wystawienie faktury z danymi wprowadzonymi w aplikacji jest przyjmowane przez KSeF TEST (dane zmyślone).
 
 ## Uwagi / pytania

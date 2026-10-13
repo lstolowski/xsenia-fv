@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import pl.xsenia.fv.invoice.config.Address
-import pl.xsenia.fv.invoice.config.BankAccount
-import pl.xsenia.fv.invoice.config.Company
-import pl.xsenia.fv.invoice.config.Counterparty
-import pl.xsenia.fv.invoice.config.InvoicingConfig
+import pl.xsenia.fv.invoice.profile.Address
+import pl.xsenia.fv.invoice.profile.BankAccount
+import pl.xsenia.fv.invoice.profile.Company
+import pl.xsenia.fv.invoice.profile.Counterparty
+import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.DraftIssue
 import pl.xsenia.fv.invoice.issue.DraftIssueType
 import pl.xsenia.fv.invoice.issue.VatRate
@@ -19,11 +19,11 @@ import java.time.LocalDate
 
 class InvoiceFormCheckTest {
 
-    private val config = InvoicingConfig(
+    private val config = CompanyProfile(
+        nip = "9945082500",
         company = Company("Jan Testowy", "9945082500", Address("ul. Testowa 1", null, null), null, null),
         bankAccounts = listOf(BankAccount("Konto testowe", "Toyota Bank", "85216097583216850246002152", "PLN")),
         counterparties = listOf(Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6", null, null), null)),
-        issues = emptyList(),
     )
     private val today = LocalDate.parse("2026-10-01")
 

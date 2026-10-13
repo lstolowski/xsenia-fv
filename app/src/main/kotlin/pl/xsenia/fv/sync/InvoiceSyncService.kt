@@ -6,12 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import pl.xsenia.fv.config.ConfigRepository
-import pl.xsenia.fv.config.ConfigState
 import pl.xsenia.fv.ksef.KsefAccess
 import pl.xsenia.fv.ksef.KsefFailure
 import pl.xsenia.fv.ksef.KsefFailureException
@@ -39,12 +36,13 @@ data class SyncUiState(
 /**
  * Runs invoice synchronization in the application scope (not tied to a screen), at most one at a time.
  * Automatic sync on app start happens at most every [autoSyncInterval] (MF recommends ≥ 15 min).
+ * One service per company profile: [nip] is the KSeF context, [mirror] lives in the profile directory (ADR 0006).
  */
 class InvoiceSyncService(
     private val scope: CoroutineScope,
     private val ksef: KsefAccess,
     private val tokenStore: KsefTokenStore,
-    private val configRepository: ConfigRepository,
+    private val nip: String,
     val mirror: InvoiceMirror,
     private val initialDate: Instant,
     private val clock: Clock = Clock.systemUTC(),
@@ -54,9 +52,7 @@ class InvoiceSyncService(
     private val _state = MutableStateFlow(SyncUiState())
     val state: StateFlow<SyncUiState> = _state.asStateFlow()
 
-    // One synchronizer (and token manager) per company NIP; normally there is just one.
-    private var synchronizerNip: String? = null
-    private var synchronizer: InvoiceSynchronizer? = null
+    private val synchronizer by lazy { InvoiceSynchronizer(KsefInvoiceSource(ksef.invoiceClient(nip)), mirror, initialDate, clock) }
 
     init {
         scope.launch { refreshFromMirror() }
@@ -90,21 +86,10 @@ class InvoiceSyncService(
     }
 
     private suspend fun synchronize() {
-        val config = configRepository.state.first { it != ConfigState.Loading }
-        val nip = (config as? ConfigState.Loaded)?.config?.company?.nip ?: throw KsefFailureException(KsefFailure.MissingCompany)
         if (tokenStore.read() == null) throw KsefFailureException(KsefFailure.MissingToken)
 
         withContext(Dispatchers.IO) {
-            synchronizerFor(nip).sync { progress -> _state.update { it.copy(progress = progress) } }
-        }
-    }
-
-    private fun synchronizerFor(nip: String): InvoiceSynchronizer {
-        synchronizer?.takeIf { synchronizerNip == nip }?.let { return it }
-        val source = KsefInvoiceSource(ksef.invoiceClient(nip))
-        return InvoiceSynchronizer(source, mirror, initialDate, clock).also {
-            synchronizer = it
-            synchronizerNip = nip
+            synchronizer.sync { progress -> _state.update { it.copy(progress = progress) } }
         }
     }
 

@@ -1,7 +1,7 @@
 package pl.xsenia.fv.issue
 
 import kotlinx.serialization.Serializable
-import pl.xsenia.fv.invoice.config.InvoicingConfig
+import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.DefaultDates
 import pl.xsenia.fv.invoice.issue.DraftIssue
 import pl.xsenia.fv.invoice.issue.DraftLine
@@ -46,11 +46,11 @@ object LineUnits {
 /** Default values of a new form and refreshing of a saved draft. */
 object InvoiceFormDefaults {
 
-    fun newForm(config: InvoicingConfig?, today: LocalDate, existingNumbers: Collection<String>): InvoiceForm {
+    fun newForm(profile: CompanyProfile?, today: LocalDate, existingNumbers: Collection<String>): InvoiceForm {
         val deliveryDate = DefaultDates.deliveryDate(today)
         return InvoiceForm(
-            counterpartyNip = config?.counterparties?.singleOrNull()?.nip,
-            bankAccountNumber = config?.invoiceBankAccounts?.firstOrNull()?.number,
+            counterpartyNip = profile?.counterparties?.singleOrNull()?.nip,
+            bankAccountNumber = profile?.invoiceBankAccounts?.firstOrNull()?.number,
             issueDate = today,
             deliveryDate = deliveryDate,
             invoiceNumber = InvoiceNumbering.suggest(deliveryDate, existingNumbers),
@@ -87,11 +87,11 @@ data class FormCheck(
 
 object InvoiceFormCheck {
 
-    fun check(form: InvoiceForm, config: InvoicingConfig, existingNumbers: Collection<String>, today: LocalDate): FormCheck {
+    fun check(form: InvoiceForm, profile: CompanyProfile, existingNumbers: Collection<String>, today: LocalDate): FormCheck {
         val formIssues = mutableListOf<FormIssue>()
-        val buyer = config.counterparties.firstOrNull { it.nip == form.counterpartyNip }
+        val buyer = profile.counterparties.firstOrNull { it.nip == form.counterpartyNip }
         if (buyer == null) formIssues += FormIssue(FormIssueType.COUNTERPARTY_MISSING)
-        val account = config.invoiceBankAccounts.firstOrNull { it.number == form.bankAccountNumber }
+        val account = profile.invoiceBankAccounts.firstOrNull { it.number == form.bankAccountNumber }
         if (account == null) formIssues += FormIssue(FormIssueType.BANK_ACCOUNT_MISSING)
 
         val lines = form.lines.mapIndexedNotNull { index, line ->
@@ -102,7 +102,7 @@ object InvoiceFormCheck {
             if (quantity != null && price != null) DraftLine(line.name.trim(), quantity, line.unit.trim(), price, line.vatRate) else null
         }
 
-        val seller = config.company
+        val seller = profile.company
         if (buyer == null || account == null || seller == null || lines.size != form.lines.size) {
             return FormCheck(null, formIssues, emptyList())
         }

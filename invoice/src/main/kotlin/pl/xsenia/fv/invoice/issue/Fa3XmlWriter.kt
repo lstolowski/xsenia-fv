@@ -1,6 +1,6 @@
 package pl.xsenia.fv.invoice.issue
 
-import pl.xsenia.fv.invoice.config.Address
+import pl.xsenia.fv.invoice.profile.Address
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant

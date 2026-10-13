@@ -17,4 +17,4 @@ Dane osobowe i adresowe:
 - adresy: „ul. Testowa 1”, „00-001 Testowo”; e-maile w domenie `example.com`; telefony `+48 000 000 000`,
 - nazwy towarów i usług: „Usługa testowa”, Lorem ipsum.
 
-Do 2026-10-13 w tym katalogu były wzory plików `company.json`, `banks.json`, `counterparties.json` (ADR 0004). Od US-010 dane firmy, rachunki i kontrahenci są wprowadzane w aplikacji ([ADR 0006](../adr/0006-dane-firmy-w-aplikacji.md)); pliki przeniesiono do zasobów testowych modułu `invoice` i znikną razem z parserem plików (ZAD-022).
+Do 2026-10-13 w tym katalogu były wzory plików `company.json`, `banks.json`, `counterparties.json` (ADR 0004). Od US-010 dane firmy, rachunki i kontrahenci są wprowadzane w aplikacji ([ADR 0006](../adr/0006-dane-firmy-w-aplikacji.md)); pliki i ich parser usunięto w ZAD-022.

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import pl.xsenia.fv.R
 import pl.xsenia.fv.ksef.ConnectionCheckResult
 import pl.xsenia.fv.ksef.KsefEnvironment
+import pl.xsenia.fv.security.KsefTokenStore
 import pl.xsenia.fv.ui.ConnectionUiState
 
 /** Token status (never the token itself), token entry and KSeF connection check. */
@@ -32,7 +33,6 @@ fun TokenSection(
     environment: KsefEnvironment,
     tokenSet: Boolean,
     tokenNip: String?,
-    companyNip: String?,
     connection: ConnectionUiState,
     onSaveToken: (String) -> Unit,
     onCheckConnection: () -> Unit,
@@ -46,9 +46,6 @@ fun TokenSection(
                 else -> stringResource(R.string.token_set)
             },
         )
-        if (tokenSet && tokenNip != null && companyNip != null && tokenNip != companyNip) {
-            Text(stringResource(R.string.token_nip_mismatch, tokenNip, companyNip), color = MaterialTheme.colorScheme.error)
-        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (tokenSet) {
                 SecondaryButton(onClick = { dialogOpen = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.token_change)) }
@@ -83,7 +80,7 @@ private fun ConnectionStatus(connection: ConnectionUiState) {
     val text = when (result) {
         ConnectionCheckResult.Success -> stringResource(R.string.connection_success)
         ConnectionCheckResult.MissingToken -> stringResource(R.string.connection_missing_token)
-        ConnectionCheckResult.MissingCompany -> stringResource(R.string.connection_missing_company)
+        ConnectionCheckResult.MissingNip -> stringResource(R.string.connection_missing_nip)
         is ConnectionCheckResult.AuthenticationFailed ->
             stringResource(R.string.connection_auth_failed, result.statusCode, result.description)
         is ConnectionCheckResult.RateLimited ->
@@ -99,6 +96,7 @@ private fun ConnectionStatus(connection: ConnectionUiState) {
 private fun TokenInputDialog(environment: KsefEnvironment, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var token by remember { mutableStateOf("") }
     var visible by remember { mutableStateOf(false) }
+    val missingNip = token.isNotBlank() && KsefTokenStore.nipOf(token.trim()) == null
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.token_dialog_title)) },
@@ -117,10 +115,12 @@ private fun TokenInputDialog(environment: KsefEnvironment, onDismiss: () -> Unit
                 TextButton(onClick = { visible = !visible }) {
                     Text(stringResource(if (visible) R.string.token_hide else R.string.token_show))
                 }
+                // The NIP in the token selects the company profile (ADR 0006).
+                if (missingNip) Text(stringResource(R.string.token_missing_nip), color = MaterialTheme.colorScheme.error)
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(token) }, enabled = token.isNotBlank()) { Text(stringResource(R.string.action_save)) }
+            TextButton(onClick = { onSave(token) }, enabled = token.isNotBlank() && !missingNip) { Text(stringResource(R.string.action_save)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )

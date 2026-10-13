@@ -12,10 +12,11 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Data dostawy | `deliveryDate` | Data dokonania dostawy / wykonania usługi: `P_6` → `OkresFa/P_6_Do` → najpóźniejsza `P_6A` → `P_1` | Podstawa filtra miesiąca i numeracji |
 | Kwota netto / VAT / brutto | `netAmount` / `vatAmount` / `grossAmount` | Sumy faktury (`P_13_1` / `P_14_1` / `P_15`) | |
 | Moja firma | `company` | Dane sprzedawcy (Podmiot1) wprowadzane w Ustawieniach → „Moja firma”; NIP = NIP z tokena KSeF | ADR 0006 (dawniej plik `company.json`, ADR 0004) |
-| Profil firmy | `profile` (`ProfileRepository`) | Wszystkie dane jednej mojej firmy w `profiles/{nip}/`: firma, rachunki, kontrahenci, szkic, niewysłane, lustro; aktywny profil = NIP z tokena | ADR 0006; w UI bez przełączania firm |
+| Profil firmy | `CompanyProfile` (dane), `ProfileSession` (kontekst), `ProfileManager` (aktywny profil) | Wszystkie dane jednej mojej firmy w `profiles/{nip}/`: firma, rachunki, kontrahenci (`CompanyProfileStore`, `ProfileRepository`), szkic, niewysłane, UPO, lustro; aktywny profil = NIP z tokena | ADR 0006; w UI bez przełączania firm |
+| Braki do wystawienia faktury | `ProfileGap` (`COMPANY`, `BANK_ACCOUNT`, `COUNTERPARTY`) | Czego brakuje w profilu, by wystawić fakturę: dane firmy, rachunek PLN, kontrahent | ADR 0006 |
+| Walidacja danych profilu | `ProfileValidator` → `FieldIssue` (`ProfileField`, `FieldIssueType`) | Sprawdzenie formularza firmy / rachunku / kontrahenta przed zapisem (pola wymagane, NIP, NRB, limity FA(3), e-mail, duplikaty) | ADR 0006 |
 | Rachunek bankowy / konto | `bankAccount` | Rachunek mojej firmy (`NrRB` w FA(3)); wiele na firmę, pierwszy domyślny na fakturze | ADR 0006 (dawniej plik `banks.json`) |
 | Kontrahenci | `counterparties` | Lista nabywców w Ustawieniach → „Kontrahenci”; NIP niezmienny po utworzeniu | ADR 0006 (dawniej plik `counterparties.json`) |
-| Konfiguracja wystawiania | `InvoicingConfig` | Firma + rachunki + kontrahenci wczytane z plików JSON, z listą problemów (`ConfigIssue`) | ADR 0004 — **wycofywane** w ZAD-022 (zastępuje je profil firmy) |
 | Biała lista (wykaz podatników VAT) | `whitelist` (`WhiteListClient`, `WhiteListResult`, `WhiteListSubject`) | API MF `wl-api.mf.gov.pl` — dane firmy po NIP-ie: nazwa, adres, status VAT, rachunki | ADR 0007 |
 | Pobieranie danych po NIP-ie | `CompanyLookupService` → `LookedUpCompany` | Wypełnienie formularza „Moja firma” / „Kontrahent” danymi z Białej listy (ikona pobierania obok NIP-u); komunikaty: `CompanyLookupMessages` | ADR 0007 |
 | Status VAT | `vatStatus` / `isActiveVatPayer` | `statusVat` z Białej listy: „Czynny”, „Zwolniony”, …; inny niż czynny → „Firma nie jest czynnym podatnikiem” | ADR 0007 |

@@ -90,9 +90,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
-import pl.xsenia.fv.invoice.config.BankAccount
-import pl.xsenia.fv.invoice.config.Counterparty
-import pl.xsenia.fv.invoice.config.InvoicingConfig
+import pl.xsenia.fv.invoice.profile.BankAccount
+import pl.xsenia.fv.invoice.profile.Counterparty
+import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.DraftIssue
 import pl.xsenia.fv.invoice.issue.DraftIssueType
 import pl.xsenia.fv.invoice.issue.DraftLine
@@ -177,9 +177,9 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
                 current == null -> LoadingScreen()
                 step == IssueStep.STATUS -> StatusContent(sendState, viewModel, onClose)
                 step == IssueStep.PREVIEW -> PreviewContent(viewModel)
-                current.config?.canIssueInvoices != true ->
+                current.profile?.canIssueInvoices != true ->
                     Text(stringResource(R.string.new_invoice_unavailable), color = MaterialTheme.colorScheme.error)
-                else -> FormContent(current, current.config, viewModel)
+                else -> FormContent(current, current.profile, viewModel)
             }
         }
     }
@@ -200,7 +200,7 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
 }
 
 @Composable
-private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewModel: NewInvoiceViewModel) {
+private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewModel: NewInvoiceViewModel) {
     val form = state.form
     val check = state.check
     val formIssues = if (state.showErrors) check?.formIssues.orEmpty() else emptyList()
@@ -216,7 +216,7 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
     // Counterparty: the chosen one as a tile, the choice in a dialog with one tile each (US-008)
     FormSectionTitle(stringResource(R.string.field_counterparty))
     TileChoiceField(
-        options = config.counterparties,
+        options = profile.counterparties,
         key = { it.nip },
         selectedKey = form.counterpartyNip,
         placeholder = stringResource(R.string.field_counterparty_choose),
@@ -273,7 +273,7 @@ private fun FormContent(state: NewInvoiceUiState, config: InvoicingConfig, viewM
     // Bank account: below the lines, before the payment term (ADR 0005), chosen like the counterparty
     FormSectionTitle(stringResource(R.string.field_bank_account))
     TileChoiceField(
-        options = config.invoiceBankAccounts,
+        options = profile.invoiceBankAccounts,
         key = { it.number },
         selectedKey = form.bankAccountNumber,
         placeholder = stringResource(R.string.field_bank_account_choose),

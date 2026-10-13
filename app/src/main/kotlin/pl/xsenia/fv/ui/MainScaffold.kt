@@ -5,8 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +33,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
-import pl.xsenia.fv.config.ConfigState
+import pl.xsenia.fv.profile.ProfileSession
 import pl.xsenia.fv.invoices.InvoiceRow
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.ui.details.InvoiceDetailsScreen
@@ -55,20 +53,17 @@ private enum class Tab(val route: String, val label: Int, val icon: ImageVector)
     SETTINGS("settings", R.string.nav_settings, Icons.Filled.Settings),
 }
 
-/** Main screen after setup: sales and purchase invoice lists and settings in a bottom navigation. */
+/** Main screen after setup: sales and purchase invoice lists and settings in a bottom navigation, for one company profile. */
 @Composable
-fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
+fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: ProfileSession) {
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val configState by viewModel.configState.collectAsStateWithLifecycle()
-    val sync by viewModel.sync.collectAsStateWithLifecycle()
-    val configIssues = (configState as? ConfigState.Loaded)?.config?.issues?.size ?: 0
 
     // Runs after every unlock (this screen is recreated); the service skips it if synced < 15 min ago.
     LaunchedEffect(Unit) {
-        viewModel.syncIfStale()
+        session.syncService.syncIfStale()
         // An invoice sent before the app was closed: finish checking its status.
-        container.sendService.resumeIfPending()
+        session.sendService.resumeIfPending()
     }
 
     Scaffold(
@@ -85,12 +80,7 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
                                 restoreState = true
                             }
                         },
-                        icon = {
-                            val showBadge = tab == Tab.SETTINGS && (configIssues > 0 || configState == ConfigState.FolderInaccessible)
-                            BadgedBox(badge = { if (showBadge) Badge { if (configIssues > 0) Text(configIssues.toString()) } }) {
-                                Icon(tab.icon, contentDescription = null)
-                            }
-                        },
+                        icon = { Icon(tab.icon, contentDescription = null) },
                         label = { Text(stringResource(tab.label)) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.onPrimary,
@@ -109,9 +99,9 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
                     ?: navController.navigate("$DETAILS_ROUTE/${category.name}/${row.ksefNumber}")
             }
             composable(Tab.SALES.route) {
-                InvoiceListRoute(InvoiceCategory.SALES, container, viewModel, openInvoice, onNewInvoice = { navController.navigate(NEW_INVOICE_ROUTE) })
+                InvoiceListRoute(InvoiceCategory.SALES, session, openInvoice, onNewInvoice = { navController.navigate(NEW_INVOICE_ROUTE) })
             }
-            composable(Tab.PURCHASE.route) { InvoiceListRoute(InvoiceCategory.PURCHASE, container, viewModel, openInvoice, onNewInvoice = null) }
+            composable(Tab.PURCHASE.route) { InvoiceListRoute(InvoiceCategory.PURCHASE, session, openInvoice, onNewInvoice = null) }
             composable(
                 "$NEW_INVOICE_ROUTE?unsentId={unsentId}",
                 arguments = listOf(navArgument("unsentId") { type = NavType.StringType; nullable = true; defaultValue = null }),
@@ -119,7 +109,7 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
                 val unsentId = entry.arguments?.getString("unsentId")
                 val newInvoiceViewModel: NewInvoiceViewModel = viewModel(
                     key = "invoice-form-${unsentId ?: "new"}",
-                    factory = viewModelFactory { initializer { NewInvoiceViewModel(container, unsentId) } },
+                    factory = viewModelFactory { initializer { NewInvoiceViewModel(container, session, unsentId) } },
                 )
                 NewInvoiceScreen(newInvoiceViewModel, onClose = { navController.popIfOn(NEW_INVOICE_ROUTE) })
             }
@@ -128,7 +118,7 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
                 val category = InvoiceCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
                 val ksefNumber = requireNotNull(entry.arguments?.getString("ksefNumber"))
                 val detailsViewModel: InvoiceDetailsViewModel = viewModel(
-                    factory = viewModelFactory { initializer { InvoiceDetailsViewModel(category, ksefNumber, container) } },
+                    factory = viewModelFactory { initializer { InvoiceDetailsViewModel(category, ksefNumber, session) } },
                 )
                 val state by detailsViewModel.state.collectAsStateWithLifecycle()
                 InvoiceDetailsScreen(state = state, onBack = { navController.popIfOn(DETAILS_ROUTE) })
@@ -140,17 +130,16 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel) {
 @Composable
 private fun InvoiceListRoute(
     category: InvoiceCategory,
-    container: AppContainer,
-    mainViewModel: MainViewModel,
+    session: ProfileSession,
     onOpenInvoice: (InvoiceCategory, InvoiceRow) -> Unit,
     onNewInvoice: (() -> Unit)?,
 ) {
     val listViewModel: InvoiceListViewModel = viewModel(
         key = category.name,
-        factory = viewModelFactory { initializer { InvoiceListViewModel(category, container) } },
+        factory = viewModelFactory { initializer { InvoiceListViewModel(category, session) } },
     )
     val state by listViewModel.state.collectAsStateWithLifecycle()
-    val sync by mainViewModel.sync.collectAsStateWithLifecycle()
+    val sync by session.syncService.state.collectAsStateWithLifecycle()
     InvoiceListScreen(
         category = category,
         state = state,
@@ -159,7 +148,7 @@ private fun InvoiceListRoute(
         onNextMonth = listViewModel::nextMonth,
         onSelectMonth = listViewModel::selectMonth,
         onQueryChange = listViewModel::setQuery,
-        onRefresh = mainViewModel::syncNow,
+        onRefresh = session.syncService::syncNow,
         onOpenInvoice = { onOpenInvoice(category, it) },
         onNewInvoice = onNewInvoice,
     )

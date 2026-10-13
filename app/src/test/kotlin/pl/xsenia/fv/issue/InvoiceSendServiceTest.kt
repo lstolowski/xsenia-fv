@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import pl.xsenia.fv.invoice.config.Address
-import pl.xsenia.fv.invoice.config.BankAccount
-import pl.xsenia.fv.invoice.config.Company
-import pl.xsenia.fv.invoice.config.Counterparty
+import pl.xsenia.fv.invoice.profile.Address
+import pl.xsenia.fv.invoice.profile.BankAccount
+import pl.xsenia.fv.invoice.profile.Company
+import pl.xsenia.fv.invoice.profile.Counterparty
 import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.SalesInvoiceDraft
 import pl.xsenia.fv.ksef.KsefFailure

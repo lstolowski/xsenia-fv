@@ -13,7 +13,7 @@ Czysty Kotlin: wczytanie i walidacja `company.json`, `banks.json`, `counterparti
 - [x] Modele (`Company`, `BankAccount`, `Counterparty`, `Address`) + `ConfigParser` (kotlinx.serialization `JsonElement`), wymagane/opcjonalne pola, limity długości z FA(3); `InvoicingConfig.parse(...)` łączy trzy pliki i wylicza `canIssueInvoices`, `invoiceBankAccounts` (tylko PLN)
 - [x] Walidacja NIP (suma kontrolna) i NRB (26 cyfr, mod 97 z prefiksem PL) — `NipValidator`, `BankAccountNumberValidator`; normalizacja: spacje, myślniki, prefiks `PL`; NIP/konto zapisane jako liczba JSON też akceptowane
 - [x] Raport błędów `ConfigIssue`: plik, typ (`ConfigIssueType`), indeks pozycji, nazwa wpisu, pole. **Polskie komunikaty powstaną w aplikacji (ZAD-005) z `strings.xml`** — moduł `invoice` nie zawiera tekstów UI. Parser zbiera wszystkie problemy naraz i nigdy nie rzuca wyjątku
-- [x] Przykładowe pliki w `docs/przyklady/` (dane zmyślone, testowe NIP-y i rachunki) — sprawdzane testem `example files are valid`; od 2026-10-13 w `invoice/src/test/resources/config/` (US-010, ZAD-022 je usuwa)
+- [x] Przykładowe pliki w `docs/przyklady/` (dane zmyślone, testowe NIP-y i rachunki) — sprawdzane testem `example files are valid`; usunięte razem z parserem w ZAD-022 (US-010)
 
 ## Definicja ukończenia
 

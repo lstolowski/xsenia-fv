@@ -124,7 +124,7 @@ class InvoiceListLogicTest {
             ),
             Instant.EPOCH,
         )
-        val unsentRow = InvoiceListLogic.toRow(unsent, config = null)
+        val unsentRow = InvoiceListLogic.toRow(unsent, profile = null)
         val rows = listOf(row("01/09/2026", "2026-09-15"), unsentRow)
 
         val september = InvoiceListLogic.filter(rows, YearMonth.of(2026, 9), "")

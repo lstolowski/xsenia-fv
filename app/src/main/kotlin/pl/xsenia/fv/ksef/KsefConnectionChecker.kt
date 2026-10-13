@@ -6,19 +6,20 @@ import java.io.IOException
 sealed interface ConnectionCheckResult {
     data object Success : ConnectionCheckResult
     data object MissingToken : ConnectionCheckResult
-    data object MissingCompany : ConnectionCheckResult
+    /** The token has no NIP, so the KSeF context is unknown. */
+    data object MissingNip : ConnectionCheckResult
     data class AuthenticationFailed(val statusCode: Int, val description: String) : ConnectionCheckResult
     data class RateLimited(val retryAfterSeconds: Long?) : ConnectionCheckResult
     data class NetworkError(val message: String?) : ConnectionCheckResult
     data class ApiError(val message: String?) : ConnectionCheckResult
 }
 
-/** Verifies that the stored KSeF token authenticates in the context of the company NIP. */
+/** Verifies that the stored KSeF token authenticates in the context of its NIP (the company profile, ADR 0006). */
 class KsefConnectionChecker(private val authenticator: KsefAuthenticator) {
 
     suspend fun check(nip: String?, ksefToken: String?): ConnectionCheckResult {
         if (ksefToken == null) return ConnectionCheckResult.MissingToken
-        if (nip == null) return ConnectionCheckResult.MissingCompany
+        if (nip == null) return ConnectionCheckResult.MissingNip
         return try {
             authenticator.authenticate(nip, ksefToken)
             ConnectionCheckResult.Success

@@ -19,15 +19,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.R
 import pl.xsenia.fv.ui.components.PrimaryButton
-import pl.xsenia.fv.config.ConfigState
 import pl.xsenia.fv.ui.MainViewModel
-import pl.xsenia.fv.ui.components.FolderSection
 import pl.xsenia.fv.ui.components.TokenSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupScreen(viewModel: MainViewModel, canContinue: Boolean, onContinue: () -> Unit) {
-    val configState by viewModel.configState.collectAsStateWithLifecycle()
     val tokenSet by viewModel.tokenSet.collectAsStateWithLifecycle()
     val tokenNip by viewModel.tokenNip.collectAsStateWithLifecycle()
     val connection by viewModel.connection.collectAsStateWithLifecycle()
@@ -38,18 +35,11 @@ fun SetupScreen(viewModel: MainViewModel, canContinue: Boolean, onContinue: () -
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(stringResource(R.string.setup_intro))
-            FolderSection(
-                title = stringResource(R.string.setup_step_folder),
-                state = configState,
-                onSelectFolder = viewModel::selectFolder,
-                onReload = viewModel::reloadConfig,
-            )
             TokenSection(
                 title = stringResource(R.string.setup_step_token),
                 environment = viewModel.environment,
                 tokenSet = tokenSet == true,
                 tokenNip = tokenNip,
-                companyNip = (configState as? ConfigState.Loaded)?.config?.company?.nip,
                 connection = connection,
                 onSaveToken = viewModel::saveToken,
                 onCheckConnection = viewModel::checkConnection,

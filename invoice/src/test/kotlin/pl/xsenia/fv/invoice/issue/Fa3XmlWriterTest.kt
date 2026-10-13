@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import pl.xsenia.fv.invoice.config.Address
+import pl.xsenia.fv.invoice.profile.Address
 import pl.xsenia.fv.invoice.issue.TestDrafts.draft
 import pl.xsenia.fv.invoice.issue.TestDrafts.line
 import pl.xsenia.fv.invoice.model.BankAccountInfo

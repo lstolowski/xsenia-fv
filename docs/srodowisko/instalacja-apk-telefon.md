@@ -25,10 +25,10 @@ Po instalacji włącz go z powrotem — zainstalowana aplikacja działa normalni
 
 1. Odblokowanie biometrią (odcisk palca telefonu).
 2. **Token KSeF** środowiska **PROD** (z Aplikacji Podatnika KSeF) — zapisywany zaszyfrowany w Android Keystore.
-3. **Folder z danymi** — np. `Dokumenty/xsenia` z plikami `company.json`, `banks.json`, `counterparties.json` (format: [ADR 0004](../adr/0004-kontrahenci-w-pliku-json.md)).
-4. Pierwsza synchronizacja pobierze faktury od 01.04.2026.
+   Token musi zawierać NIP firmy (`…|nip-XXXXXXXXXX|…`) — ten NIP wskazuje firmę, w imieniu której działa aplikacja ([ADR 0006](../adr/0006-dane-firmy-w-aplikacji.md)).
+3. Pierwsza synchronizacja pobierze faktury od 01.04.2026.
 
-> Po wdrożeniu [US-010](../user-stories/US-010-dane-firmy-w-aplikacji.md) krok 3 zastąpi formularz **„Moja firma”** (NIP z tokena, dane i rachunki pobierane z Białej listy MF), a kontrahentów dodaje się w aplikacji. Danych z plików JSON aplikacja nie importuje — po aktualizacji trzeba je wpisać raz w Ustawieniach.
+> [US-010](../user-stories/US-010-dane-firmy-w-aplikacji.md) (w realizacji): dane firmy, rachunki i kontrahentów wpisuje się w aplikacji — formularz **„Moja firma”** (NIP z tokena, dane i rachunki pobierane z Białej listy MF) i lista kontrahentów w Ustawieniach. Folder z plikami `company.json`, `banks.json`, `counterparties.json` nie jest już używany, a danych z nich aplikacja nie importuje — po aktualizacji trzeba je wpisać raz w aplikacji. Szkic, faktury niewysłane i pobrane faktury zostają.
 
 ## 5. Aktualizacja
 

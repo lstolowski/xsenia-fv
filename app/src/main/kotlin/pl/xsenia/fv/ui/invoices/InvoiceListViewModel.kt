@@ -17,7 +17,7 @@ import pl.xsenia.fv.invoices.CurrencyTotals
 import pl.xsenia.fv.invoices.InvoiceListLogic
 import pl.xsenia.fv.invoices.InvoiceRow
 import pl.xsenia.fv.invoices.UnsentSummary
-import pl.xsenia.fv.config.ConfigState
+import pl.xsenia.fv.profile.ProfileSession
 import pl.xsenia.fv.mirror.InvoiceCategory
 import java.time.YearMonth
 
@@ -35,17 +35,16 @@ data class InvoiceListUiState(
 )
 
 /** Sales or purchase invoice list: month by delivery date, search, totals (US-003, US-004). */
-class InvoiceListViewModel(private val category: InvoiceCategory, private val container: AppContainer) : ViewModel() {
+class InvoiceListViewModel(private val category: InvoiceCategory, private val session: ProfileSession) : ViewModel() {
 
     private val rows = MutableStateFlow<List<InvoiceRow>?>(null)
     private val month = MutableStateFlow(YearMonth.now())
     private val query = MutableStateFlow("")
 
     /** Unsent invoices (US-007) — only on the sales list. */
-    private val unsentRows = combine(container.unsentInvoices.invoices, container.configRepository.state) { unsent, configState ->
+    private val unsentRows = combine(session.unsentInvoices.invoices, session.profile.profile) { unsent, profile ->
         if (category != InvoiceCategory.SALES) return@combine emptyList()
-        val config = (configState as? ConfigState.Loaded)?.config
-        unsent.map { InvoiceListLogic.toRow(it, config) }
+        unsent.map { InvoiceListLogic.toRow(it, profile) }
     }
 
     val state: StateFlow<InvoiceListUiState> = combine(rows, unsentRows, month, query) { ksefRows, unsentRows, month, query ->
@@ -67,9 +66,9 @@ class InvoiceListViewModel(private val category: InvoiceCategory, private val co
     init {
         // Reload whenever a synchronization changed the mirror.
         viewModelScope.launch {
-            container.syncService.state.map { it.mirrorVersion }.distinctUntilChanged().collect {
+            session.syncService.state.map { it.mirrorVersion }.distinctUntilChanged().collect {
                 rows.value = withContext(Dispatchers.IO) {
-                    container.syncService.mirror.entries(category).map { InvoiceListLogic.toRow(category, it) }
+                    session.syncService.mirror.entries(category).map { InvoiceListLogic.toRow(category, it) }
                 }
             }
         }

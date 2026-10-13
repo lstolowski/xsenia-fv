@@ -17,17 +17,22 @@ class KsefTokenStore(
 
     val isSet: Flow<Boolean> = dataStore.data.map { it[ENCRYPTED_TOKEN] != null }
 
-    /** NIP embedded in the token (`…|nip-XXXXXXXXXX|…`), if any — not secret, shown in settings. */
+    /**
+     * NIP embedded in the token (`…|nip-XXXXXXXXXX|…`) — the KSeF context and the active company profile (ADR 0006).
+     * Not secret, shown in settings. null without a token (or for a token saved by an older version without a NIP).
+     */
     val tokenNip: Flow<String?> = dataStore.data.map { it[TOKEN_NIP] }
 
+    suspend fun tokenNip(): String? = tokenNip.first()
+
+    /** The token must contain the company NIP ([nipOf]) — tokens of other contexts are not supported. */
     suspend fun save(ksefToken: String) {
         val token = ksefToken.trim()
-        require(token.isNotEmpty()) { "KSeF token must not be blank" }
+        val nip = requireNotNull(nipOf(token)) { "KSeF token has no company NIP" }
         val encrypted = Base64.encodeToString(cipher.encrypt(token.toByteArray(Charsets.UTF_8)), Base64.NO_WRAP)
         dataStore.edit {
             it[ENCRYPTED_TOKEN] = encrypted
-            val nip = nipOf(token)
-            if (nip != null) it[TOKEN_NIP] = nip else it.remove(TOKEN_NIP)
+            it[TOKEN_NIP] = nip
         }
     }
 

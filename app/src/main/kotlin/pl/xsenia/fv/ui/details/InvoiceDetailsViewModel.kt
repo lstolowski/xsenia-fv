@@ -8,12 +8,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.invoice.model.Invoice
 import pl.xsenia.fv.invoice.xml.InvoiceParseException
 import pl.xsenia.fv.invoice.xml.InvoiceXmlParser
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.mirror.MirrorEntry
+import pl.xsenia.fv.profile.ProfileSession
 
 sealed interface InvoiceDetailsState {
     data object Loading : InvoiceDetailsState
@@ -27,7 +27,7 @@ sealed interface InvoiceDetailsState {
 class InvoiceDetailsViewModel(
     private val category: InvoiceCategory,
     private val ksefNumber: String,
-    private val container: AppContainer,
+    private val session: ProfileSession,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<InvoiceDetailsState>(InvoiceDetailsState.Loading)
@@ -38,7 +38,7 @@ class InvoiceDetailsViewModel(
     }
 
     private fun load(): InvoiceDetailsState {
-        val mirror = container.syncService.mirror
+        val mirror = session.syncService.mirror
         val entry = mirror.entries(category).firstOrNull { it.metadata.ksefNumber == ksefNumber } ?: return InvoiceDetailsState.NotFound
         val xml = mirror.readXml(category, ksefNumber) ?: return InvoiceDetailsState.NotFound
         return try {

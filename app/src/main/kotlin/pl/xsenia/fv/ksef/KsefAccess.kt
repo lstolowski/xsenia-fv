@@ -35,14 +35,13 @@ class KsefAccess(
 /** Problems talking to KSeF, shown to the user in Polish. */
 sealed interface KsefFailure {
     data object MissingToken : KsefFailure
-    data object MissingCompany : KsefFailure
     data class RateLimited(val retryAfterSeconds: Long?) : KsefFailure
     data class AuthenticationFailed(val statusCode: Int, val description: String) : KsefFailure
     data class Network(val message: String?) : KsefFailure
     data class Ksef(val message: String?) : KsefFailure
 }
 
-/** Carries a [KsefFailure] that is known before calling KSeF (missing token / company). */
+/** Carries a [KsefFailure] that is known before calling KSeF (missing token). */
 class KsefFailureException(val failure: KsefFailure) : Exception()
 
 /** Maps errors of KSeF calls to [KsefFailure]; returns null for unrelated exceptions. */

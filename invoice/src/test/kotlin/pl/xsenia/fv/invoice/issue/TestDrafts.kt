@@ -1,9 +1,9 @@
 package pl.xsenia.fv.invoice.issue
 
-import pl.xsenia.fv.invoice.config.Address
-import pl.xsenia.fv.invoice.config.BankAccount
-import pl.xsenia.fv.invoice.config.Company
-import pl.xsenia.fv.invoice.config.Counterparty
+import pl.xsenia.fv.invoice.profile.Address
+import pl.xsenia.fv.invoice.profile.BankAccount
+import pl.xsenia.fv.invoice.profile.Company
+import pl.xsenia.fv.invoice.profile.Counterparty
 import java.math.BigDecimal
 import java.time.LocalDate
 

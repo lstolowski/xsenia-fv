@@ -10,7 +10,7 @@ class InvoiceFormDefaultsTest {
 
     @Test
     fun `new form uses today and the suggested number`() {
-        val form = InvoiceFormDefaults.newForm(config = null, today = LocalDate.parse("2026-10-12"), existingNumbers = existing)
+        val form = InvoiceFormDefaults.newForm(profile = null, today = LocalDate.parse("2026-10-12"), existingNumbers = existing)
 
         assertEquals(LocalDate.parse("2026-10-12"), form.issueDate)
         assertEquals(LocalDate.parse("2026-09-30"), form.deliveryDate)

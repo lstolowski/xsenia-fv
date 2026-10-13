@@ -27,16 +27,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.BuildConfig
 import pl.xsenia.fv.R
 import pl.xsenia.fv.ui.components.SecondaryButton
-import pl.xsenia.fv.config.ConfigState
 import pl.xsenia.fv.ui.MainViewModel
-import pl.xsenia.fv.ui.components.FolderSection
 import pl.xsenia.fv.ui.components.SectionCard
 import pl.xsenia.fv.ui.components.TokenSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: MainViewModel, onBack: (() -> Unit)?) {
-    val configState by viewModel.configState.collectAsStateWithLifecycle()
     val tokenSet by viewModel.tokenSet.collectAsStateWithLifecycle()
     val tokenNip by viewModel.tokenNip.collectAsStateWithLifecycle()
     val connection by viewModel.connection.collectAsStateWithLifecycle()
@@ -65,16 +62,9 @@ fun SettingsScreen(viewModel: MainViewModel, onBack: (() -> Unit)?) {
                 environment = viewModel.environment,
                 tokenSet = tokenSet == true,
                 tokenNip = tokenNip,
-                companyNip = (configState as? ConfigState.Loaded)?.config?.company?.nip,
                 connection = connection,
                 onSaveToken = viewModel::saveToken,
                 onCheckConnection = viewModel::checkConnection,
-            )
-            FolderSection(
-                title = stringResource(R.string.folder_section_title),
-                state = configState,
-                onSelectFolder = viewModel::selectFolder,
-                onReload = viewModel::reloadConfig,
             )
             SectionCard(stringResource(R.string.settings_cache_section)) {
                 Text(stringResource(R.string.settings_cache_description))

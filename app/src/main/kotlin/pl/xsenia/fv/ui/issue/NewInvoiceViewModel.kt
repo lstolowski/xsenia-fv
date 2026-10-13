@@ -17,8 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.xsenia.fv.AppContainer
-import pl.xsenia.fv.config.ConfigState
-import pl.xsenia.fv.invoice.config.InvoicingConfig
+import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
 import pl.xsenia.fv.invoice.issue.InvoiceNumbering
 import pl.xsenia.fv.invoice.model.Invoice
@@ -33,6 +32,7 @@ import pl.xsenia.fv.issue.SendState
 import pl.xsenia.fv.issue.TakenNumbers
 import pl.xsenia.fv.issue.UnsentInvoice
 import pl.xsenia.fv.mirror.InvoiceCategory
+import pl.xsenia.fv.profile.ProfileSession
 import java.time.Instant
 import java.time.LocalDate
 
@@ -40,7 +40,8 @@ enum class IssueStep { FORM, PREVIEW, STATUS }
 
 data class NewInvoiceUiState(
     val form: InvoiceForm,
-    val config: InvoicingConfig?,
+    /** Seller, bank accounts and counterparties of the active company; null while loading. */
+    val profile: CompanyProfile?,
     val check: FormCheck?,
     val suggestedNumber: String,
     /** Set after "Podgląd" was tapped, so field errors are shown only then. */
@@ -57,7 +58,7 @@ data class NewInvoiceUiState(
  * @param initialUnsentId the unsent invoice to edit, or null for a new invoice (backed by the auto-saved draft)
  */
 @OptIn(FlowPreview::class)
-class NewInvoiceViewModel(private val container: AppContainer, initialUnsentId: String?) : ViewModel() {
+class NewInvoiceViewModel(container: AppContainer, private val session: ProfileSession, initialUnsentId: String?) : ViewModel() {
 
     private val form = MutableStateFlow<InvoiceForm?>(null)
     private val ksefNumbers = MutableStateFlow<List<String>>(emptyList())
@@ -74,23 +75,22 @@ class NewInvoiceViewModel(private val container: AppContainer, initialUnsentId: 
     private val _closed = MutableStateFlow(false)
     val closed: StateFlow<Boolean> = _closed.asStateFlow()
 
-    val sendState: StateFlow<SendState> = container.sendService.state
+    val sendState: StateFlow<SendState> = session.sendService.state
     val environment = container.environment
 
     val state: StateFlow<NewInvoiceUiState?> = combine(
-        combine(form, container.configRepository.state, ::Pair),
+        combine(form, session.profile.profile, ::Pair),
         ksefNumbers,
-        container.unsentInvoices.invoices,
+        session.unsentInvoices.invoices,
         showErrors,
         unsentId,
-    ) { (form, configState), ksef, unsent, showErrors, unsentId ->
+    ) { (form, profile), ksef, unsent, showErrors, unsentId ->
         if (form == null) return@combine null
-        val config = (configState as? ConfigState.Loaded)?.config
         val taken = TakenNumbers.of(ksef, unsent, excludeUnsentId = unsentId)
         NewInvoiceUiState(
             form = form,
-            config = config,
-            check = config?.let { InvoiceFormCheck.check(form, it, taken, today()) },
+            profile = profile,
+            check = profile?.let { InvoiceFormCheck.check(form, it, taken, today()) },
             suggestedNumber = InvoiceNumbering.suggest(form.deliveryDate, taken),
             showErrors = showErrors,
             unsentId = unsentId,
@@ -101,16 +101,16 @@ class NewInvoiceViewModel(private val container: AppContainer, initialUnsentId: 
     init {
         viewModelScope.launch {
             ksefNumbers.value = loadKsefNumbers()
-            val config = (container.configRepository.state.first { it != ConfigState.Loading } as? ConfigState.Loaded)?.config
+            val profile = session.profile.profile.filterNotNull().first()
             val id = unsentId.value
             form.value = if (id != null) {
                 // Unsent invoice: exactly as saved (dates included — an old issue date is handled in the preview, Q5).
-                withContext(Dispatchers.IO) { container.unsentInvoices.get(id) }?.form
-                    ?: InvoiceFormDefaults.newForm(config, today(), taken())
+                withContext(Dispatchers.IO) { session.unsentInvoices.get(id) }?.form
+                    ?: InvoiceFormDefaults.newForm(profile, today(), taken())
             } else {
-                withContext(Dispatchers.IO) { container.issueStorage.loadDraft() }
+                withContext(Dispatchers.IO) { session.issueStorage.loadDraft() }
                     ?.let { InvoiceFormDefaults.refresh(it, today(), taken()) }
-                    ?: InvoiceFormDefaults.newForm(config, today(), taken())
+                    ?: InvoiceFormDefaults.newForm(profile, today(), taken())
             }
             val sending = sendState.value
             if (sending !is SendState.Idle && (id == null || id == sending.unsentIdOrNull())) _step.value = IssueStep.STATUS
@@ -170,7 +170,7 @@ class NewInvoiceViewModel(private val container: AppContainer, initialUnsentId: 
         val current = form.value ?: return
         val draft = state.value?.check?.takeIf { it.canPreview }?.draft ?: return
         _step.value = IssueStep.STATUS
-        container.sendService.send(draft, current, unsentId.value)
+        session.sendService.send(draft, current, unsentId.value)
     }
 
     /** Saves the invoice on the phone without sending it to KSeF (US-007); no biometrics (P6). */
@@ -179,11 +179,11 @@ class NewInvoiceViewModel(private val container: AppContainer, initialUnsentId: 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val id = unsentId.value
-                val existing = id?.let { container.unsentInvoices.get(it) }
-                container.unsentInvoices.save(
+                val existing = id?.let { session.unsentInvoices.get(it) }
+                session.unsentInvoices.save(
                     existing?.copy(form = current, updatedAt = Instant.now()) ?: UnsentInvoice.create(current, Instant.now()),
                 )
-                if (id == null) container.issueStorage.clearDraft()
+                if (id == null) session.issueStorage.clearDraft()
             }
             _closed.value = true
         }
@@ -192,14 +192,14 @@ class NewInvoiceViewModel(private val container: AppContainer, initialUnsentId: 
     fun deleteUnsent() {
         val id = unsentId.value ?: return
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { container.unsentInvoices.delete(id) }
+            withContext(Dispatchers.IO) { session.unsentInvoices.delete(id) }
             _closed.value = true
         }
     }
 
     fun retry() {
         val current = sendState.value
-        if (current is SendState.Failed && current.pendingInKsef) container.sendService.resumeIfPending() else send()
+        if (current is SendState.Failed && current.pendingInKsef) session.sendService.resumeIfPending() else send()
     }
 
     /** After a rejection or failure the invoice is an unsent invoice — continue editing it. */
@@ -209,29 +209,29 @@ class NewInvoiceViewModel(private val container: AppContainer, initialUnsentId: 
             is SendState.Failed -> current.unsentId?.let { unsentId.value = it }
             else -> Unit
         }
-        container.sendService.acknowledge()
+        session.sendService.acknowledge()
         _step.value = IssueStep.FORM
     }
 
     /** Leaves the result screen. */
     fun finish() {
-        container.sendService.acknowledge()
+        session.sendService.acknowledge()
     }
 
     private suspend fun saveCurrent(current: InvoiceForm) = withContext(Dispatchers.IO) {
         val id = unsentId.value
         if (id == null) {
-            container.issueStorage.saveDraft(current)
+            session.issueStorage.saveDraft(current)
         } else {
-            container.unsentInvoices.get(id)?.let { container.unsentInvoices.save(it.copy(form = current, updatedAt = Instant.now())) }
+            session.unsentInvoices.get(id)?.let { session.unsentInvoices.save(it.copy(form = current, updatedAt = Instant.now())) }
         }
     }
 
     private suspend fun loadKsefNumbers(): List<String> = withContext(Dispatchers.IO) {
-        container.syncService.mirror.entries(InvoiceCategory.SALES).map { it.metadata.invoiceNumber }
+        session.syncService.mirror.entries(InvoiceCategory.SALES).map { it.metadata.invoiceNumber }
     }
 
-    private fun taken(): List<String> = TakenNumbers.of(ksefNumbers.value, container.unsentInvoices.invoices.value, unsentId.value)
+    private fun taken(): List<String> = TakenNumbers.of(ksefNumbers.value, session.unsentInvoices.invoices.value, unsentId.value)
 
     private fun update(change: (InvoiceForm) -> InvoiceForm) {
         form.value = form.value?.let(change)
