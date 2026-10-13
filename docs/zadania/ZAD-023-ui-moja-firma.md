@@ -1,7 +1,7 @@
 # ZAD-023. UI: sekcja „Moja firma” — podgląd, edycja, pobieranie, rachunki
 
 - User story: US-010
-- Status: Do zrobienia
+- Status: Zrobione (2026-10-13)
 - Szacunek: M
 
 ## Cel
@@ -10,15 +10,21 @@ W Ustawieniach sekcja „Moja firma”: podgląd danych i rachunków, formularz 
 
 ## Zakres
 
-- [ ] Ustawienia → karta „Moja firma”: nazwa, NIP, adres, e-mail, telefon oraz lista rachunków (kafelki jak w oknie wyboru rachunku); na dole przycisk „Edytuj”. Brak danych — zachęta do uzupełnienia
-- [ ] Formularz „Moja firma” (osobny ekran): NIP z tokena tylko do odczytu, obok ikona pobierania; pola: nazwa, adres linia 1, adres linia 2, kraj (domyślnie „Polska”), e-mail, telefon; walidacja per pole; „Zapisz”; pytanie o porzucenie niezapisanych zmian
-- [ ] Pobieranie (`CompanyLookupService`): wskaźnik postępu na ikonie, nadpisanie nazwy i adresu, ostrzeżenie ⚠ „Firma nie jest czynnym podatnikiem”, komunikaty „Nie znaleziono…” i błędów
-- [ ] Po pobraniu: okno z rachunkami z rejestru do zaznaczenia (już zapisane — oznaczone, nie do zaznaczenia); zaznaczone dodawane jako „Rachunek …{4 ostatnie cyfry}”, PLN
-- [ ] Rachunki: dodaj / edytuj / usuń (formularz: nazwa, bank, numer, waluta); usuwanie z potwierdzeniem i ostrzeżeniem, gdy rachunek jest w szkicu lub fakturze niewysłanej
-- [ ] Wygląd zgodny z US-008 (kafelki, `SectionCard`, `PrimaryButton`)
+- [x] Ustawienia → karta „Moja firma” (na górze): nazwa, NIP, adres, kraj, e-mail, telefon oraz rachunki (kafelki jak w oknie wyboru rachunku); na dole „Edytuj”. Brak danych — NIP z tokena i „Nie uzupełniono danych firmy — bez nich nie wystawisz faktury.” (`CompanySection`)
+- [x] Formularz „Moja firma” (`CompanyFormScreen`, `CompanyFormViewModel`): NIP z tokena tylko do odczytu („NIP z tokena KSeF”) z ikoną pobierania (`ic_download`, w trakcie — wskaźnik postępu); pola: nazwa, adres linia 1 i 2, kraj (domyślnie „Polska”), e-mail, telefon; błędy per pole po pierwszym „Zapisz” (`ProfileValidator`); pytanie „Porzucić zmiany?” przy wyjściu z niezapisanymi zmianami
+- [x] Pobieranie (`CompanyLookupService`): nadpisanie nazwy i adresu (e-mail, telefon bez zmian; bez adresu w rejestrze — adres wpisany zostaje), „Pobrano nazwę i adres z Białej listy — sprawdź i zapisz.”, ⚠ „Firma nie jest czynnym podatnikiem”, komunikaty „Nie znaleziono…” i błędów — wspólny komponent `NipField` (do ZAD-024/025)
+- [x] Po pobraniu: przewijane okno „Rachunki w Białej liście” z polami wyboru (domyślnie nic; zapisane — „już zapisany”, nieaktywne); „Dodaj zaznaczone” dodaje je jako „Rachunek …{4 ostatnie cyfry}”, PLN; „Pomiń” zamyka okno (`RegistryAccounts`)
+- [x] Rachunki pod formularzem: kafelki (dotknięcie → edycja), „Dodaj rachunek”; ekran rachunku (`BankAccountFormScreen`): nazwa, numer (26 cyfr), bank, waluta (informacja: na fakturze tylko PLN, pierwszy rachunek domyślny), zapis z walidacją (suma kontrolna, duplikat), usuwanie z potwierdzeniem; ostrzeżenie, gdy rachunek jest w szkicu lub fakturze niewysłanej (`ProfileUsage`)
+- [x] Wygląd zgodny z US-008; kafelki rachunku i kontrahenta przeniesione do wspólnych komponentów (`ProfileTiles.kt`)
 
 ## Definicja ukończenia
 
-- [ ] Testy logiki formularza (stan, nadpisywanie pól z wyniku pobrania, dodawanie rachunków z rejestru bez duplikatów)
-- [ ] Sprawdzone na emulatorze: pobranie na prawdziwym NIP-ie podanym przez użytkownika w sesji (bez zapisywania go w repozytorium), następnie **nadpisanie danych zmyślonymi** ([docs/przyklady/firma.md](../przyklady/firma.md), [rachunki.md](../przyklady/rachunki.md)) przed jakąkolwiek wysyłką do KSeF TEST; ostrzeżenie o statusie VAT na mocku / zmyślonej odpowiedzi
-- [ ] Zaktualizowana dokumentacja / słownik
+- [x] Testy logiki formularza: `ProfileFormsTest` (5 — nadpisywanie pól wynikiem pobrania, pola zapisanej firmy, rachunki z rejestru bez duplikatów, użycie w szkicu i fakturach niewysłanych); `./gradlew build` zielony
+- [x] Sprawdzone na emulatorze (2026-10-13, KSeF TEST, profil ze zmyślonymi danymi): podgląd w Ustawieniach; pobranie z Białej listy na NIP-ie z tokena — nazwa i adres nadpisane, e-mail i telefon bez zmian, okno rachunków z rejestru (nic niezaznaczone, „Dodaj zaznaczone” nieaktywne) → „Pomiń”, wyjście → „Porzucić zmiany?” → „Porzuć” (pobrane dane **nie zostały zapisane**, w profilu zostały dane zmyślone); dodanie rachunku z błędnym numerem (komunikat) i poprawnym (zapis w `bank-accounts.json`), usunięcie z potwierdzeniem, ostrzeżenie przy rachunku ze szkicu; zmiana nazwy firmy i zapis → podgląd zaktualizowany. Ostrzeżenie o statusie VAT — w testach na zmyślonych odpowiedziach (prawdziwy NIP jest czynnym podatnikiem)
+- [x] Wersja release (R8): `releaseApkTest` podpisany kluczem debug, zainstalowany jako aktualizacja — pobieranie z Białej listy i okno rachunków działają, zmiany porzucone, bez błędów w logach
+- [x] Zaktualizowana dokumentacja / słownik
+
+## Uwagi
+
+- Dane firmy zapisuje „Zapisz”; rachunki zapisują się od razu (każdy własnym „Zapisz” lub „Dodaj zaznaczone”).
+- Na emulatorze pływający pasek klawiatury Gboard zasłania lewą część pól — przy `adb input tap` celować w prawą część pola; „Zaznacz wszystko” (Ctrl+A) nie działa w polach Compose — czyścić `KEYCODE_DEL`.

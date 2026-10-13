@@ -36,6 +36,10 @@ import pl.xsenia.fv.R
 import pl.xsenia.fv.profile.ProfileSession
 import pl.xsenia.fv.invoices.InvoiceRow
 import pl.xsenia.fv.mirror.InvoiceCategory
+import pl.xsenia.fv.ui.company.BankAccountFormScreen
+import pl.xsenia.fv.ui.company.BankAccountFormViewModel
+import pl.xsenia.fv.ui.company.CompanyFormScreen
+import pl.xsenia.fv.ui.company.CompanyFormViewModel
 import pl.xsenia.fv.ui.details.InvoiceDetailsScreen
 import pl.xsenia.fv.ui.details.InvoiceDetailsViewModel
 import pl.xsenia.fv.ui.invoices.InvoiceListScreen
@@ -46,6 +50,8 @@ import pl.xsenia.fv.ui.settings.SettingsScreen
 
 private const val DETAILS_ROUTE = "invoice"
 private const val NEW_INVOICE_ROUTE = "new-invoice"
+private const val COMPANY_ROUTE = "company"
+private const val BANK_ACCOUNT_ROUTE = "bank-account"
 
 private enum class Tab(val route: String, val label: Int, val icon: ImageVector) {
     SALES("sales", R.string.nav_sales, Icons.AutoMirrored.Filled.Send),
@@ -113,7 +119,31 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
                 )
                 NewInvoiceScreen(newInvoiceViewModel, onClose = { navController.popIfOn(NEW_INVOICE_ROUTE) })
             }
-            composable(Tab.SETTINGS.route) { SettingsScreen(viewModel = viewModel, onBack = null) }
+            composable(Tab.SETTINGS.route) {
+                SettingsScreen(viewModel = viewModel, session = session, onEditCompany = { navController.navigate(COMPANY_ROUTE) }, onBack = null)
+            }
+            composable(COMPANY_ROUTE) {
+                val companyViewModel: CompanyFormViewModel = viewModel(
+                    factory = viewModelFactory { initializer { CompanyFormViewModel(session, container.companyLookup) } },
+                )
+                CompanyFormScreen(
+                    viewModel = companyViewModel,
+                    onClose = { navController.popIfOn(COMPANY_ROUTE) },
+                    onAddAccount = { navController.navigate(BANK_ACCOUNT_ROUTE) },
+                    onEditAccount = { number -> navController.navigate("$BANK_ACCOUNT_ROUTE?number=$number") },
+                )
+            }
+            composable(
+                "$BANK_ACCOUNT_ROUTE?number={number}",
+                arguments = listOf(navArgument("number") { type = NavType.StringType; nullable = true; defaultValue = null }),
+            ) { entry ->
+                val number = entry.arguments?.getString("number")
+                val accountViewModel: BankAccountFormViewModel = viewModel(
+                    key = "bank-account-${number ?: "new"}",
+                    factory = viewModelFactory { initializer { BankAccountFormViewModel(session, number) } },
+                )
+                BankAccountFormScreen(accountViewModel, onClose = { navController.popIfOn(BANK_ACCOUNT_ROUTE) })
+            }
             composable("$DETAILS_ROUTE/{category}/{ksefNumber}") { entry ->
                 val category = InvoiceCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
                 val ksefNumber = requireNotNull(entry.arguments?.getString("ksefNumber"))

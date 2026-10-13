@@ -28,4 +28,4 @@ Czysty Kotlin: jeden klient API Białej listy MF zwracający dane firmy po NIP-i
 
 - Format sprawdzony 2026-10-13 na prawdziwych odpowiedziach (JDG, spółka, urząd) — dane nie trafiły do repozytorium. Spółki i urzędy mają adres w `workingAddress`, osoby fizyczne w `residenceAddress`; „ul.” nie występuje; duże firmy mają dziesiątki–setki rachunków (`hasVirtualAccounts`) — okno wyboru rachunków w ZAD-023 musi być przewijane.
 - Kod błędu przy przekroczeniu limitu nie jest udokumentowany — przyjęto `429`; inny kod `WL-…` pokaże się jako „Biała lista odrzuciła zapytanie: … (kod)”.
-- Weryfikacja na emulatorze — razem z UI w ZAD-023 (serwis nie ma jeszcze miejsca w interfejsie). Działanie po R8 (kotlinx.serialization w module `whitelist`) do sprawdzenia przy `releaseApkTest` w ZAD-023.
+- Sprawdzone na emulatorze razem z UI w ZAD-023 (2026-10-13), także w wersji release po R8 (`releaseApkTest`).

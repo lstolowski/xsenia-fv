@@ -27,16 +27,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.BuildConfig
 import pl.xsenia.fv.R
 import pl.xsenia.fv.ui.components.SecondaryButton
+import pl.xsenia.fv.profile.ProfileSession
 import pl.xsenia.fv.ui.MainViewModel
 import pl.xsenia.fv.ui.components.SectionCard
 import pl.xsenia.fv.ui.components.TokenSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(viewModel: MainViewModel, onBack: (() -> Unit)?) {
+fun SettingsScreen(viewModel: MainViewModel, session: ProfileSession, onEditCompany: () -> Unit, onBack: (() -> Unit)?) {
     val tokenSet by viewModel.tokenSet.collectAsStateWithLifecycle()
     val tokenNip by viewModel.tokenNip.collectAsStateWithLifecycle()
     val connection by viewModel.connection.collectAsStateWithLifecycle()
+    val profile by session.profile.profile.collectAsStateWithLifecycle()
     var confirmClearCache by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val cacheClearedMessage = stringResource(R.string.settings_cache_cleared)
@@ -53,6 +55,7 @@ fun SettingsScreen(viewModel: MainViewModel, onBack: (() -> Unit)?) {
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            profile?.let { CompanySection(it, onEdit = onEditCompany) }
             SectionCard(stringResource(R.string.settings_app_section)) {
                 Text(stringResource(R.string.environment_label, viewModel.environment.name))
                 Text(stringResource(R.string.version_label, BuildConfig.VERSION_NAME))

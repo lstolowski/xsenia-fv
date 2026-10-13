@@ -90,8 +90,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
-import pl.xsenia.fv.invoice.profile.BankAccount
-import pl.xsenia.fv.invoice.profile.Counterparty
 import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.DraftIssue
 import pl.xsenia.fv.invoice.issue.DraftIssueType
@@ -107,6 +105,8 @@ import pl.xsenia.fv.issue.SendState
 import pl.xsenia.fv.ksef.KsefEnvironment
 import pl.xsenia.fv.security.BiometricGate
 import pl.xsenia.fv.ui.components.InfoRow
+import pl.xsenia.fv.ui.components.BankAccountText
+import pl.xsenia.fv.ui.components.CounterpartyText
 import pl.xsenia.fv.ui.components.LoadingScreen
 import pl.xsenia.fv.ui.components.PrimaryButton
 import pl.xsenia.fv.ui.components.SecondaryButton
@@ -634,28 +634,6 @@ private fun ChoiceTile(selected: Boolean, onClick: () -> Unit, content: @Composa
             Box(Modifier.weight(1f)) { content() }
             RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
         }
-    }
-}
-
-@Composable
-private fun BankAccountText(account: BankAccount) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(account.name, style = MaterialTheme.typography.titleSmall)
-        account.bank?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        Text(Formats.bankAccount(account.number), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Composable
-private fun CounterpartyText(counterparty: Counterparty) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(counterparty.name, style = MaterialTheme.typography.titleSmall)
-        Text(stringResource(R.string.list_nip, counterparty.nip), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(
-            listOfNotNull(counterparty.address.line1, counterparty.address.line2).joinToString(", "),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 

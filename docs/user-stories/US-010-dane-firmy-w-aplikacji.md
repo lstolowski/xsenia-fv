@@ -13,17 +13,17 @@ Jako **właściciel firmy** chcę **wprowadzać i edytować dane mojej firmy, je
 ### Pobieranie danych po NIP-ie (Biała lista MF)
 
 - [x] Jeden serwis pobiera dane firmy po NIP-ie z `https://wl-api.mf.gov.pl/api/search/nip/{nip}?date={yyyy-MM-dd}` (NIP bez myślników, data „dziś”) i jest używany w formularzach „Moja firma”, „Kontrahent” i przy pierwszym uruchomieniu — [ADR 0007](../adr/0007-biala-lista-mf.md).
-- [ ] Obok pola NIP jest ikona pobierania. Po dotknięciu: nazwa i adres zostają **nadpisane** danymi z rejestru (pisownia jak w rejestrze), adres rozbity na dwie linie; pozostałe pola bez zmian i nadal edytowalne.
-- [ ] Gdy firma nie jest czynnym podatnikiem VAT — ikona ostrzeżenia i komunikat „Firma nie jest czynnym podatnikiem”.
-- [ ] Gdy rejestr nie zna NIP-u — „Nie znaleziono firmy w Białej liście”; niepoprawny NIP (suma kontrolna) — komunikat bez wysyłania zapytania; brak sieci, limit zapytań, błąd serwera — czytelne komunikaty po polsku.
+- [x] Obok pola NIP jest ikona pobierania. Po dotknięciu: nazwa i adres zostają **nadpisane** danymi z rejestru (pisownia jak w rejestrze), adres rozbity na dwie linie; pozostałe pola bez zmian i nadal edytowalne.
+- [x] Gdy firma nie jest czynnym podatnikiem VAT — ikona ostrzeżenia i komunikat „Firma nie jest czynnym podatnikiem”.
+- [x] Gdy rejestr nie zna NIP-u — „Nie znaleziono firmy w Białej liście”; niepoprawny NIP (suma kontrolna) — komunikat bez wysyłania zapytania; brak sieci, limit zapytań, błąd serwera — czytelne komunikaty po polsku.
 
 ### Moja firma
 
-- [ ] Ustawienia mają sekcję „Moja firma”: podgląd danych firmy i jej rachunków, na dole przycisk „Edytuj” prowadzący do formularza.
-- [ ] Formularz ma pola jak dotychczasowy `company.json`: nazwa, NIP, adres (linia 1, linia 2, kraj), e-mail, telefon. NIP pochodzi z tokena KSeF i jest tylko do odczytu; pierwszy element formularza to NIP z ikoną pobierania.
-- [ ] Firma może mieć wiele rachunków bankowych (pola jak w `banks.json`: nazwa, bank, numer, waluta); można je dodawać, edytować i usuwać.
-- [ ] Po pobraniu danych firmy z Białej listy mogę zaznaczyć rachunki z rejestru, które zostaną dodane do firmy (nazwę i bank uzupełniam ręcznie).
-- [ ] Aplikacja działa w kontekście jednej mojej firmy (profil = NIP z tokena); w UI nie ma i nie jest sugerowana zmiana firmy — [ADR 0006](../adr/0006-dane-firmy-w-aplikacji.md).
+- [x] Ustawienia mają sekcję „Moja firma”: podgląd danych firmy i jej rachunków, na dole przycisk „Edytuj” prowadzący do formularza.
+- [x] Formularz ma pola jak dotychczasowy `company.json`: nazwa, NIP, adres (linia 1, linia 2, kraj), e-mail, telefon. NIP pochodzi z tokena KSeF i jest tylko do odczytu; pierwszy element formularza to NIP z ikoną pobierania.
+- [x] Firma może mieć wiele rachunków bankowych (pola jak w `banks.json`: nazwa, bank, numer, waluta); można je dodawać, edytować i usuwać.
+- [x] Po pobraniu danych firmy z Białej listy mogę zaznaczyć rachunki z rejestru, które zostaną dodane do firmy (nazwę i bank uzupełniam ręcznie).
+- [x] Aplikacja działa w kontekście jednej mojej firmy (profil = NIP z tokena); w UI nie ma i nie jest sugerowana zmiana firmy — [ADR 0006](../adr/0006-dane-firmy-w-aplikacji.md).
 
 ### Kontrahenci
 

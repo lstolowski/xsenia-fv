@@ -294,4 +294,51 @@
     <string name="lookup_rate_limited">Wyczerpany dzienny limit zapytań do Białej listy. Spróbuj jutro.</string>
     <string name="lookup_server">Biała lista nie odpowiada (błąd %1$d). Spróbuj później.</string>
     <string name="lookup_api_error">Biała lista odrzuciła zapytanie: %1$s (%2$s).</string>
+
+    <string name="lookup_action">Pobierz dane z Białej listy</string>
+    <string name="lookup_filled">Pobrano nazwę i adres z Białej listy — sprawdź i zapisz.</string>
+
+    <!-- Company profile forms (ADR 0006, ZAD-023) -->
+    <string name="company_section_title">Moja firma</string>
+    <string name="company_empty">Nie uzupełniono danych firmy — bez nich nie wystawisz faktury.</string>
+    <string name="company_edit">Edytuj</string>
+    <string name="company_form_title">Moja firma</string>
+    <string name="company_nip_from_token">NIP z tokena KSeF</string>
+    <string name="field_nip">NIP</string>
+    <string name="field_name">Nazwa</string>
+    <string name="field_address_line1">Adres — ulica i numer</string>
+    <string name="field_address_line2">Adres — kod pocztowy i miejscowość</string>
+    <string name="field_country">Kraj</string>
+    <string name="field_email">E-mail</string>
+    <string name="field_phone">Telefon</string>
+    <string name="bank_accounts_title">Rachunki bankowe</string>
+    <string name="bank_accounts_empty">Brak rachunków.</string>
+    <string name="bank_account_add">Dodaj rachunek</string>
+    <string name="bank_account_form_new">Nowy rachunek</string>
+    <string name="bank_account_form_edit">Rachunek bankowy</string>
+    <string name="field_account_name">Nazwa rachunku</string>
+    <string name="field_account_number">Numer rachunku (26 cyfr)</string>
+    <string name="field_bank_name">Bank</string>
+    <string name="field_currency">Waluta</string>
+    <string name="bank_account_currency_hint">Na fakturze można wybrać tylko rachunek w PLN. Pierwszy rachunek na liście jest domyślny.</string>
+    <string name="bank_account_used">Rachunek jest wybrany w szkicu lub w fakturze niewysłanej — po usunięciu lub zmianie numeru trzeba tam wybrać rachunek ponownie.</string>
+    <string name="bank_account_delete">Usuń rachunek</string>
+    <string name="bank_account_delete_title">Usunąć rachunek?</string>
+    <string name="bank_account_delete_text">Rachunek „%1$s” zostanie usunięty z danych firmy.</string>
+    <string name="registry_accounts_title">Rachunki w Białej liście</string>
+    <string name="registry_accounts_hint">Zaznacz rachunki, które chcesz dodać do firmy. Nazwę i bank uzupełnisz potem w rachunku.</string>
+    <string name="registry_account_saved">już zapisany</string>
+    <string name="registry_accounts_add">Dodaj zaznaczone</string>
+    <string name="registry_accounts_skip">Pomiń</string>
+    <string name="discard_title">Porzucić zmiany?</string>
+    <string name="discard_text">Niezapisane zmiany zostaną utracone.</string>
+    <string name="discard_confirm">Porzuć</string>
+    <string name="field_issue_required">Pole wymagane.</string>
+    <string name="field_issue_too_long">Za długie — maksymalnie %1$d znaków.</string>
+    <string name="field_issue_invalid_nip">Niepoprawny NIP — sprawdź 10 cyfr.</string>
+    <string name="field_issue_invalid_account">Niepoprawny numer rachunku — sprawdź 26 cyfr.</string>
+    <string name="field_issue_invalid_email">Niepoprawny adres e-mail.</string>
+    <string name="field_issue_invalid_currency">Podaj trzyliterowy kod waluty, np. PLN.</string>
+    <string name="field_issue_duplicate_account">Ten rachunek jest już zapisany.</string>
+    <string name="field_issue_duplicate_nip">Kontrahent z tym NIP-em już istnieje.</string>
 </resources>

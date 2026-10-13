@@ -1,0 +1,94 @@
+package pl.xsenia.fv.profile
+
+import pl.xsenia.fv.invoice.profile.BankAccount
+import pl.xsenia.fv.invoice.profile.BankAccountInput
+import pl.xsenia.fv.invoice.profile.Company
+import pl.xsenia.fv.invoice.profile.CompanyInput
+import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.issue.InvoiceForm
+import pl.xsenia.fv.issue.UnsentInvoice
+import pl.xsenia.fv.lookup.LookedUpCompany
+
+/** Default country of a new company or counterparty — the app issues invoices to Polish companies only. */
+const val DEFAULT_COUNTRY = "Polska"
+
+/** Fields of the „Moja firma” form exactly as typed. */
+data class CompanyFormFields(
+    val name: String = "",
+    val addressLine1: String = "",
+    val addressLine2: String = "",
+    val country: String = DEFAULT_COUNTRY,
+    val email: String = "",
+    val phone: String = "",
+) {
+    fun toInput() = CompanyInput(name, addressLine1, addressLine2, country, email, phone)
+
+    /**
+     * Fills the form with White List data (ADR 0007): name and address are overwritten (registry spelling),
+     * e-mail and phone are kept. Without an address in the registry the typed one stays.
+     */
+    fun withLookup(company: LookedUpCompany): CompanyFormFields {
+        val line1 = company.addressLine1 ?: return copy(name = company.name)
+        return copy(name = company.name, addressLine1 = line1, addressLine2 = company.addressLine2.orEmpty(), country = company.country)
+    }
+
+    companion object {
+        fun of(company: Company?): CompanyFormFields = company?.let {
+            CompanyFormFields(
+                name = it.name,
+                addressLine1 = it.address.line1,
+                addressLine2 = it.address.line2.orEmpty(),
+                country = it.address.country.orEmpty(),
+                email = it.email.orEmpty(),
+                phone = it.phone.orEmpty(),
+            )
+        } ?: CompanyFormFields()
+    }
+}
+
+/** Fields of the bank account form exactly as typed. */
+data class BankAccountFormFields(
+    val name: String = "",
+    val bank: String = "",
+    val number: String = "",
+    val currency: String = CompanyProfile.INVOICE_CURRENCY,
+) {
+    fun toInput() = BankAccountInput(name, number, bank, currency)
+
+    companion object {
+        fun of(account: BankAccount?): BankAccountFormFields = account?.let {
+            BankAccountFormFields(it.name, it.bank.orEmpty(), it.number, it.currency)
+        } ?: BankAccountFormFields()
+    }
+}
+
+/** Account of my company found in the White List; [saved] when the profile already has it. */
+data class RegistryAccount(val number: String, val saved: Boolean)
+
+/** Accounts from the White List offered for my company (ADR 0007, Q3). */
+object RegistryAccounts {
+
+    fun of(numbers: List<String>, saved: List<BankAccount>): List<RegistryAccount> =
+        numbers.distinct().map { number -> RegistryAccount(number, saved.any { it.number == number }) }
+
+    /** New accounts for the [selected] numbers not saved yet: PLN, no bank, name to be completed by the user. */
+    fun toBankAccounts(selected: Collection<String>, saved: List<BankAccount>): List<BankAccount> =
+        selected.distinct()
+            .filter { number -> saved.none { it.number == number } }
+            .map { number -> BankAccount(name = defaultName(number), number = number) }
+
+    /** „Rachunek …2152” — the last four digits, until the user names the account. */
+    fun defaultName(number: String) = "Rachunek …${number.takeLast(4)}"
+}
+
+/** Whether profile data is used by the new-invoice draft or by unsent invoices — warned about before deleting. */
+object ProfileUsage {
+
+    fun bankAccountUsed(number: String, draft: InvoiceForm?, unsent: List<UnsentInvoice>): Boolean =
+        forms(draft, unsent).any { it.bankAccountNumber == number }
+
+    fun counterpartyUsed(nip: String, draft: InvoiceForm?, unsent: List<UnsentInvoice>): Boolean =
+        forms(draft, unsent).any { it.counterpartyNip == nip }
+
+    private fun forms(draft: InvoiceForm?, unsent: List<UnsentInvoice>) = listOfNotNull(draft) + unsent.map { it.form }
+}
