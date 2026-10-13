@@ -38,11 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -108,6 +104,7 @@ import pl.xsenia.fv.security.BiometricGate
 import pl.xsenia.fv.ui.components.InfoRow
 import pl.xsenia.fv.ui.components.BankAccountText
 import pl.xsenia.fv.ui.components.CounterpartyText
+import pl.xsenia.fv.ui.components.DropdownField
 import pl.xsenia.fv.ui.components.LoadingScreen
 import pl.xsenia.fv.ui.components.PrimaryButton
 import pl.xsenia.fv.ui.components.SecondaryButton
@@ -676,46 +673,6 @@ private fun ChoiceTile(selected: Boolean, onClick: () -> Unit, content: @Composa
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) { content() }
             RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
-        }
-    }
-}
-
-/** Read-only text field with a drop-down list of [options]. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun <T> DropdownField(
-    label: String,
-    options: List<T>,
-    selected: T,
-    optionText: @Composable (T) -> String,
-    error: String?,
-    onSelect: (T) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
-        OutlinedTextField(
-            value = optionText(selected),
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            isError = error != null,
-            supportingText = error?.let { { Text(it) } },
-            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(optionText(option)) },
-                    onClick = {
-                        expanded = false
-                        onSelect(option)
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                )
-            }
         }
     }
 }

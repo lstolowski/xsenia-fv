@@ -28,15 +28,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.R
 import pl.xsenia.fv.invoice.profile.ProfileField
+import pl.xsenia.fv.profile.BankAccountCurrencies
+import pl.xsenia.fv.ui.components.DropdownField
 import pl.xsenia.fv.ui.components.LoadingScreen
 import pl.xsenia.fv.ui.components.PrimaryButton
 import pl.xsenia.fv.ui.components.ProfileTextField
+import pl.xsenia.fv.ui.components.fieldIssueText
 import pl.xsenia.fv.ui.theme.WarningText
 
 /** New or edited bank account of my company (ZAD-023). */
@@ -90,9 +92,14 @@ fun BankAccountFormScreen(viewModel: BankAccountFormViewModel, onClose: () -> Un
                 Text(stringResource(R.string.bank_account_used), color = WarningText, style = MaterialTheme.typography.bodySmall)
             }
             ProfileTextField(stringResource(R.string.field_bank_name), fields.bank, { value -> viewModel.update { it.copy(bank = value) } }, ProfileField.BANK, issues)
-            ProfileTextField(
-                stringResource(R.string.field_currency), fields.currency, { value -> viewModel.update { it.copy(currency = value) } },
-                ProfileField.CURRENCY, issues, capitalization = KeyboardCapitalization.Characters,
+            DropdownField(
+                label = stringResource(R.string.field_currency),
+                options = BankAccountCurrencies.options(fields.currency),
+                selected = fields.currency,
+                optionText = { it },
+                error = issues.firstOrNull { it.field == ProfileField.CURRENCY }?.let { fieldIssueText(it) },
+                onSelect = { value -> viewModel.update { it.copy(currency = value) } },
+                modifier = Modifier.fillMaxWidth(),
             )
             Text(stringResource(R.string.bank_account_currency_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             PrimaryButton(onClick = viewModel::save, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_save)) }

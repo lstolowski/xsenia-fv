@@ -101,6 +101,14 @@ data class BankAccountFormFields(
     }
 }
 
+/** Currencies offered for a bank account; invoices use PLN accounts only (ADR 0006). */
+object BankAccountCurrencies {
+    val ALL = listOf(CompanyProfile.INVOICE_CURRENCY, "EUR", "USD", "GBP")
+
+    /** An account saved earlier with another currency keeps it as an extra option until the user changes it. */
+    fun options(current: String): List<String> = if (current in ALL) ALL else ALL + current
+}
+
 /** Account of my company found in the White List; [saved] when the profile already has it. */
 data class RegistryAccount(val number: String, val saved: Boolean)
 

@@ -111,4 +111,11 @@ class ProfileFormsTest {
         )
         assertEquals(CounterpartyFormFields(country = "Polska"), CounterpartyFormFields.of(null))
     }
+
+    @Test
+    fun `currency options keep an earlier currency of the account`() {
+        assertEquals(listOf("PLN", "EUR", "USD", "GBP"), BankAccountCurrencies.options("PLN"))
+        assertEquals(listOf("PLN", "EUR", "USD", "GBP", "CHF"), BankAccountCurrencies.options("CHF"))
+        assertEquals("PLN", BankAccountFormFields.of(null).currency)
+    }
 }

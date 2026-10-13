@@ -52,6 +52,8 @@ Decyzje z sesji pytań (2026-10-13):
 - Q6 — testy na mockach API ze zmyślonymi odpowiedziami ([docs/przyklady/biala-lista.md](../przyklady/biala-lista.md)); prawdziwy NIP użytkownika tylko do podejrzenia formatu w trakcie sesji, nigdy w kodzie ani dokumentacji.
 - Q7 — pierwsze uruchomienie: token → Moja firma (automatyczne pobranie) → ekran główny.
 - Dla JDG Biała lista zwraca imię i nazwisko, nie nazwę firmy — nazwę dopisuje się ręcznie.
+- 2026-10-13: komunikat dla NIP-u spoza rejestru zmieniony na „Nie znaleziono firmy w Rejestrze WL” (zgłoszenie użytkownika).
+- 2026-10-13: waluta rachunku wybierana z listy: PLN, EUR, USD, GBP, domyślnie PLN (zgłoszenie użytkownika); na fakturze nadal tylko rachunki PLN.
 
 ## Zadania
 

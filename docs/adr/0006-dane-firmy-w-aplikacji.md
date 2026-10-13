@@ -59,7 +59,7 @@ Opcja 1 we wszystkich trzech punktach (decyzje użytkownika Q1, Q5 z 2026-10-13)
 
 - Pola i reguły walidacji **jak w ADR 0004** (te same nazwy pól w JSON, ten sam zapis w FA(3)):
   - moja firma: `name`, `address.line1` wymagane; `address.line2`, `address.country` (domyślnie „Polska”), `email`, `phone` opcjonalne; `nip` z tokena,
-  - rachunek: `name`, `account` (NRB, suma kontrolna) wymagane; `bank` opcjonalny; `currency` domyślnie `PLN` (na fakturze tylko PLN),
+  - rachunek: `name`, `account` (NRB, suma kontrolna) wymagane; `bank` opcjonalny; `currency` z listy PLN, EUR, USD, GBP, domyślnie `PLN` (na fakturze tylko PLN; rachunek zapisany wcześniej z inną walutą ją zachowuje),
   - kontrahent: `name`, `nip` (suma kontrolna), `address.line1` wymagane; `address.line2`, `address.country`, `email` opcjonalne,
   - limity długości z FA(3) (nazwa i adres 512, bank 256, e-mail 255, telefon 16).
 - Walidacja **w formularzu, przed zapisem** — niepoprawnych danych nie da się zapisać, więc przy odczycie nie ma już raportu błędów plików (`ConfigIssue`).
