@@ -5,6 +5,8 @@ import pl.xsenia.fv.invoice.profile.BankAccountInput
 import pl.xsenia.fv.invoice.profile.Company
 import pl.xsenia.fv.invoice.profile.CompanyInput
 import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.profile.Counterparty
+import pl.xsenia.fv.invoice.profile.CounterpartyInput
 import pl.xsenia.fv.issue.InvoiceForm
 import pl.xsenia.fv.issue.UnsentInvoice
 import pl.xsenia.fv.lookup.LookedUpCompany
@@ -43,6 +45,43 @@ data class CompanyFormFields(
                 phone = it.phone.orEmpty(),
             )
         } ?: CompanyFormFields()
+    }
+}
+
+/** Fields of the counterparty form exactly as typed; [nip] is read-only once the counterparty is saved (ADR 0006). */
+data class CounterpartyFormFields(
+    val nip: String = "",
+    val name: String = "",
+    val addressLine1: String = "",
+    val addressLine2: String = "",
+    val country: String = DEFAULT_COUNTRY,
+    val email: String = "",
+) {
+    fun toInput() = CounterpartyInput(nip, name, addressLine1, addressLine2, country, email)
+
+    /** Like [CompanyFormFields.withLookup]: name and address from the White List, the NIP normalized, e-mail kept. */
+    fun withLookup(company: LookedUpCompany): CounterpartyFormFields {
+        val line1 = company.addressLine1 ?: return copy(nip = company.nip, name = company.name)
+        return copy(
+            nip = company.nip,
+            name = company.name,
+            addressLine1 = line1,
+            addressLine2 = company.addressLine2.orEmpty(),
+            country = company.country,
+        )
+    }
+
+    companion object {
+        fun of(counterparty: Counterparty?): CounterpartyFormFields = counterparty?.let {
+            CounterpartyFormFields(
+                nip = it.nip,
+                name = it.name,
+                addressLine1 = it.address.line1,
+                addressLine2 = it.address.line2.orEmpty(),
+                country = it.address.country.orEmpty(),
+                email = it.email.orEmpty(),
+            )
+        } ?: CounterpartyFormFields()
     }
 }
 

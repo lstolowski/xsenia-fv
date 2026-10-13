@@ -27,10 +27,10 @@ Jako **właściciel firmy** chcę **wprowadzać i edytować dane mojej firmy, je
 
 ### Kontrahenci
 
-- [ ] Ustawienia mają pozycję „Kontrahenci” — odnośnik do listy kontrahentów (te same kafelki co przy wyborze kontrahenta w formularzu „Nowa faktura”).
-- [ ] Mogę dodać kontrahenta: formularz z polami jak w `counterparties.json` (nazwa, NIP, adres, e-mail); pierwszy element to NIP z ikoną pobierania.
-- [ ] Mogę edytować i usunąć kontrahenta (usunięcie z potwierdzeniem; ostrzeżenie, gdy kontrahent jest użyty w szkicu lub fakturze niewysłanej). NIP istniejącego kontrahenta nie jest edytowalny.
-- [ ] W oknie wyboru kontrahenta na formularzu „Nowa faktura” jest „+ Nowy kontrahent”; po zapisie nowy kontrahent jest od razu wybrany.
+- [x] Ustawienia mają pozycję „Kontrahenci” — odnośnik do listy kontrahentów (te same kafelki co przy wyborze kontrahenta w formularzu „Nowa faktura”).
+- [x] Mogę dodać kontrahenta: formularz z polami jak w `counterparties.json` (nazwa, NIP, adres, e-mail); pierwszy element to NIP z ikoną pobierania.
+- [x] Mogę edytować i usunąć kontrahenta (usunięcie z potwierdzeniem; ostrzeżenie, gdy kontrahent jest użyty w szkicu lub fakturze niewysłanej). NIP istniejącego kontrahenta nie jest edytowalny.
+- [x] W oknie wyboru kontrahenta na formularzu „Nowa faktura” jest „+ Nowy kontrahent”; po zapisie nowy kontrahent jest od razu wybrany.
 
 ### Pierwsze uruchomienie i pliki JSON
 

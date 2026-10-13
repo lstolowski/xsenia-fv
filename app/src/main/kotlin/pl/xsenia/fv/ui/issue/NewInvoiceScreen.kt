@@ -124,7 +124,7 @@ import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
+fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewCounterparty: () -> Unit) {
     val step by viewModel.step.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sendState by viewModel.sendState.collectAsStateWithLifecycle()
@@ -179,7 +179,7 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
                 step == IssueStep.PREVIEW -> PreviewContent(viewModel)
                 current.profile?.canIssueInvoices != true ->
                     Text(stringResource(R.string.new_invoice_unavailable), color = MaterialTheme.colorScheme.error)
-                else -> FormContent(current, current.profile, viewModel)
+                else -> FormContent(current, current.profile, viewModel, onNewCounterparty)
             }
         }
     }
@@ -200,7 +200,7 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
 }
 
 @Composable
-private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewModel: NewInvoiceViewModel) {
+private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewModel: NewInvoiceViewModel, onNewCounterparty: () -> Unit) {
     val form = state.form
     val check = state.check
     val formIssues = if (state.showErrors) check?.formIssues.orEmpty() else emptyList()
@@ -222,6 +222,8 @@ private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewM
         placeholder = stringResource(R.string.field_counterparty_choose),
         error = formIssues.messageFor(FormIssueType.COUNTERPARTY_MISSING),
         onSelect = viewModel::selectCounterparty,
+        addLabel = stringResource(R.string.counterparty_new_from_invoice),
+        onAdd = onNewCounterparty,
     ) { CounterpartyText(it) }
 
     // Number and dates (ADR 0005: the number first)
@@ -590,6 +592,8 @@ private fun <T> TileChoiceField(
     placeholder: String,
     error: String?,
     onSelect: (String) -> Unit,
+    addLabel: String? = null,
+    onAdd: (() -> Unit)? = null,
     content: @Composable (T) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -622,6 +626,20 @@ private fun <T> TileChoiceField(
                 }
             },
             confirmButton = { TextButton(onClick = { open = false }, shape = ButtonShape) { Text(stringResource(R.string.action_cancel)) } },
+            // E.g. "+ Nowy kontrahent" — adds an option without leaving the form (ZAD-024).
+            dismissButton = if (onAdd != null && addLabel != null) {
+                {
+                    TextButton(onClick = {
+                        open = false
+                        onAdd()
+                    }, shape = ButtonShape) {
+                        Icon(Icons.Filled.Add, contentDescription = null)
+                        Text(addLabel)
+                    }
+                }
+            } else {
+                null
+            },
         )
     }
 }

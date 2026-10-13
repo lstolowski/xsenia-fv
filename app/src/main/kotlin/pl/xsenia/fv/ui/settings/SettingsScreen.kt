@@ -34,7 +34,13 @@ import pl.xsenia.fv.ui.components.TokenSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(viewModel: MainViewModel, session: ProfileSession, onEditCompany: () -> Unit, onBack: (() -> Unit)?) {
+fun SettingsScreen(
+    viewModel: MainViewModel,
+    session: ProfileSession,
+    onEditCompany: () -> Unit,
+    onOpenCounterparties: () -> Unit,
+    onBack: (() -> Unit)?,
+) {
     val tokenSet by viewModel.tokenSet.collectAsStateWithLifecycle()
     val tokenNip by viewModel.tokenNip.collectAsStateWithLifecycle()
     val connection by viewModel.connection.collectAsStateWithLifecycle()
@@ -55,7 +61,10 @@ fun SettingsScreen(viewModel: MainViewModel, session: ProfileSession, onEditComp
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            profile?.let { CompanySection(it, onEdit = onEditCompany) }
+            profile?.let {
+                CompanySection(it, onEdit = onEditCompany)
+                CounterpartiesLink(it.counterparties.size, onClick = onOpenCounterparties)
+            }
             SectionCard(stringResource(R.string.settings_app_section)) {
                 Text(stringResource(R.string.environment_label, viewModel.environment.name))
                 Text(stringResource(R.string.version_label, BuildConfig.VERSION_NAME))

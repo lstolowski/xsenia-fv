@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import pl.xsenia.fv.invoice.profile.Address
 import pl.xsenia.fv.invoice.profile.BankAccount
 import pl.xsenia.fv.invoice.profile.Company
+import pl.xsenia.fv.invoice.profile.Counterparty
 import pl.xsenia.fv.issue.InvoiceForm
 import pl.xsenia.fv.issue.UnsentInvoice
 import pl.xsenia.fv.lookup.LookedUpCompany
@@ -80,5 +81,34 @@ class ProfileFormsTest {
         assertFalse(ProfileUsage.bankAccountUsed("22161029092633573189646018", draft, listOf(unsent)))
         assertTrue(ProfileUsage.counterpartyUsed("9945082500", draft, listOf(unsent)))
         assertFalse(ProfileUsage.counterpartyUsed("9579102904", draft, listOf(unsent)))
+    }
+
+    @Test
+    fun `counterparty lookup normalizes the NIP and overwrites name and address`() {
+        val typed = CounterpartyFormFields(nip = "669-103-42-74", email = "faktury@example.com")
+        val company = LookedUpCompany("6691034274", "TESTOWA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ", "TESTOWA 6", "00-002 TESTOWO", true, emptyList())
+
+        assertEquals(
+            CounterpartyFormFields(
+                nip = "6691034274",
+                name = "TESTOWA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ",
+                addressLine1 = "TESTOWA 6",
+                addressLine2 = "00-002 TESTOWO",
+                country = "Polska",
+                email = "faktury@example.com",
+            ),
+            typed.withLookup(company),
+        )
+    }
+
+    @Test
+    fun `form fields of a saved counterparty`() {
+        val counterparty = Counterparty("Lorem Ipsum Testowy S.A.", "9945082500", Address("ul. Dolor Sit Amet 12/3", "00-003 Testowo"))
+
+        assertEquals(
+            CounterpartyFormFields("9945082500", "Lorem Ipsum Testowy S.A.", "ul. Dolor Sit Amet 12/3", "00-003 Testowo", "", ""),
+            CounterpartyFormFields.of(counterparty),
+        )
+        assertEquals(CounterpartyFormFields(country = "Polska"), CounterpartyFormFields.of(null))
     }
 }

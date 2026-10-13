@@ -341,4 +341,21 @@
     <string name="field_issue_invalid_currency">Podaj trzyliterowy kod waluty, np. PLN.</string>
     <string name="field_issue_duplicate_account">Ten rachunek jest już zapisany.</string>
     <string name="field_issue_duplicate_nip">Kontrahent z tym NIP-em już istnieje.</string>
+
+    <!-- Counterparties (ZAD-024) -->
+    <string name="counterparties_title">Kontrahenci</string>
+    <string name="counterparties_empty">Brak kontrahentów — dodaj pierwszego, podając jego NIP.</string>
+    <string name="counterparty_count_one">%1$d kontrahent</string>
+    <string name="counterparty_count_few">%1$d kontrahentów</string>
+    <string name="counterparty_count_many">%1$d kontrahentów</string>
+    <string name="counterparty_add">Dodaj kontrahenta</string>
+    <string name="counterparty_new_from_invoice">Nowy kontrahent</string>
+    <string name="counterparty_form_new">Nowy kontrahent</string>
+    <string name="counterparty_form_edit">Kontrahent</string>
+    <string name="counterparty_nip_hint">Wpisz NIP i pobierz dane z Białej listy.</string>
+    <string name="counterparty_nip_fixed">NIP zapisanego kontrahenta nie zmienia się — w razie pomyłki usuń kontrahenta i dodaj nowego.</string>
+    <string name="counterparty_used">Kontrahent jest wybrany w szkicu lub w fakturze niewysłanej — po usunięciu trzeba tam wybrać kontrahenta ponownie.</string>
+    <string name="counterparty_delete">Usuń kontrahenta</string>
+    <string name="counterparty_delete_title">Usunąć kontrahenta?</string>
+    <string name="counterparty_delete_text">Kontrahent „%1$s” zostanie usunięty z listy.</string>
 </resources>

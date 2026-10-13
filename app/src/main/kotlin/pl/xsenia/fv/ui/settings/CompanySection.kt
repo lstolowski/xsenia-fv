@@ -2,11 +2,16 @@ package pl.xsenia.fv.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -16,6 +21,7 @@ import pl.xsenia.fv.ui.components.BankAccountText
 import pl.xsenia.fv.ui.components.SectionCard
 import pl.xsenia.fv.ui.components.SecondaryButton
 import pl.xsenia.fv.ui.components.Tile
+import pl.xsenia.fv.ui.format.counterpartyCount
 
 /** Settings → „Moja firma”: the company of the active profile and its bank accounts; „Edytuj” opens the form. */
 @Composable
@@ -47,5 +53,19 @@ fun CompanySection(profile: CompanyProfile, onEdit: () -> Unit) {
             }
         }
         SecondaryButton(onClick = onEdit, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text(stringResource(R.string.company_edit)) }
+    }
+}
+
+/** Settings → „Kontrahenci”: only a link to the counterparty list (ZAD-024). */
+@Composable
+fun CounterpartiesLink(count: Int, onClick: () -> Unit) {
+    Tile(onClick = onClick) {
+        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.counterparties_title), style = MaterialTheme.typography.titleMedium)
+                Text(counterpartyCount(count), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }

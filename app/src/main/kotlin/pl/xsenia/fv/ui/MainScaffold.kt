@@ -40,6 +40,9 @@ import pl.xsenia.fv.ui.company.BankAccountFormScreen
 import pl.xsenia.fv.ui.company.BankAccountFormViewModel
 import pl.xsenia.fv.ui.company.CompanyFormScreen
 import pl.xsenia.fv.ui.company.CompanyFormViewModel
+import pl.xsenia.fv.ui.counterparties.CounterpartyFormScreen
+import pl.xsenia.fv.ui.counterparties.CounterpartyFormViewModel
+import pl.xsenia.fv.ui.counterparties.CounterpartyListScreen
 import pl.xsenia.fv.ui.details.InvoiceDetailsScreen
 import pl.xsenia.fv.ui.details.InvoiceDetailsViewModel
 import pl.xsenia.fv.ui.invoices.InvoiceListScreen
@@ -52,6 +55,11 @@ private const val DETAILS_ROUTE = "invoice"
 private const val NEW_INVOICE_ROUTE = "new-invoice"
 private const val COMPANY_ROUTE = "company"
 private const val BANK_ACCOUNT_ROUTE = "bank-account"
+private const val COUNTERPARTIES_ROUTE = "counterparties"
+private const val COUNTERPARTY_ROUTE = "counterparty"
+
+/** Saved-state key: NIP of a counterparty created from the invoice form, to select it there (ZAD-024). */
+private const val CREATED_COUNTERPARTY_KEY = "createdCounterpartyNip"
 
 private enum class Tab(val route: String, val label: Int, val icon: ImageVector) {
     SALES("sales", R.string.nav_sales, Icons.AutoMirrored.Filled.Send),
@@ -117,10 +125,27 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
                     key = "invoice-form-${unsentId ?: "new"}",
                     factory = viewModelFactory { initializer { NewInvoiceViewModel(container, session, unsentId) } },
                 )
-                NewInvoiceScreen(newInvoiceViewModel, onClose = { navController.popIfOn(NEW_INVOICE_ROUTE) })
+                val createdCounterparty by entry.savedStateHandle.getStateFlow<String?>(CREATED_COUNTERPARTY_KEY, null).collectAsStateWithLifecycle()
+                LaunchedEffect(createdCounterparty) {
+                    createdCounterparty?.let {
+                        newInvoiceViewModel.selectCounterparty(it)
+                        entry.savedStateHandle[CREATED_COUNTERPARTY_KEY] = null
+                    }
+                }
+                NewInvoiceScreen(
+                    newInvoiceViewModel,
+                    onClose = { navController.popIfOn(NEW_INVOICE_ROUTE) },
+                    onNewCounterparty = { navController.navigate(COUNTERPARTY_ROUTE) },
+                )
             }
             composable(Tab.SETTINGS.route) {
-                SettingsScreen(viewModel = viewModel, session = session, onEditCompany = { navController.navigate(COMPANY_ROUTE) }, onBack = null)
+                SettingsScreen(
+                    viewModel = viewModel,
+                    session = session,
+                    onEditCompany = { navController.navigate(COMPANY_ROUTE) },
+                    onOpenCounterparties = { navController.navigate(COUNTERPARTIES_ROUTE) },
+                    onBack = null,
+                )
             }
             composable(COMPANY_ROUTE) {
                 val companyViewModel: CompanyFormViewModel = viewModel(
@@ -143,6 +168,29 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
                     factory = viewModelFactory { initializer { BankAccountFormViewModel(session, number) } },
                 )
                 BankAccountFormScreen(accountViewModel, onClose = { navController.popIfOn(BANK_ACCOUNT_ROUTE) })
+            }
+            composable(COUNTERPARTIES_ROUTE) {
+                CounterpartyListScreen(
+                    session = session,
+                    onBack = { navController.popIfOn(COUNTERPARTIES_ROUTE) },
+                    onAdd = { navController.navigate(COUNTERPARTY_ROUTE) },
+                    onEdit = { nip -> navController.navigate("$COUNTERPARTY_ROUTE?nip=$nip") },
+                )
+            }
+            composable(
+                "$COUNTERPARTY_ROUTE?nip={nip}",
+                arguments = listOf(navArgument("nip") { type = NavType.StringType; nullable = true; defaultValue = null }),
+            ) { entry ->
+                val nip = entry.arguments?.getString("nip")
+                val counterpartyViewModel: CounterpartyFormViewModel = viewModel(
+                    key = "counterparty-${nip ?: "new"}",
+                    factory = viewModelFactory { initializer { CounterpartyFormViewModel(session, container.companyLookup, nip) } },
+                )
+                CounterpartyFormScreen(counterpartyViewModel, onClose = { savedNip ->
+                    // Opened from the invoice form: the new counterparty is selected there.
+                    savedNip?.let { navController.previousBackStackEntry?.savedStateHandle?.set(CREATED_COUNTERPARTY_KEY, it) }
+                    navController.popIfOn(COUNTERPARTY_ROUTE)
+                })
             }
             composable("$DETAILS_ROUTE/{category}/{ksefNumber}") { entry ->
                 val category = InvoiceCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
