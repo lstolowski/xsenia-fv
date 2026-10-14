@@ -1,5 +1,6 @@
 package pl.xsenia.fv.pdf
 
+import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
 import pl.xsenia.fv.invoice.model.VatCategory
 import pl.xsenia.fv.invoice.profile.Countries
 import java.util.Locale
@@ -10,11 +11,11 @@ import java.util.Locale
  */
 class InvoicePdfLabels private constructor(val bilingual: Boolean) {
 
-    /** "pl" or "pl / en". */
-    private fun t(pl: String, en: String) = if (bilingual) "$pl / $en" else pl
+    /** "pl" or "pl / en" (once when both are the same, e.g. "Bank"). */
+    private fun t(pl: String, en: String) = if (bilingual && pl != en) "$pl / $en" else pl
 
     /** Table header cell: Polish over English. */
-    private fun cell(pl: String, en: String) = if (bilingual) listOf(pl, en) else listOf(pl)
+    private fun cell(pl: String, en: String) = if (bilingual && pl != en) listOf(pl, en) else listOf(pl)
 
     fun title(kind: String): String = when (kind.uppercase()) {
         "VAT" -> t("Faktura VAT", "VAT invoice")
@@ -60,7 +61,6 @@ class InvoicePdfLabels private constructor(val bilingual: Boolean) {
         if (vat == null) "$rate: ${t("netto", "net")} $net" else "$rate: ${t("netto", "net")} $net · VAT $vat"
     val totalNet = t("Razem netto", "Total net")
     val totalVat = t("Razem VAT", "Total VAT")
-    val totalVatPln = t("VAT w PLN", "VAT in PLN")
     val totalGross = t("Do zapłaty (brutto)", "Amount due (gross)")
     fun exchangeRate(rate: String) = "${t("Kurs waluty", "Exchange rate")}: $rate"
 
@@ -108,7 +108,10 @@ class InvoicePdfLabels private constructor(val bilingual: Boolean) {
     val paid = t("Zapłacono", "Paid")
 
     val remarksHeading = t("Uwagi", "Remarks")
-    fun page(page: Int, of: Int) = "${t("Strona", "Page")} $page ${t("z", "of")} $of"
+    fun page(page: Int, of: Int) = t("Strona $page z $of", "Page $page of $of")
+
+    /** A remark as printed under the remarks heading: without the key "Uwagi" ([Fa3XmlWriter.REMARKS_KEY]) repeated. */
+    fun remark(key: String, value: String) = if (key == Fa3XmlWriter.REMARKS_KEY) value else "$key: $value"
 
     companion object {
         val POLISH = InvoicePdfLabels(bilingual = false)

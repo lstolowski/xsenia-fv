@@ -4,6 +4,7 @@ import pl.xsenia.fv.invoice.model.Invoice
 import pl.xsenia.fv.invoice.model.Party
 import pl.xsenia.fv.ui.format.Formats
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Lays out a sales invoice on A4 pages (US-013, ADR 0010): header with the KSeF number (or "not submitted"),
@@ -146,25 +147,56 @@ class InvoicePdfLayout(private val measurer: TextMeasurer) {
             elements += PdfElement.Line(LEFT, y, RIGHT, y, if (isHeader) LINE_STRONG else LINE_THIN)
         }
 
+        /**
+         * Totals; the breakdown per rate only with several rates — with one rate it repeats the totals
+         * (decision 2026-10-14). Per-rate sums are a required part of an invoice (VAT act art. 106e ust. 1 pkt 13–14).
+         */
         fun summary() {
-            text(labels.summaryHeading, PdfTextStyle.HEADING)
-            invoice.vatSummary.forEach { entry ->
-                text(labels.summaryRate(labels.vatCategory(entry.category), money(entry.net), entry.vat?.let { money(it) }), PdfTextStyle.NORMAL)
+            if (invoice.vatSummary.size > 1) {
+                text(labels.summaryHeading, PdfTextStyle.HEADING)
+                invoice.vatSummary.forEach { entry ->
+                    text(labels.summaryRate(labels.vatCategory(entry.category), money(entry.net), entry.vat?.let { money(it) }), PdfTextStyle.NORMAL)
+                }
+                gap(4f)
             }
-            gap(4f)
-            amountRow(labels.totalNet, money(invoice.netTotal), PdfTextStyle.NORMAL)
-            amountRow(labels.totalVat, money(invoice.vatTotal), PdfTextStyle.NORMAL)
-            invoice.vatInPlnTotal?.let { amountRow(labels.totalVatPln, money(it, PLN), PdfTextStyle.NORMAL) }
+            val pln = plnTotals()
+            amountRow(labels.totalNet, money(invoice.netTotal), PdfTextStyle.NORMAL, pln?.net)
+            amountRow(labels.totalVat, money(invoice.vatTotal), PdfTextStyle.NORMAL, pln?.vat)
             invoice.exchangeRate?.let { text(labels.exchangeRate(Formats.exchangeRate(it)), PdfTextStyle.NORMAL) }
-            amountRow(labels.totalGross, money(invoice.grossTotal), PdfTextStyle.HEADING)
+            amountRow(labels.totalGross, money(invoice.grossTotal), PdfTextStyle.HEADING, pln?.gross)
             gap(SECTION_GAP)
         }
 
-        private fun amountRow(label: String, amount: String, style: PdfTextStyle) {
+        /**
+         * Totals of a foreign currency invoice converted to PLN, informative (decision 2026-10-14): net × rate, VAT in PLN
+         * from the invoice (`P_14_xW`, or VAT × rate) — only when VAT > 0, gross = net + VAT in PLN. Null for PLN.
+         */
+        private fun plnTotals(): PlnTotals? {
+            val rate = invoice.exchangeRate ?: return null
+            if (invoice.currency == PLN) return null
+            val net = (invoice.netTotal * rate).setScale(2, RoundingMode.HALF_UP)
+            val vat = invoice.vatInPlnTotal ?: (invoice.vatTotal * rate).setScale(2, RoundingMode.HALF_UP)
+            return PlnTotals(
+                net = plnText(net),
+                vat = vat.takeIf { invoice.vatTotal.signum() > 0 }?.let(::plnText),
+                gross = plnText(net + vat),
+            )
+        }
+
+        private fun plnText(amount: BigDecimal) = "(${Formats.amount(amount)} $PLN)"
+
+        /** Label left, amount right; [pln] — the PLN equivalent in a smaller font, right of the amount. */
+        private fun amountRow(label: String, amount: String, style: PdfTextStyle, pln: String? = null) {
             ensure(style.lineHeight)
             y += style.lineHeight
             elements += PdfElement.Text(label, LEFT, y - DESCENT, style)
-            elements += PdfElement.Text(amount, RIGHT, y - DESCENT, style, PdfAlign.RIGHT)
+            if (pln == null) {
+                elements += PdfElement.Text(amount, RIGHT, y - DESCENT, style, PdfAlign.RIGHT)
+            } else {
+                elements += PdfElement.Text(pln, RIGHT, y - DESCENT, PdfTextStyle.SMALL, PdfAlign.RIGHT)
+                val amountRight = RIGHT - measurer.width(pln, PdfTextStyle.SMALL) - PLN_GAP
+                elements += PdfElement.Text(amount, amountRight, y - DESCENT, style, PdfAlign.RIGHT)
+            }
         }
 
         fun payment() {
@@ -187,7 +219,7 @@ class InvoicePdfLayout(private val measurer: TextMeasurer) {
         fun remarks() {
             if (invoice.additionalInfo.isEmpty() && invoice.footer.isEmpty()) return
             text(labels.remarksHeading, PdfTextStyle.HEADING)
-            invoice.additionalInfo.forEach { (key, value) -> text("$key: $value", PdfTextStyle.NORMAL) }
+            invoice.additionalInfo.forEach { (key, value) -> text(labels.remark(key, value), PdfTextStyle.NORMAL) }
             invoice.footer.forEach { text(it, PdfTextStyle.SMALL) }
         }
 
@@ -221,6 +253,8 @@ class InvoicePdfLayout(private val measurer: TextMeasurer) {
 
     private data class Column(val width: Float, val numeric: Boolean)
 
+    private data class PlnTotals(val net: String, val vat: String?, val gross: String)
+
     companion object {
         const val MARGIN = 40f
         const val LEFT = MARGIN
@@ -234,6 +268,7 @@ class InvoicePdfLayout(private val measurer: TextMeasurer) {
         private const val PLN = "PLN"
         private const val PL_COUNTRY = "PL"
         private const val SECTION_GAP = 14f
+        private const val PLN_GAP = 4f
         private const val TABLE_START_HEIGHT = 70f
         private const val COLUMN_GAP = 15f
         private const val CELL_PADDING = 3f

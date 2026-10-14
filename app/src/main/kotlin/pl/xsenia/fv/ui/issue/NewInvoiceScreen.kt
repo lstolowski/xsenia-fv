@@ -87,6 +87,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
+import pl.xsenia.fv.ui.components.ShareInvoiceButton
 import pl.xsenia.fv.currency.problemMessage
 import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.CompanyProfile
@@ -159,6 +160,12 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewC
                     }
                 },
                 actions = {
+                    // PDF of the invoice (US-013): in the preview — not in KSeF yet; after sending — with the KSeF number.
+                    val preview by viewModel.preview.collectAsStateWithLifecycle()
+                    val shown = preview
+                    val accepted = sendState as? SendState.Accepted
+                    if (shown != null && step == IssueStep.PREVIEW) ShareInvoiceButton(shown, ksefNumber = null)
+                    if (shown != null && step == IssueStep.STATUS && accepted != null) ShareInvoiceButton(shown, accepted.ksefNumber)
                     if (step == IssueStep.FORM && state?.unsentId != null) {
                         IconButton(onClick = { confirmDelete = true }) {
                             Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.unsent_delete))

@@ -202,7 +202,7 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
                     factory = viewModelFactory { initializer { InvoiceDetailsViewModel(category, ksefNumber, session) } },
                 )
                 val state by detailsViewModel.state.collectAsStateWithLifecycle()
-                InvoiceDetailsScreen(state = state, onBack = { navController.popIfOn(DETAILS_ROUTE) })
+                InvoiceDetailsScreen(state = state, canShare = category == InvoiceCategory.SALES, onBack = { navController.popIfOn(DETAILS_ROUTE) })
             }
         }
     }

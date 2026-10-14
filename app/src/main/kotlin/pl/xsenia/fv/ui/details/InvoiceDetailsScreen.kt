@@ -20,13 +20,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import pl.xsenia.fv.R
+import pl.xsenia.fv.ui.components.ShareInvoiceButton
 import pl.xsenia.fv.ui.components.LoadingScreen
 import pl.xsenia.fv.ui.components.SectionCard
 import pl.xsenia.fv.ui.format.Formats
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InvoiceDetailsScreen(state: InvoiceDetailsState, onBack: () -> Unit) {
+/** [canShare] — a sales invoice: its PDF can be shared (US-013). */
+fun InvoiceDetailsScreen(state: InvoiceDetailsState, canShare: Boolean, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -35,6 +37,10 @@ fun InvoiceDetailsScreen(state: InvoiceDetailsState, onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
+                },
+                actions = {
+                    val invoice = (state as? InvoiceDetailsState.Loaded)?.invoice
+                    if (canShare && invoice != null) ShareInvoiceButton(invoice, state.entry.metadata.ksefNumber)
                 },
             )
         },

@@ -1,7 +1,7 @@
 # US-013. PDF faktury sprzedażowej i udostępnianie
 
 - Priorytet: MVP
-- Status: W realizacji (ZAD-034 zrobione)
+- Status: Zrobiona (2026-10-14)
 - Zgłoszone: 2026-10-14 (wydzielone z US-012, decyzja Q5)
 
 ## Historyjka
@@ -14,17 +14,17 @@ Analiza: [06-pdf-kod-qr.md](../analiza/06-pdf-kod-qr.md), decyzja: [ADR 0010](..
 
 ### Treść PDF
 
-- [ ] A4, prosty układ jak ekran szczegółów, bez logo: nagłówek (rodzaj, numer faktury, numer KSeF, data wystawienia, data dostawy), sprzedawca i nabywca (nazwa, NIP / numer VAT UE / identyfikator, adres, kraj), tabela pozycji (nazwa, ilość, jednostka, cena jedn. netto, stawka, wartość netto, wartość brutto), podsumowanie wg stawek (netto, VAT, brutto; VAT w PLN i kurs dla waluty obcej), płatność (forma, termin, rachunek, bank), uwagi („Reverse charge”, „Kurs waluty”).
-- [ ] Długa lista pozycji — kolejne strony z numerem strony.
-- [ ] **Bez kodu QR** — tylko numer KSeF.
-- [ ] Faktura niewysłana — zamiast numeru KSeF napis „Faktura nie wysłana do KSeF”.
-- [ ] Polski nabywca — etykiety po polsku; zagraniczny — „polski / angielski” (np. „Sprzedawca / Seller”, „Faktura nie wysłana do KSeF / Not yet submitted to KSeF”).
+- [x] A4, prosty układ jak ekran szczegółów, bez logo: nagłówek (rodzaj, numer faktury, numer KSeF, data wystawienia, data dostawy), sprzedawca i nabywca (nazwa, NIP / numer VAT UE / identyfikator, adres, kraj), tabela pozycji (nazwa, ilość, jednostka, cena jedn. netto, stawka, wartość netto, wartość brutto), sumy (netto, VAT, brutto; dla waluty obcej — kurs i obok sum, mniejszą czcionką, przeliczenie na PLN, np. „250,00 EUR (1 093,20 PLN)”; przy VAT 0 bez przeliczenia VAT) — rozbicie „Podsumowanie” wg stawek tylko przy kilku stawkach, płatność (forma, termin, rachunek, bank), uwagi („Reverse charge”, „Kurs waluty”).
+- [x] Długa lista pozycji — kolejne strony z numerem strony.
+- [x] **Bez kodu QR** — tylko numer KSeF.
+- [x] Faktura niewysłana — zamiast numeru KSeF napis „Faktura nie wysłana do KSeF”.
+- [x] Polski nabywca — etykiety po polsku; zagraniczny — „polski / angielski” (np. „Sprzedawca / Seller”, „Faktura nie wysłana do KSeF / Not yet submitted to KSeF”).
 
 ### Udostępnianie
 
-- [ ] Ikona udostępniania (trzy kropki połączone liniami) otwiera systemowy arkusz „Udostępnij” z samym PDF (e-mail, komunikator, Dysk, „Zapisz w Plikach”).
-- [ ] Ikona jest: w szczegółach faktury sprzedażowej (nie zakupowej), na ekranie po udanej wysyłce, w podglądzie nowej / niewysłanej faktury (PDF z tego, co w podglądzie, z kursem na dzień wysyłki).
-- [ ] Plik tymczasowy, bez zapisu w Pobranych; „Wyczyść cache” go usuwa.
+- [x] Ikona udostępniania (trzy kropki połączone liniami) otwiera systemowy arkusz „Udostępnij” z samym PDF (e-mail, komunikator, Dysk, „Zapisz w Plikach”).
+- [x] Ikona jest: w szczegółach faktury sprzedażowej (nie zakupowej), na ekranie po udanej wysyłce, w podglądzie nowej / niewysłanej faktury (PDF z tego, co w podglądzie, z kursem na dzień wysyłki).
+- [x] Plik tymczasowy, bez zapisu w Pobranych; „Wyczyść cache” go usuwa.
 
 ## Uwagi / pytania
 
@@ -39,6 +39,8 @@ Decyzje z sesji pytań (2026-10-14):
 - Q6 (a) — plik tymczasowy, zapis przez arkusz „Udostępnij”; ikona udostępniania (trzy kropki połączone dwiema liniami).
 - R2-Q1 (a) — niewysłana: „Faktura nie wysłana do KSeF” (PL), dla nabywcy zagranicznego z angielskim „Not yet submitted to KSeF”.
 - R2-Q2 (a) — niewysłaną i nową fakturę udostępnia się z podglądu.
+- Po obejrzeniu PDF (2026-10-14): sekcja „Podsumowanie / Summary” z rozbiciem wg stawek pominięta przy jednej stawce (powtarza sumy); przy kilku stawkach zostaje — sumy wg stawek są obowiązkowym elementem faktury (art. 106e ust. 1 pkt 13–14).
+- 2026-10-14: przy „Razem netto”, „Razem VAT” (gdy VAT > 0) i „Do zapłaty” faktury w walucie obcej — przeliczenie na PLN mniejszą czcionką w nawiasie: netto × kurs, VAT w PLN z faktury (`P_14_xW`), brutto = netto + VAT w PLN; osobny wiersz „VAT w PLN” usunięty.
 
 ## Zadania
 

@@ -96,6 +96,8 @@
     <string name="list_no_name">(brak nazwy)</string>
     <string name="list_delivery">Dostawa %1$s</string>
     <string name="list_nip">NIP %1$s</string>
+    <string name="share_invoice">Udostępnij fakturę</string>
+    <string name="share_invoice_failed">Nie udało się utworzyć PDF faktury.</string>
     <string name="list_vat_ue">VAT UE %1$s</string>
     <string name="list_tax_id">ID %1$s</string>
     <string name="list_number">nr %1$s</string>

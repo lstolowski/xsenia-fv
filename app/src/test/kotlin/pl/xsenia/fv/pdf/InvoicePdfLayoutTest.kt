@@ -95,11 +95,17 @@ class InvoicePdfLayoutTest {
         assertTrue("Niemcy / Germany" in texts)
         assertTrue("Waluta / Currency: EUR" in texts)
         assertTrue("1 730,00 EUR" in texts)
-        assertTrue("1 006,83 PLN" in texts)
+        // PLN equivalents in a smaller font: net 1 500,00 × 4,3775, VAT in PLN from P_14_1W, gross = net + VAT.
+        assertTrue("(6 566,25 PLN)" in texts)
+        assertTrue("(1 006,83 PLN)" in texts)
+        assertTrue("(7 573,08 PLN)" in texts)
         assertTrue("Kurs waluty / Exchange rate: 4,3775" in texts)
         assertTrue("np" in texts)
-        assertTrue("Uwagi: Reverse charge" in texts)
-        assertTrue("Strona / Page 1 z / of 1" in texts)
+        assertTrue("Reverse charge" in texts)
+        assertTrue("Kurs waluty: 1 EUR = 4,3775 PLN, tabela NBP 197/A/NBP/2026 z 2026-10-09" in texts)
+        assertTrue("Strona 1 z 1 / Page 1 of 1" in texts)
+        assertFalse(texts.any { it == "Bank / Bank: Toyota Bank" })
+        assertTrue("Bank: Toyota Bank" in texts)
         // Table header: Polish over English.
         assertTrue("Description" in texts && "Nazwa towaru lub usługi" in texts)
     }
@@ -145,5 +151,39 @@ class InvoicePdfLayoutTest {
         assertEquals("Faktura_01-09-2026.pdf", InvoicePdfLayout.fileName("01/09/2026"))
         assertEquals("Faktura_FV-1-a-b.pdf", InvoicePdfLayout.fileName(" FV 1:a\\b "))
         assertEquals("Faktura_bez-numeru.pdf", InvoicePdfLayout.fileName(""))
+    }
+
+    @Test
+    fun `breakdown per rate only with several rates`() {
+        val single = layout.layout(invoice(), ksefNumber = "K").texts()
+        assertFalse("Podsumowanie" in single)
+        assertFalse(single.any { it.startsWith("Stawka 23%") })
+        assertTrue("Do zapłaty (brutto)" in single)
+
+        val mixed = layout.layout(invoice(lines = listOf(line(), line(price = "100", rate = VatRate.RATE_8))), ksefNumber = "K").texts()
+        assertTrue("Podsumowanie" in mixed)
+        assertTrue("Stawka 23%: netto 233,00 zł · VAT 53,59 zł" in mixed)
+        assertTrue("Stawka 8%: netto 100,00 zł · VAT 8,00 zł" in mixed)
+    }
+
+    @Test
+    fun `PLN equivalents in a smaller font right of the totals, not for VAT 0 and not for PLN invoices`() {
+        val rate = ExchangeRate(InvoiceCurrency.EUR, BigDecimal("4.3728"), "189/A/NBP/2026", LocalDate.parse("2026-09-29"))
+        val page = layout.layout(
+            invoice(germanBuyer, listOf(line(price = "250.00", rate = VatRate.NOT_TAXABLE)), InvoiceCurrency.EUR, rate, eurAccount), ksefNumber = null,
+        ).single()
+        val texts = page.elements.filterIsInstance<PdfElement.Text>()
+        // The first one — net (gross is the same with VAT 0).
+        fun find(text: String) = texts.first { it.text.replace('\u00A0', ' ').replace('\u202F', ' ') == text }
+
+        val netPln = find("(1 093,20 PLN)")
+        assertEquals(PdfTextStyle.SMALL, netPln.style)
+        assertEquals(InvoicePdfLayout.RIGHT, netPln.x)
+        val net = texts.single { it.baseline == netPln.baseline && it.text.replace('\u00A0', ' ') == "250,00 EUR" }
+        assertTrue(net.x < netPln.x - measurer.width(netPln.text, PdfTextStyle.SMALL))
+        assertEquals(2, texts.count { it.text.replace('\u00A0', ' ') == "(1 093,20 PLN)" }, "net and gross; no VAT line in PLN for VAT 0")
+
+        val polish = layout.layout(invoice(), ksefNumber = "K").texts()
+        assertFalse(polish.any { it.startsWith("(") && it.endsWith("PLN)") })
     }
 }
