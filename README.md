@@ -1,6 +1,8 @@
 # xsenia-fv
 
-Prywatna aplikacja na Androida do KSeF (API 2.0): przegląd faktur sprzedażowych i zakupowych oraz wystawianie faktur sprzedażowych VAT. APK instalowany ręcznie, bez Google Play, bez backendu.
+Vibecodowana aplikacja na Androida do KSeF (API 2.0): przegląd faktur sprzedażowych i zakupowych oraz wystawianie faktur sprzedażowych VAT. APK instalowany ręcznie, bez Google Play, bez backendu.
+
+Prostota wystawiania kilku faktur w miesiącu, idealna dla JDG
 
 Dokumentacja projektu: [docs/](docs/README.md). Instrukcje dla agentów AI: [AGENTS.md](AGENTS.md).
 
