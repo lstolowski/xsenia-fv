@@ -17,4 +17,4 @@ Z każdej historyjki rozpisujemy zadania w [../zadania/](../zadania/README.md).
 | [US-010](US-010-dane-firmy-w-aplikacji.md) | Moja firma, rachunki i kontrahenci w Ustawieniach, z pobieraniem danych po NIP-ie | MVP | Zrobiona |
 | [US-011](US-011-faktury-w-walucie-obcej.md) | Faktury w walucie obcej (EUR, USD, GBP) z kursem NBP | MVP | Zrobiona |
 | [US-012](US-012-nabywca-zagraniczny.md) | Nabywca zagraniczny (bez polskiego NIP-u) | MVP | Zrobiona |
-| [US-013](US-013-pdf-kod-qr.md) | PDF faktury sprzedażowej i udostępnianie | MVP | Gotowa |
+| [US-013](US-013-pdf-kod-qr.md) | PDF faktury sprzedażowej i udostępnianie | MVP | W realizacji |

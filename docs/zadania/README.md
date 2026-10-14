@@ -37,7 +37,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-031](ZAD-031-fa3-nabywca-zagraniczny.md) | FA(3): nabywca z numerem VAT UE lub innym identyfikatorem, „np I” / „np II” | US-012 | Zrobione |
 | [ZAD-032](ZAD-032-ui-kontrahent-zagraniczny.md) | UI: formularz kontrahenta z krajem, domyślna waluta, wartości domyślne faktury | US-012 | Zrobione |
 | [ZAD-033](ZAD-033-listy-identyfikator-nabywcy.md) | Listy, szczegóły i wyszukiwanie: numer VAT UE / identyfikator nabywcy | US-012 | Zrobione |
-| [ZAD-034](ZAD-034-pdf-uklad.md) | PDF faktury: układ, strony, etykiety PL / PL+EN | US-013 | Do zrobienia |
+| [ZAD-034](ZAD-034-pdf-uklad.md) | PDF faktury: układ, strony, etykiety PL / PL+EN | US-013 | Zrobione |
 | [ZAD-035](ZAD-035-pdf-rysowanie-udostepnianie.md) | PDF faktury: rysowanie, udostępnianie, ikony w aplikacji | US-013 | Do zrobienia |
 
 Weryfikacja na urządzeniu fizycznym (2026-10-13): użytkownik sprawdził zadania 001–020 (poza 002 — infrastruktura testów integracyjnych) na swoim telefonie z KSeF TEST — aplikacja działa i wygląda poprawnie.

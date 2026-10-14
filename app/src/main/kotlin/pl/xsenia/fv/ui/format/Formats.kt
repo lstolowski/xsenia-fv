@@ -17,6 +17,18 @@ object Formats {
     private val DATE_TIME = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
     private val MONTH = DateTimeFormatter.ofPattern("LLLL yyyy", POLISH)
 
+    /** `1 234,56` — two decimals, Polish grouping. */
+    fun amount(amount: BigDecimal): String = NumberFormat.getNumberInstance(POLISH).apply {
+        minimumFractionDigits = 2
+        maximumFractionDigits = 2
+    }.format(amount)
+
+    /** Unit price: at least two decimals, up to eight (`P_9A`), e.g. `100,00`, `0,12345`. */
+    fun unitPrice(price: BigDecimal): String = NumberFormat.getNumberInstance(POLISH).apply {
+        minimumFractionDigits = 2
+        maximumFractionDigits = 8
+    }.format(price)
+
     /** `1 234,56 zł` for PLN, `1 234,56 EUR` for other currencies. */
     fun money(amount: BigDecimal, currency: String): String {
         val number = NumberFormat.getNumberInstance(POLISH).apply {

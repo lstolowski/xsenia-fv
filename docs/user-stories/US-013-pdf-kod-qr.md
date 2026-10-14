@@ -1,7 +1,7 @@
 # US-013. PDF faktury sprzedażowej i udostępnianie
 
 - Priorytet: MVP
-- Status: Gotowa
+- Status: W realizacji (ZAD-034 zrobione)
 - Zgłoszone: 2026-10-14 (wydzielone z US-012, decyzja Q5)
 
 ## Historyjka

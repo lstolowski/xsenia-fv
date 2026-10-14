@@ -63,3 +63,4 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Szkic faktury | `InvoiceForm` (`issue/draft.json`) | Automatycznie zapisywany formularz nowej faktury | |
 | Brak kursu przy wysyłce | `SendState.RateUnavailable` | Kurs NBP na dzień wysyłki nie został pobrany — faktura nie trafia do KSeF, zostaje szkicem lub niewysłaną | ADR 0008, Q3 |
 | Faktura niewysłana | `UnsentInvoice` | Faktura sprzedażowa zapisana na telefonie bez wysyłki do KSeF, edytowalna (US-007) | Oznaczenie: żółty trójkąt z wykrzyknikiem |
+| PDF faktury | `InvoicePdfLayout` (`PdfPage`, `PdfElement`), `InvoicePdfLabels` | PDF faktury sprzedażowej do udostępnienia: A4, etykiety PL albo PL / EN (nabywca zagraniczny), numer KSeF albo „Faktura nie wysłana do KSeF”; bez kodu QR | ADR 0010 |
