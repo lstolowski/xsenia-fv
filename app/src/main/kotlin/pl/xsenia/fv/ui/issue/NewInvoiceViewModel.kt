@@ -26,6 +26,7 @@ import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
 import pl.xsenia.fv.invoice.issue.InvoiceNumbering
+import pl.xsenia.fv.invoice.issue.SalesInvoiceDraft
 import pl.xsenia.fv.invoice.model.Invoice
 import pl.xsenia.fv.invoice.xml.InvoiceXmlParser
 import pl.xsenia.fv.issue.FormCheck
@@ -71,7 +72,16 @@ data class NewInvoiceUiState(
     /** Why KSeF rejected this invoice the last time it was sent (Q4). */
     val rejection: Rejection?,
     val rate: RateStatus = RateStatus.None,
+    /** Fetching the final rate before the preview. */
+    val previewLoading: Boolean = false,
+    /** Why the preview could not get the rate for the day of sending (ADR 0008, Q3). */
+    val previewRateProblem: ExchangeRateResult? = null,
 )
+
+/** Rate in the preview: [final] — for the day of sending; [working] — the one shown in the form (null when there was none). */
+data class PreviewRate(val final: ExchangeRate, val working: ExchangeRate?) {
+    val changed: Boolean get() = working != null && working != final
+}
 
 /**
  * New sales invoice or edit of an unsent one: form → preview → send to KSeF / save without sending (US-006, US-007).
@@ -88,12 +98,20 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
     private val showErrors = MutableStateFlow(false)
     private val unsentId = MutableStateFlow(initialUnsentId)
     private val rateStatus = MutableStateFlow<RateStatus>(RateStatus.None)
+    private val previewLoading = MutableStateFlow(false)
+    private val previewRateProblem = MutableStateFlow<ExchangeRateResult?>(null)
+
+    /** The draft shown in the preview — exactly what [send] sends (with the final rate). */
+    private var previewDraft: SalesInvoiceDraft? = null
 
     private val _step = MutableStateFlow(IssueStep.FORM)
     val step: StateFlow<IssueStep> = _step.asStateFlow()
 
     private val _preview = MutableStateFlow<Invoice?>(null)
     val preview: StateFlow<Invoice?> = _preview.asStateFlow()
+
+    private val _previewRate = MutableStateFlow<PreviewRate?>(null)
+    val previewRate: StateFlow<PreviewRate?> = _previewRate.asStateFlow()
 
     /** Emits true when the screen should close (saved without sending, deleted). */
     private val _closed = MutableStateFlow(false)
@@ -104,11 +122,11 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
 
     val state: StateFlow<NewInvoiceUiState?> = combine(
         combine(form, session.profile.profile, rateStatus, ::Triple),
-        ksefNumbers,
+        combine(ksefNumbers, previewLoading, previewRateProblem, ::Triple),
         session.unsentInvoices.invoices,
         showErrors,
         unsentId,
-    ) { (form, profile, rate), ksef, unsent, showErrors, unsentId ->
+    ) { (form, profile, rate), (ksef, loading, rateProblem), unsent, showErrors, unsentId ->
         if (form == null) return@combine null
         val taken = TakenNumbers.of(ksef, unsent, excludeUnsentId = unsentId)
         NewInvoiceUiState(
@@ -120,6 +138,8 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
             unsentId = unsentId,
             rejection = unsent.firstOrNull { it.id == unsentId }?.rejection,
             rate = rate,
+            previewLoading = loading,
+            previewRateProblem = rateProblem,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
@@ -186,27 +206,34 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
 
     /**
      * Shows the invoice exactly as it will be sent: generated FA(3) XML read back by the parser.
-     * A missing working rate (e.g. no connection while editing) is fetched first.
+     * A foreign currency invoice gets the final NBP rate — for sending today (ADR 0008, Q4); without it there is no preview.
      */
     fun openPreview() {
         showErrors.value = true
+        previewRateProblem.value = null
         val current = form.value ?: return
-        if (current.currency.isForeign && current.workingRate == null) {
-            viewModelScope.launch {
-                refreshRate()
-                showPreview()
+        if (!current.currency.isForeign) return showPreview(current, finalRate = null)
+        if (previewLoading.value) return
+        viewModelScope.launch {
+            previewLoading.value = true
+            val result = exchangeRates.rateFor(current.currency, current.deliveryDate, today())
+            previewLoading.value = false
+            // The form may have changed while the rate was fetched.
+            if (form.value != current) return@launch
+            when (result) {
+                is ExchangeRateResult.Found -> showPreview(current, result.rate)
+                else -> previewRateProblem.value = result
             }
-        } else {
-            showPreview()
         }
     }
 
-    private fun showPreview() {
-        val current = form.value ?: return
+    private fun showPreview(current: InvoiceForm, finalRate: ExchangeRate?) {
         val profile = session.profile.profile.value ?: return
-        val check = InvoiceFormCheck.check(current, profile, taken(), today())
+        val check = InvoiceFormCheck.check(current, profile, taken(), today(), exchangeRate = finalRate)
         val draft = check.draft
         if (!check.canPreview || draft == null) return
+        previewDraft = draft
+        _previewRate.value = finalRate?.let { PreviewRate(it, current.workingRate) }
         _preview.value = InvoiceXmlParser.parse(Fa3XmlWriter.write(draft, Instant.now()))
         _step.value = IssueStep.PREVIEW
     }
@@ -248,10 +275,10 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
         _step.value = IssueStep.FORM
     }
 
-    /** Called after the biometric confirmation. */
+    /** Called after the biometric confirmation; the service checks the rate again for the day of sending. */
     fun send() {
         val current = form.value ?: return
-        val draft = state.value?.check?.takeIf { it.canPreview }?.draft ?: return
+        val draft = previewDraft ?: state.value?.check?.takeIf { it.canPreview }?.draft ?: return
         _step.value = IssueStep.STATUS
         session.sendService.send(draft, current, unsentId.value)
     }
@@ -326,6 +353,7 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
         is SendState.Sending -> unsentId
         is SendState.Rejected -> unsentId
         is SendState.Failed -> unsentId
+        is SendState.RateUnavailable -> unsentId
         else -> null
     }
 }

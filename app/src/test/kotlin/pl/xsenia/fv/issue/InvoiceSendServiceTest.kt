@@ -5,11 +5,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import pl.xsenia.fv.exchangerates.ExchangeRateResult
+import pl.xsenia.fv.invoice.currency.ExchangeRate
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.Address
 import pl.xsenia.fv.invoice.profile.BankAccount
 import pl.xsenia.fv.invoice.profile.Company
@@ -23,8 +27,10 @@ import pl.xsenia.fv.ksef.sending.SubmittedInvoice
 import java.io.File
 import java.io.IOException
 import java.math.BigDecimal
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 class InvoiceSendServiceTest {
 
@@ -47,9 +53,12 @@ class InvoiceSendServiceTest {
         listOf(DraftLine("Usługa testowa", BigDecimal.ONE, "szt.", BigDecimal(100))),
     )
 
-    /** Fake KSeF: [outcome] runs after the invoice was submitted (unless [failBeforeSubmit]). */
+    /** Fake KSeF: [outcome] runs after the invoice was submitted (unless [failBeforeSubmit]); [sentXml] — what was sent. */
     private class FakeBackend(var failBeforeSubmit: Exception? = null, var outcome: () -> SentInvoice) : InvoiceSendBackend {
+        val sentXml = mutableListOf<String>()
+
         override suspend fun send(nip: String, invoiceXml: ByteArray, onSubmitted: suspend (SubmittedInvoice) -> Unit): SentInvoice {
+            sentXml += invoiceXml.toString(Charsets.UTF_8)
             failBeforeSubmit?.let { throw it }
             onSubmitted(SubmittedInvoice("SO-1", "INV-1"))
             return outcome()
@@ -60,17 +69,46 @@ class InvoiceSendServiceTest {
 
     private val accepted = { SentInvoice(submitted, "9945082500-20261001-0000000000AA-00", null, "<UPO/>".toByteArray()) }
 
-    private inner class Fixture(backend: InvoiceSendBackend, scope: CoroutineScope) {
+    /** NBP rates (docs/przyklady/kursy-nbp.md): working 09.10.2026, final for sending 12.10.2026. */
+    private fun rate(rate: String, table: String, date: String) = ExchangeRate(InvoiceCurrency.EUR, BigDecimal(rate), table, LocalDate.parse(date))
+    private val workingRate = rate("4.3775", "197/A/NBP/2026", "2026-10-09")
+    private val finalRate = rate("4.3889", "198/A/NBP/2026", "2026-10-12")
+    private val euroDraft = draft.copy(
+        bankAccount = BankAccount("Konto testowe EUR", null, "83216097587877893287921742", "EUR"),
+        currency = InvoiceCurrency.EUR,
+        exchangeRate = workingRate,
+    )
+
+    /** Fake final rates: [result] for every invoice; [asked] — the days of sending asked for. */
+    private class FakeRates(var result: ExchangeRateResult) : FinalRateSource {
+        val asked = mutableListOf<LocalDate>()
+
+        override suspend fun rateFor(draft: SalesInvoiceDraft, sendDay: LocalDate): ExchangeRateResult {
+            asked += sendDay
+            return result
+        }
+    }
+
+    // 2026-10-13 22:30 UTC is already 14 October in Poland.
+    private val clock = Clock.fixed(Instant.parse("2026-10-13T22:30:00Z"), ZoneOffset.UTC)
+
+    private inner class Fixture(backend: InvoiceSendBackend, scope: CoroutineScope, val rates: FakeRates) {
         val storage = IssueStorage(dir)
         val unsent = UnsentInvoiceRepository(UnsentInvoiceStore(dir), scope)
         var synced = 0
-        val service = InvoiceSendService(scope, backend, storage, unsent, onAccepted = { synced++ }, ioDispatcher = Dispatchers.Unconfined)
+        val service = InvoiceSendService(
+            scope, backend, storage, unsent, onAccepted = { synced++ }, finalRates = rates, clock = clock, ioDispatcher = Dispatchers.Unconfined,
+        )
     }
 
-    private fun run(backend: InvoiceSendBackend, block: Fixture.() -> Unit): Fixture = runBlocking {
+    private fun run(
+        backend: InvoiceSendBackend,
+        rates: FakeRates = FakeRates(ExchangeRateResult.Found(finalRate)),
+        block: Fixture.() -> Unit,
+    ): Fixture = runBlocking {
         lateinit var fixture: Fixture
         coroutineScope {
-            fixture = Fixture(backend, this)
+            fixture = Fixture(backend, this, rates)
             fixture.block()
         }
         fixture
@@ -146,10 +184,52 @@ class InvoiceSendServiceTest {
         backend.outcome = accepted
         runBlocking {
             coroutineScope {
-                val resumed = InvoiceSendService(this, backend, fixture.storage, fixture.unsent, {}, ioDispatcher = Dispatchers.Unconfined)
+                val resumed = InvoiceSendService(this, backend, fixture.storage, fixture.unsent, {}, fixture.rates, ioDispatcher = Dispatchers.Unconfined)
                 resumed.resumeIfPending()
             }
         }
         assertNull(fixture.storage.loadPending())
+    }
+
+    @Test
+    fun `PLN invoice is sent without asking for a rate`() {
+        val backend = FakeBackend(outcome = accepted)
+        val fixture = run(backend) { service.send(draft, form, unsentId = null) }
+
+        assertTrue(fixture.service.state.value is SendState.Accepted)
+        assertTrue(fixture.rates.asked.isEmpty())
+        assertTrue(backend.sentXml.single().contains("<KodWaluty>PLN</KodWaluty>"))
+    }
+
+    @Test
+    fun `foreign currency invoice gets the rate for the day of sending in Poland`() {
+        val backend = FakeBackend(outcome = accepted)
+        val fixture = run(backend) { service.send(euroDraft, form, unsentId = null) }
+
+        assertTrue(fixture.service.state.value is SendState.Accepted)
+        assertEquals(listOf(LocalDate.parse("2026-10-14")), fixture.rates.asked)
+        val xml = backend.sentXml.single()
+        assertTrue(xml.contains("<KursWaluty>4.3889</KursWaluty>"))
+        assertTrue(xml.contains("tabela NBP 198/A/NBP/2026 z 2026-10-12"))
+        assertFalse(xml.contains("4.3775"))
+    }
+
+    @Test
+    fun `without the rate nothing is sent and the invoice stays a draft`() {
+        val backend = FakeBackend(outcome = accepted)
+        val problem = ExchangeRateResult.Failure(ExchangeRateResult.Failure.Reason.NETWORK)
+        val fixture = run(backend, FakeRates(problem)) {
+            storage.saveDraft(form)
+            service.send(euroDraft, form, unsentId = null)
+        }
+
+        assertEquals(SendState.RateUnavailable("04/09/2026", problem, unsentId = null), fixture.service.state.value)
+        assertTrue(backend.sentXml.isEmpty())
+        assertEquals(form, fixture.storage.loadDraft())
+        assertTrue(fixture.unsent.invoices.value.isEmpty())
+        assertNull(fixture.storage.loadPending())
+
+        fixture.service.acknowledge()
+        assertEquals(SendState.Idle, fixture.service.state.value)
     }
 }

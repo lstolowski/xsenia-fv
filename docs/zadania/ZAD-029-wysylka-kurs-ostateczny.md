@@ -1,7 +1,7 @@
 # ZAD-029. Podgląd i wysyłka faktury w walucie: kurs ostateczny w locie, szczegóły
 
 - User story: US-011
-- Status: Do zrobienia
+- Status: Zrobione (2026-10-14)
 - Szacunek: S
 
 ## Cel
@@ -10,13 +10,13 @@ Podgląd przed potwierdzeniem biometrią pokazuje kurs ostateczny dla dnia wysy�
 
 ## Zakres
 
-- [ ] Podgląd: kurs ostateczny (`ExchangeRateService`, `issueDay` = dziś), kurs i VAT w PLN; gdy różny od roboczego — „Kurs zaktualizowany: 4,3775 → 4,3889”; szkic / faktura niewysłana dostaje kurs ostateczny
-- [ ] `InvoiceSendService.send`: przed `Fa3XmlWriter.write` — kurs dla dnia wysyłki; różny od kursu z podglądu (wysyłka po północy) — szkic aktualizowany w locie; przy niepowodzeniu faktura niewysłana zapisywana z tym kursem
-- [ ] Brak kursu (NBP niedostępne) w podglądzie lub przy wysyłce — wysyłka nie startuje, komunikat „Nie udało się pobrać kursu NBP”; faktura zostaje szkicem / niewysłaną
-- [ ] Szczegóły faktury: dla waluty obcej kurs (`KursWaluty`) i VAT w PLN (`P_14_xW`)
+- [x] Podgląd: kurs ostateczny (`ExchangeRateService.rateFor`, `issueDay` = dziś) pobierany po „Podgląd” (przycisk z kółkiem ładowania); w podglądzie „Kurs NBP EUR na dzień wysyłki: …”, a gdy różny od roboczego — „Kurs zaktualizowany na dzień wysyłki: 4,3775 → 4,3889 (tabela …)”; `InvoiceFormCheck.check(…, exchangeRate)` z kursem ostatecznym; wysyłany jest dokładnie szkic z podglądu. Kurs ostateczny **nie** jest zapisywany w szkicu ani w fakturze niewysłanej — przy każdej wysyłce i tak liczy się od nowa, a w formularzu zostaje kurs roboczy
+- [x] `InvoiceSendService.send`: przed `Fa3XmlWriter.write` — kurs dla dnia wysyłki w Polsce (`FinalRateSource`, z `ExchangeRateService`); różny od kursu z podglądu (wysyłka po północy) — podmieniany w locie; przy niepowodzeniu wysyłki faktura niewysłana zapisywana z formularzem (kurs roboczy — kolejna wysyłka znów pobiera kurs ostateczny)
+- [x] Brak kursu (NBP niedostępne): w formularzu „Podgląd wymaga kursu NBP na dzień wysyłki.” z przyczyną; przy wysyłce — nowy stan `SendState.RateUnavailable` („Nie wysłano faktury … — brak kursu NBP na dzień wysyłki.”, „Spróbuj ponownie”, „Popraw fakturę”, „Zamknij”); nic nie trafia do KSeF, faktura zostaje szkicem / niewysłaną
+- [x] Szczegóły faktury (i podgląd): „Kurs waluty: 4,3728” w nagłówku (`Invoice.exchangeRate`), „VAT w PLN” w podsumowaniu (`Invoice.vatInPlnTotal`)
 
 ## Definicja ukończenia
 
-- [ ] Testy: `InvoiceSendServiceTest` — kurs dla dnia wysyłki, aktualizacja kursu po północy, brak kursu; PLN bez zapytań o kurs
-- [ ] Sprawdzone na emulatorze z KSeF TEST: faktura w EUR wysłana, kurs w podglądzie i szczegółach
-- [ ] Zaktualizowana dokumentacja / słownik
+- [x] Testy: `InvoiceSendServiceTest` — kurs dla dnia wysyłki w Polsce (22:30 UTC = następny dzień), podmiana kursu roboczego na ostateczny w XML, brak kursu (nic nie wysłane, szkic zostaje); PLN bez zapytań o kurs; `Fa3XmlWriterTest` — `exchangeRate`, `vatInPlnTotal`
+- [x] Sprawdzone na emulatorze z KSeF TEST (2026-10-14): faktura 10/09/2026 w EUR (dane zmyślone) — w podglądzie kurs na dzień wysyłki 4,3728 (tabela 189/A/NBP/2026 z 29.09.2026, dostawa 30.09), VAT w PLN i uwaga „Kurs waluty”; przyjęta przez KSeF TEST z UPO; w szczegółach po synchronizacji kurs i VAT w PLN. Komunikat „Kurs zaktualizowany” i stan braku kursu — sprawdzone tylko testami
+- [x] Zaktualizowana dokumentacja / słownik

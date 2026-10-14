@@ -54,6 +54,14 @@ data class Invoice(
 
     val isCorrection: Boolean get() = kind.startsWith("KOR")
 
+    /** VAT converted to PLN (sum of `P_14_xW`) on a foreign currency invoice; null when the invoice has none. */
+    val vatInPlnTotal: BigDecimal?
+        get() = vatSummary.mapNotNull { it.vatInPln }.takeIf { it.isNotEmpty() }?.fold(BigDecimal.ZERO, BigDecimal::add)
+
+    /** `KursWaluty` when all lines that have it use the same rate (our invoices: always); null otherwise. */
+    val exchangeRate: BigDecimal?
+        get() = lines.mapNotNull { it.exchangeRate }.distinct().singleOrNull()
+
     /**
      * Delivery date used to assign the invoice to a month (decision D2):
      * `P_6` → `OkresFa/P_6_Do` → latest `P_6A` of the lines → issue date `P_1`.

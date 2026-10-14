@@ -1,7 +1,7 @@
 # US-011. Faktury w walucie obcej (EUR, USD, GBP) z kursem NBP
 
 - Priorytet: MVP
-- Status: W realizacji (ZAD-026…028 zrobione)
+- Status: Zrobiona (2026-10-14)
 - Zgłoszone: 2026-10-13
 
 ## Historyjka
@@ -30,13 +30,13 @@ Uzupełnia stawkę „np” (reverse charge, [US-009](US-009-stawki-vat-jednostk
 
 - [x] Dzień odniesienia = wcześniejsza z dat: data dostawy, dzień wystawienia. Kurs = tabela A NBP z ostatniego dnia roboczego **przed** dniem odniesienia.
 - [x] Przy zapisie bez wysyłki dzień wystawienia = data wystawienia z formularza (kurs roboczy).
-- [ ] Przy wysyłce do KSeF dzień wystawienia = dzień wysyłki; kurs ostateczny pobierany ponownie i aktualizowany w locie.
+- [x] Przy wysyłce do KSeF dzień wystawienia = dzień wysyłki; kurs ostateczny pobierany ponownie i aktualizowany w locie.
 
 ### Podgląd i wysyłka
 
-- [ ] Podgląd przed potwierdzeniem biometrią pobiera kurs ostateczny (dzień wysyłki = dziś) i pokazuje kurs oraz VAT w PLN; gdy różni się od roboczego — „Kurs zaktualizowany: 4,3775 → 4,3889”.
-- [ ] Tuż przed utworzeniem XML kurs jest sprawdzany ponownie (zmieni się tylko, gdy między podglądem a wysyłką minęła północ).
-- [ ] Nie da się pobrać kursu — wysyłka nie startuje, komunikat „Nie udało się pobrać kursu NBP”, faktura zostaje szkicem lub niewysłaną. Kursu nie wpisuje się ręcznie.
+- [x] Podgląd przed potwierdzeniem biometrią pobiera kurs ostateczny (dzień wysyłki = dziś) i pokazuje kurs oraz VAT w PLN; gdy różni się od roboczego — „Kurs zaktualizowany: 4,3775 → 4,3889”.
+- [x] Tuż przed utworzeniem XML kurs jest sprawdzany ponownie (zmieni się tylko, gdy między podglądem a wysyłką minęła północ).
+- [x] Nie da się pobrać kursu — wysyłka nie startuje, komunikat o braku kursu NBP na dzień wysyłki, faktura zostaje szkicem lub niewysłaną. Kursu nie wpisuje się ręcznie.
 
 ### Faktura w KSeF (FA(3))
 
@@ -48,7 +48,7 @@ Uzupełnia stawkę „np” (reverse charge, [US-009](US-009-stawki-vat-jednostk
 
 ### Pozostałe
 
-- [ ] Szczegóły wysłanej faktury w walucie obcej — kurs i VAT w PLN.
+- [x] Szczegóły wysłanej faktury w walucie obcej — kurs i VAT w PLN.
 - [x] Listy: faktura niewysłana pokazuje kwotę w swojej walucie; sumy miesiąca liczone osobno per waluta (już działa dla faktur z KSeF).
 - [x] Formularz rachunku w „Moja firma” ma listę walut PLN, EUR, USD, GBP.
 - [x] Do wystawienia faktury wystarczy dowolny rachunek (dotąd wymagany rachunek PLN — US-010).

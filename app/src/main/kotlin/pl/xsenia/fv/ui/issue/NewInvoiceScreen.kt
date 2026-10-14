@@ -313,7 +313,17 @@ private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewM
     draftIssues.filter { it.lineIndex == null && it.type !in NUMBER_ISSUES && it.type !in FIELD_ISSUES }.forEach {
         ErrorText(draftIssueText(it))
     }
-    PrimaryButton(onClick = viewModel::openPreview, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_preview)) }
+    state.previewRateProblem?.let { problem ->
+        ErrorText(stringResource(R.string.preview_rate_missing))
+        problem.problemMessage(LocalResources.current)?.let { ErrorText(it) }
+    }
+    PrimaryButton(onClick = viewModel::openPreview, modifier = Modifier.fillMaxWidth(), enabled = !state.previewLoading) {
+        if (state.previewLoading) {
+            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+        } else {
+            Text(stringResource(R.string.action_preview))
+        }
+    }
 }
 
 @Composable
@@ -441,6 +451,20 @@ private fun PreviewContent(viewModel: NewInvoiceViewModel) {
             Text(stringResource(R.string.preview_use_today))
         }
     }
+    val previewRate by viewModel.previewRate.collectAsStateWithLifecycle()
+    previewRate?.let { rate ->
+        val final = rate.final
+        val working = rate.working
+        val table = stringResource(R.string.preview_rate_table, final.tableNumber, Formats.date(final.effectiveDate))
+        if (rate.changed && working != null) {
+            Text(
+                stringResource(R.string.preview_rate_changed, Formats.exchangeRate(working.rate), Formats.exchangeRate(final.rate), table),
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+        } else {
+            Text(stringResource(R.string.preview_rate_final, final.currency.code, Formats.exchangeRate(final.rate), table))
+        }
+    }
     InvoiceDetailsContent(invoice, ksefNumber = null)
     PrimaryButton(
         onClick = {
@@ -490,6 +514,27 @@ private fun StatusContent(state: SendState, viewModel: NewInvoiceViewModel, onCl
             }
             PrimaryButton(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_fix)) }
             SecondaryButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_close)) }
+        }
+        is SendState.RateUnavailable -> {
+            StatusMark(success = false)
+            Tile(borderColor = MaterialTheme.colorScheme.error) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(R.string.status_rate_unavailable, state.invoiceNumber),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    state.problem.problemMessage(LocalResources.current)?.let { Text(it) }
+                    Text(
+                        stringResource(if (state.unsentId != null) R.string.status_rate_kept_unsent else R.string.status_rate_kept_draft),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            PrimaryButton(onClick = viewModel::retry, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_retry)) }
+            SecondaryButton(onClick = viewModel::fixInvoice, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_fix)) }
+            TextButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth(), shape = ButtonShape) { Text(stringResource(R.string.status_close)) }
         }
         is SendState.Failed -> {
             StatusMark(success = false)

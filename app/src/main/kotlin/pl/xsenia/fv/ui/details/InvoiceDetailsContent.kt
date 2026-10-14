@@ -70,6 +70,7 @@ fun InvoiceDetailsContent(invoice: Invoice, ksefNumber: String?) {
             HorizontalDivider()
             InfoRow(stringResource(R.string.details_total_net), money(invoice.netTotal))
             InfoRow(stringResource(R.string.details_total_vat), money(invoice.vatTotal))
+            invoice.vatInPlnTotal?.let { InfoRow(stringResource(R.string.total_vat_pln), Formats.money(it, "PLN")) }
             InfoRow(stringResource(R.string.details_total_gross), money(invoice.grossTotal), emphasized = true)
         }
         invoice.payment?.let { payment ->
@@ -132,6 +133,7 @@ private fun Header(invoice: Invoice, ksefNumber: String?) {
                 Text(stringResource(R.string.details_delivery_date, Formats.date(invoice.deliveryDate)), color = secondary)
             }
             if (invoice.currency != "PLN") Text(stringResource(R.string.details_currency, invoice.currency), color = secondary)
+            invoice.exchangeRate?.let { Text(stringResource(R.string.details_exchange_rate, Formats.exchangeRate(it)), color = secondary) }
             ksefNumber?.let {
                 SelectionContainer { Text(stringResource(R.string.details_ksef_number, it), style = MaterialTheme.typography.bodySmall, color = secondary) }
             }

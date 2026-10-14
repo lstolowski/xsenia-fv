@@ -79,6 +79,7 @@ class AppContainer(context: Context) {
             ksef = ksefAccess,
             tokenStore = tokenStore,
             mirrorStartDate = MIRROR_START_DATE.atStartOfDay(POLAND).toInstant(),
+            exchangeRates = exchangeRates,
         )
     }
 

@@ -32,7 +32,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-026](ZAD-026-serwis-kursow-walut.md) | Serwis kursów walut: klient NBP, pamięć podręczna, reguła daty kursu | US-011 | Zrobione |
 | [ZAD-027](ZAD-027-faktura-w-walucie-model-xml.md) | Faktura w walucie obcej: model, VAT w PLN, XML FA(3) | US-011 | Zrobione |
 | [ZAD-028](ZAD-028-ui-waluta-formularz.md) | UI: lista „Waluta”, rachunek z ostrzeżeniem, kurs roboczy | US-011 | Zrobione |
-| [ZAD-029](ZAD-029-wysylka-kurs-ostateczny.md) | Podgląd i wysyłka faktury w walucie: kurs ostateczny w locie, szczegóły | US-011 | Do zrobienia |
+| [ZAD-029](ZAD-029-wysylka-kurs-ostateczny.md) | Podgląd i wysyłka faktury w walucie: kurs ostateczny w locie, szczegóły | US-011 | Zrobione |
 
 Weryfikacja na urządzeniu fizycznym (2026-10-13): użytkownik sprawdził zadania 001–020 (poza 002 — infrastruktura testów integracyjnych) na swoim telefonie z KSeF TEST — aplikacja działa i wygląda poprawnie.
 

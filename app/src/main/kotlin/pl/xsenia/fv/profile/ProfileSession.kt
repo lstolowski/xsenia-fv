@@ -1,7 +1,9 @@
 package pl.xsenia.fv.profile
 
 import kotlinx.coroutines.CoroutineScope
+import pl.xsenia.fv.currency.ExchangeRateService
 import pl.xsenia.fv.invoice.profile.CompanyProfileStore
+import pl.xsenia.fv.issue.FinalRateSource
 import pl.xsenia.fv.issue.InvoiceSendService
 import pl.xsenia.fv.issue.IssueStorage
 import pl.xsenia.fv.issue.KsefSendBackend
@@ -25,6 +27,7 @@ class ProfileSession(
     ksef: KsefAccess,
     tokenStore: KsefTokenStore,
     mirrorStartDate: Instant,
+    exchangeRates: ExchangeRateService,
 ) {
 
     val profile = ProfileRepository(CompanyProfileStore(directory, nip), scope)
@@ -46,6 +49,7 @@ class ProfileSession(
         storage = issueStorage,
         unsent = unsentInvoices,
         onAccepted = syncService::syncNow,
+        finalRates = FinalRateSource { draft, sendDay -> exchangeRates.rateFor(draft.currency, draft.deliveryDate, sendDay) },
     )
 
     /** Removes the downloaded invoices; they are downloaded again by the next synchronization. */

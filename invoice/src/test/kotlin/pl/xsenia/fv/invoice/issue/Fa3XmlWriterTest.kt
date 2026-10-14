@@ -118,6 +118,8 @@ class Fa3XmlWriterTest {
 
         assertTrue(xml.contains("<KodWaluty>PLN</KodWaluty>"))
         assertFalse(xml.contains("KursWaluty"))
+        assertNull(InvoiceXmlParser.parse(xml.toByteArray()).exchangeRate)
+        assertNull(InvoiceXmlParser.parse(xml.toByteArray()).vatInPlnTotal)
         assertFalse(xml.contains("P_14_1W"))
         assertFalse(xml.contains("Kurs waluty"))
     }
@@ -141,6 +143,8 @@ class Fa3XmlWriterTest {
         assertEquals(BigDecimal("1730.00"), invoice.grossTotal)
         assertTrue(text.contains("<P_12>23</P_12>\n      <KursWaluty>4.3775</KursWaluty>\n    </FaWiersz>"))
         assertEquals(listOf(BigDecimal("4.3775"), BigDecimal("4.3775")), invoice.lines.map { it.exchangeRate })
+        assertEquals(BigDecimal("4.3775"), invoice.exchangeRate)
+        assertEquals(BigDecimal("1006.83"), invoice.vatInPlnTotal)
         assertEquals(
             listOf("Uwagi" to "Reverse charge", "Kurs waluty" to "1 EUR = 4,3775 PLN, tabela NBP 197/A/NBP/2026 z 2026-10-09"),
             invoice.additionalInfo,
@@ -168,6 +172,7 @@ class Fa3XmlWriterTest {
         // 23.00 × 3.9022 = 89.7506, 8.00 × 3.9022 = 31.2176, 5.00 × 3.9022 = 19.511
         assertEquals(listOf(BigDecimal("89.75"), BigDecimal("31.22"), BigDecimal("19.51"), null, null), invoice.vatSummary.map { it.vatInPln })
         assertEquals(List(5) { BigDecimal("3.9022") }, invoice.lines.map { it.exchangeRate })
+        assertEquals(BigDecimal("140.48"), invoice.vatInPlnTotal)
     }
 
     @Test

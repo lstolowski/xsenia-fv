@@ -127,6 +127,7 @@
     <string name="details_delivery_date">Data dostawy / wykonania usługi: %1$s</string>
     <string name="details_period">Okres: %1$s – %2$s</string>
     <string name="details_currency">Waluta: %1$s</string>
+    <string name="details_exchange_rate">Kurs waluty: %1$s</string>
     <string name="details_seller">Sprzedawca</string>
     <string name="details_buyer">Nabywca</string>
     <string name="details_other_party">Podmiot trzeci (rola %1$s)</string>
@@ -378,6 +379,13 @@
     <string name="rate_later">Kurs zostanie pobrany przy podglądzie i wysyłce.</string>
     <string name="rate_retry">Pobierz kurs ponownie</string>
     <string name="total_vat_pln">VAT w PLN</string>
+    <string name="preview_rate_missing">Podgląd wymaga kursu NBP na dzień wysyłki.</string>
+    <string name="preview_rate_table">tabela %1$s z %2$s</string>
+    <string name="preview_rate_final">Kurs NBP %1$s na dzień wysyłki: %2$s (%3$s).</string>
+    <string name="preview_rate_changed">Kurs zaktualizowany na dzień wysyłki: %1$s → %2$s (%3$s).</string>
+    <string name="status_rate_unavailable">Nie wysłano faktury %1$s — brak kursu NBP na dzień wysyłki.</string>
+    <string name="status_rate_kept_draft">Faktura nie trafiła do KSeF i czeka w formularzu „Nowa faktura”.</string>
+    <string name="status_rate_kept_unsent">Faktura nie trafiła do KSeF i pozostaje na liście niewysłanych.</string>
     <string name="bank_account_currency_mismatch">Rachunek jest w %1$s, a faktura w %2$s.</string>
     <string name="exchange_rate_network">Nie udało się pobrać kursu NBP — sprawdź połączenie z internetem.</string>
     <string name="exchange_rate_server">Serwis kursów NBP nie odpowiada poprawnie. Spróbuj ponownie później.</string>

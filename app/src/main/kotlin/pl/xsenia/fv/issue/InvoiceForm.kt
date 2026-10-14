@@ -143,7 +143,14 @@ data class FormCheck(
 
 object InvoiceFormCheck {
 
-    fun check(form: InvoiceForm, profile: CompanyProfile, existingNumbers: Collection<String>, today: LocalDate): FormCheck {
+    /** @param exchangeRate rate of a foreign currency invoice: the working one in the form, the final one for the preview */
+    fun check(
+        form: InvoiceForm,
+        profile: CompanyProfile,
+        existingNumbers: Collection<String>,
+        today: LocalDate,
+        exchangeRate: ExchangeRate? = form.workingRate,
+    ): FormCheck {
         val formIssues = mutableListOf<FormIssue>()
         val buyer = profile.counterparties.firstOrNull { it.nip == form.counterpartyNip }
         if (buyer == null) formIssues += FormIssue(FormIssueType.COUNTERPARTY_MISSING)
@@ -163,7 +170,7 @@ object InvoiceFormCheck {
             return FormCheck(null, formIssues, emptyList())
         }
         val draft = SalesInvoiceDraft(
-            form.invoiceNumber.trim(), form.issueDate, form.deliveryDate, seller, buyer, account, lines, form.currency, form.workingRate,
+            form.invoiceNumber.trim(), form.issueDate, form.deliveryDate, seller, buyer, account, lines, form.currency, exchangeRate,
         )
         return FormCheck(draft, formIssues, DraftValidator.validate(draft, existingNumbers, today))
     }

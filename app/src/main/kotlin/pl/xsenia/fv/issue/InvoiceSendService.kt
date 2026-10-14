@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pl.xsenia.fv.AppContainer
+import pl.xsenia.fv.exchangerates.ExchangeRateResult
 import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
 import pl.xsenia.fv.invoice.issue.SalesInvoiceDraft
 import pl.xsenia.fv.ksef.KsefAccess
@@ -18,6 +20,7 @@ import pl.xsenia.fv.ksef.sending.SentInvoice
 import pl.xsenia.fv.ksef.sending.SubmittedInvoice
 import pl.xsenia.fv.ksef.toKsefFailure
 import java.time.Clock
+import java.time.LocalDate
 
 sealed interface SendState {
     data object Idle : SendState
@@ -35,6 +38,17 @@ sealed interface SendState {
      * it never sends it again; otherwise the invoice was kept as unsent invoice [unsentId] (Q4).
      */
     data class Failed(val invoiceNumber: String, val failure: KsefFailure, val pendingInKsef: Boolean, val unsentId: String?) : SendState
+
+    /**
+     * The NBP rate for the day of sending could not be fetched, so the invoice was not sent (ADR 0008, Q3); it stays
+     * what it was — the new-invoice draft or unsent invoice [unsentId].
+     */
+    data class RateUnavailable(val invoiceNumber: String, val problem: ExchangeRateResult, val unsentId: String?) : SendState
+}
+
+/** Final NBP rate of a foreign currency invoice sent on [sendDay] (ADR 0008) — an interface so sending can be tested offline. */
+fun interface FinalRateSource {
+    suspend fun rateFor(draft: SalesInvoiceDraft, sendDay: LocalDate): ExchangeRateResult
 }
 
 /** KSeF operations used by [InvoiceSendService] — an interface so the state transitions can be tested offline. */
@@ -58,6 +72,10 @@ class KsefSendBackend(private val ksef: KsefAccess) : InvoiceSendBackend {
  * - accepted — UPO saved; the source (new-invoice draft or unsent invoice) removed; [onAccepted] (sync) called,
  * - rejected by KSeF, or failed before reaching KSeF — kept as an unsent invoice (with the rejection reason),
  * - failed after reaching KSeF — kept as pending; the status is checked again on retry / next app start.
+ *
+ * A foreign currency invoice gets the NBP rate for the day of sending just before its XML is created (ADR 0008):
+ * usually the rate already shown in the preview, a newer one when the day changed meanwhile. Without a rate
+ * nothing is sent.
  */
 class InvoiceSendService(
     private val scope: CoroutineScope,
@@ -65,6 +83,7 @@ class InvoiceSendService(
     private val storage: IssueStorage,
     private val unsent: UnsentInvoiceRepository,
     private val onAccepted: () -> Unit,
+    private val finalRates: FinalRateSource,
     private val clock: Clock = Clock.systemUTC(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
@@ -83,8 +102,19 @@ class InvoiceSendService(
         if (storage.loadPending() != null) return resumeIfPending()
         _state.value = SendState.Sending(draft.invoiceNumber, submitted = false, unsentId = unsentId)
         scope.launch {
+            val toSend = if (draft.currency.isForeign) {
+                when (val result = finalRates.rateFor(draft, LocalDate.ofInstant(clock.instant(), AppContainer.POLAND))) {
+                    is ExchangeRateResult.Found -> draft.copy(exchangeRate = result.rate)
+                    else -> {
+                        _state.value = SendState.RateUnavailable(draft.invoiceNumber, result, unsentId)
+                        return@launch
+                    }
+                }
+            } else {
+                draft
+            }
             run(draft.invoiceNumber, form, unsentId) {
-                val xml = Fa3XmlWriter.write(draft, clock.instant())
+                val xml = Fa3XmlWriter.write(toSend, clock.instant())
                 backend.send(draft.seller.nip, xml) { submitted ->
                     storage.savePending(PendingSend(submitted, draft.invoiceNumber, draft.seller.nip, form, unsentId))
                     _state.value = SendState.Sending(draft.invoiceNumber, submitted = true, unsentId = unsentId)
