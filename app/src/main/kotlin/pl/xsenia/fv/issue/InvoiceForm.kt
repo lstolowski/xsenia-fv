@@ -3,6 +3,7 @@ package pl.xsenia.fv.issue
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.profile.Counterparty
 import pl.xsenia.fv.invoice.currency.ExchangeRate
 import pl.xsenia.fv.invoice.currency.ExchangeRateDateRule
 import pl.xsenia.fv.invoice.currency.InvoiceCurrency
@@ -73,7 +74,10 @@ data class LineForm(
     val unit: String = LineUnits.DEFAULT,
     val unitNetPrice: String = "",
     val vatRate: VatRate = VatRate.DEFAULT,
-)
+) {
+    /** Nothing typed yet — such a line may still get default values. */
+    val isBlank: Boolean get() = name.isBlank() && unitNetPrice.isBlank()
+}
 
 /** Units offered in the form (`P_8A`, ADR 0005). */
 object LineUnits {
@@ -86,12 +90,34 @@ object InvoiceFormDefaults {
 
     fun newForm(profile: CompanyProfile?, today: LocalDate, existingNumbers: Collection<String>): InvoiceForm {
         val deliveryDate = DefaultDates.deliveryDate(today)
-        return InvoiceForm(
-            counterpartyId = profile?.counterparties?.singleOrNull()?.id,
+        val form = InvoiceForm(
             bankAccountNumber = profile?.defaultBankAccount(InvoiceCurrency.DEFAULT.code)?.number,
             issueDate = today,
             deliveryDate = deliveryDate,
             invoiceNumber = InvoiceNumbering.suggest(deliveryDate, existingNumbers),
+        )
+        val only = profile?.counterparties?.singleOrNull() ?: return form
+        return selectCounterparty(form, only, profile)
+    }
+
+    /**
+     * The buyer chosen (ADR 0009, Q6): its default currency is set (with a fitting bank account), and for a foreign
+     * buyer the lines not filled in yet get "np". Lines with a name or a price keep their rate.
+     */
+    fun selectCounterparty(form: InvoiceForm, counterparty: Counterparty, profile: CompanyProfile?): InvoiceForm {
+        val chosen = form.copy(counterpartyId = counterparty.id)
+        val currency = counterparty.defaultCurrency
+        val withCurrency = if (currency != null && currency != chosen.currency) changeCurrency(chosen, currency, profile) else chosen
+        if (!counterparty.isForeign) return withCurrency
+        return withCurrency.copy(lines = withCurrency.lines.map { if (it.isBlank) it.copy(vatRate = VatRate.NOT_TAXABLE) else it })
+    }
+
+    /** A line added to [form]: the unit of the last line; "np" for a foreign buyer (ADR 0009, Q6). */
+    fun newLine(form: InvoiceForm, profile: CompanyProfile?): LineForm {
+        val buyer = profile?.counterparties?.firstOrNull { it.id == form.counterpartyId }
+        return LineForm(
+            unit = form.lines.lastOrNull()?.unit ?: LineUnits.DEFAULT,
+            vatRate = if (buyer?.isForeign == true) VatRate.NOT_TAXABLE else VatRate.DEFAULT,
         )
     }
 
@@ -99,10 +125,11 @@ object InvoiceFormDefaults {
      * Defaults that were not available when the form was opened (no account or counterparty yet): the default account
      * of the invoice currency and the only counterparty. Choices already made are kept.
      */
-    fun fillMissing(form: InvoiceForm, profile: CompanyProfile): InvoiceForm = form.copy(
-        counterpartyId = form.counterpartyId ?: profile.counterparties.singleOrNull()?.id,
-        bankAccountNumber = form.bankAccountNumber ?: profile.defaultBankAccount(form.currency.code)?.number,
-    )
+    fun fillMissing(form: InvoiceForm, profile: CompanyProfile): InvoiceForm {
+        val withAccount = form.copy(bankAccountNumber = form.bankAccountNumber ?: profile.defaultBankAccount(form.currency.code)?.number)
+        val only = profile.counterparties.singleOrNull()
+        return if (form.counterpartyId == null && only != null) selectCounterparty(withAccount, only, profile) else withAccount
+    }
 
     /**
      * New invoice currency: when the chosen account is in another currency and there is an account in the new one,

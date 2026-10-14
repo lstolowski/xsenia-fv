@@ -1,7 +1,7 @@
 # US-012. Nabywca zagraniczny (bez polskiego NIP-u)
 
 - Priorytet: MVP
-- Status: W realizacji (ZAD-030, ZAD-031 zrobione)
+- Status: W realizacji (ZAD-030…032 zrobione)
 - Zgłoszone: 2026-10-14 (wydzielone z US-011, decyzja Q1)
 
 ## Historyjka
@@ -14,18 +14,18 @@ Analiza: [05-nabywca-zagraniczny.md](../analiza/05-nabywca-zagraniczny.md), decy
 
 ### Kontrahent
 
-- [ ] Formularz kontrahenta zaczyna się od pola „Kraj” (lista wszystkich krajów z wyszukiwaniem, domyślnie Polska).
-- [ ] Polska — NIP z pobieraniem z Białej listy, jak dziś.
-- [ ] Kraj UE — „Numer VAT UE” (bez prefiksu; prefiks pokazany z kraju, dla Grecji `EL`), sprawdzany formatem; dane wpisywane ręcznie.
-- [ ] Inny kraj — „Identyfikator podatkowy” (opcjonalny); dane wpisywane ręcznie.
-- [ ] Kraj i identyfikator nie zmieniają się po zapisie; ten sam kraj i numer drugi raz — błąd „Kontrahent z tym numerem już istnieje”.
-- [ ] Kontrahent ma opcjonalną „Domyślną walutę” (PLN, EUR, USD, GBP).
-- [ ] Kafelki kontrahentów pokazują kraj i numer VAT UE / identyfikator (polscy — NIP jak dziś).
+- [x] Formularz kontrahenta zaczyna się od pola „Kraj” (lista wszystkich krajów z wyszukiwaniem, domyślnie Polska).
+- [x] Polska — NIP z pobieraniem z Białej listy, jak dziś.
+- [x] Kraj UE — „Numer VAT UE” (bez prefiksu; prefiks pokazany z kraju, dla Grecji `EL`), sprawdzany formatem; dane wpisywane ręcznie.
+- [x] Inny kraj — „Identyfikator podatkowy” (opcjonalny); dane wpisywane ręcznie.
+- [x] Kraj i identyfikator nie zmieniają się po zapisie; ten sam kraj i numer drugi raz — błąd „Kontrahent z tym numerem już istnieje”.
+- [x] Kontrahent ma opcjonalną „Domyślną walutę” (PLN, EUR, USD, GBP).
+- [x] Kafelki kontrahentów pokazują kraj i numer VAT UE / identyfikator (polscy — NIP jak dziś).
 
 ### Faktura
 
-- [ ] Wybór kontrahenta z domyślną walutą ustawia walutę faktury.
-- [ ] Dla nabywcy zagranicznego nowe pozycje mają stawkę „np”; puste pozycje zmieniają się na „np” przy wyborze takiego nabywcy.
+- [x] Wybór kontrahenta z domyślną walutą ustawia walutę faktury.
+- [x] Dla nabywcy zagranicznego nowe pozycje mają stawkę „np”; puste pozycje zmieniają się na „np” przy wyborze takiego nabywcy.
 - [x] `Podmiot2`: numer VAT UE (`KodUE` + `NrVatUE`), inny identyfikator (`KodKraju` + `NrID`) albo `BrakID`; `Adres/KodKraju` = kraj kontrahenta.
 - [x] „np” dla nabywcy z UE — `np II` (`P_13_9`), spoza UE — `np I` (`P_13_8`); zawsze z „odwrotnym obciążeniem” i uwagą „Reverse charge”.
 - [x] Faktury dla nabywcy z UE i spoza UE (w EUR / USD) są przyjmowane przez KSeF TEST (dane zmyślone).
@@ -36,7 +36,7 @@ Analiza: [05-nabywca-zagraniczny.md](../analiza/05-nabywca-zagraniczny.md), decy
 
 ### Zgodność
 
-- [ ] Istniejący kontrahenci, szkic i faktury niewysłane działają po aktualizacji (kontrahenci → Polska, NIP).
+- [x] Istniejący kontrahenci, szkic i faktury niewysłane działają po aktualizacji (kontrahenci → Polska, NIP).
 
 ## Uwagi / pytania
 

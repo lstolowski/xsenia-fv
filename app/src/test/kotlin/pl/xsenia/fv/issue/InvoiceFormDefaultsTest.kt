@@ -1,5 +1,6 @@
 package pl.xsenia.fv.issue
 
+import pl.xsenia.fv.invoice.issue.VatRate
 import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -95,5 +96,65 @@ class InvoiceFormDefaultsTest {
         // An account added later is filled in for the invoice currency.
         val empty = InvoiceFormDefaults.newForm(null, LocalDate.parse("2026-10-12"), existing).copy(currency = InvoiceCurrency.EUR)
         assertEquals(eur.number, InvoiceFormDefaults.fillMissing(empty, profile).bankAccountNumber)
+    }
+
+    // Fictitious data only (docs/przyklady/).
+    private val pln = BankAccount("Konto testowe Toyota", "Toyota Bank", "85216097583216850246002152")
+    private val eur = BankAccount("Konto testowe EUR", "Toyota Bank", "83216097587877893287921742", "EUR")
+    private val polish = Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6"))
+    private val german = Counterparty(
+        "Lorem Testowy GmbH", address = Address("Teststraße 1"), countryCode = "DE", taxNumber = "999999990", defaultCurrency = InvoiceCurrency.EUR,
+    )
+    private val american = Counterparty("Lorem Test Inc.", address = Address("1 Test Street"), countryCode = "US")
+    private val profile = CompanyProfile(nip = "1996845518", bankAccounts = listOf(pln, eur), counterparties = listOf(polish, german, american))
+
+    @Test
+    fun `foreign buyer sets its currency and np in lines not filled in yet`() {
+        val form = InvoiceFormDefaults.newForm(profile, LocalDate.parse("2026-10-12"), existing)
+            .copy(lines = listOf(LineForm("Usługa testowa", "1", "godz.", "100"), LineForm()))
+
+        val chosen = InvoiceFormDefaults.selectCounterparty(form, german, profile)
+
+        assertEquals(german.id, chosen.counterpartyId)
+        assertEquals(InvoiceCurrency.EUR, chosen.currency)
+        assertEquals(eur.number, chosen.bankAccountNumber)
+        assertEquals(listOf(VatRate.RATE_23, VatRate.NOT_TAXABLE), chosen.lines.map { it.vatRate })
+    }
+
+    @Test
+    fun `buyer without a default currency keeps the currency`() {
+        val form = InvoiceFormDefaults.newForm(profile, LocalDate.parse("2026-10-12"), existing).copy(currency = InvoiceCurrency.USD)
+
+        val chosen = InvoiceFormDefaults.selectCounterparty(form, american, profile)
+
+        assertEquals(InvoiceCurrency.USD, chosen.currency)
+        assertEquals(listOf(VatRate.NOT_TAXABLE), chosen.lines.map { it.vatRate })
+        // A Polish buyer changes neither the currency nor the rates.
+        val back = InvoiceFormDefaults.selectCounterparty(chosen, polish, profile)
+        assertEquals(InvoiceCurrency.USD, back.currency)
+        assertEquals(listOf(VatRate.NOT_TAXABLE), back.lines.map { it.vatRate })
+        assertEquals(polish.id, back.counterpartyId)
+    }
+
+    @Test
+    fun `new lines get np for a foreign buyer`() {
+        val form = InvoiceFormDefaults.newForm(profile, LocalDate.parse("2026-10-12"), existing)
+            .copy(lines = listOf(LineForm("Usługa testowa", unit = "dni")))
+
+        assertEquals(LineForm(unit = "dni", vatRate = VatRate.NOT_TAXABLE), InvoiceFormDefaults.newLine(form.copy(counterpartyId = german.id), profile))
+        assertEquals(LineForm(unit = "dni"), InvoiceFormDefaults.newLine(form.copy(counterpartyId = polish.id), profile))
+        assertEquals(LineForm(unit = "dni"), InvoiceFormDefaults.newLine(form.copy(counterpartyId = null), profile))
+    }
+
+    @Test
+    fun `the only counterparty, when foreign, gets its defaults on a new form`() {
+        val onlyGerman = profile.copy(counterparties = listOf(german))
+
+        val form = InvoiceFormDefaults.newForm(onlyGerman, LocalDate.parse("2026-10-12"), existing)
+
+        assertEquals(german.id, form.counterpartyId)
+        assertEquals(InvoiceCurrency.EUR, form.currency)
+        assertEquals(eur.number, form.bankAccountNumber)
+        assertEquals(listOf(VatRate.NOT_TAXABLE), form.lines.map { it.vatRate })
     }
 }

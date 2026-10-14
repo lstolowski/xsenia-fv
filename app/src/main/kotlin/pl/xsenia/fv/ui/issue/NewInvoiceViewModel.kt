@@ -174,7 +174,10 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
         }
     }
 
-    fun selectCounterparty(id: String) = update { it.copy(counterpartyId = id) }
+    fun selectCounterparty(id: String) = update { form ->
+        val profile = session.profile.profile.value
+        profile?.counterparties?.firstOrNull { it.id == id }?.let { InvoiceFormDefaults.selectCounterparty(form, it, profile) } ?: form.copy(counterpartyId = id)
+    }
 
     fun selectBankAccount(number: String) = update { it.copy(bankAccountNumber = number) }
 
@@ -200,7 +203,7 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
         form.copy(lines = form.lines.mapIndexed { i, existing -> if (i == index) line else existing })
     }
 
-    fun addLine() = update { it.copy(lines = it.lines + LineForm(unit = it.lines.lastOrNull()?.unit ?: "szt.")) }
+    fun addLine() = update { it.copy(lines = it.lines + InvoiceFormDefaults.newLine(it, session.profile.profile.value)) }
 
     fun removeLine(index: Int) = update { form -> form.copy(lines = form.lines.filterIndexed { i, _ -> i != index }) }
 

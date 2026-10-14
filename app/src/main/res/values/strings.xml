@@ -311,6 +311,16 @@
     <string name="field_address_line1">Adres — ulica i numer</string>
     <string name="field_address_line2">Adres — kod pocztowy i miejscowość</string>
     <string name="field_country">Kraj</string>
+    <string name="country_choose">Wybierz kraj</string>
+    <string name="country_search">Szukaj kraju</string>
+    <string name="field_vat_ue">Numer VAT UE</string>
+    <string name="field_tax_id">Identyfikator podatkowy (opcjonalnie)</string>
+    <string name="counterparty_vat_ue_hint">Bez prefiksu kraju. Dane kontrahenta zagranicznego wpisz ręcznie.</string>
+    <string name="counterparty_tax_id_hint">Numer podatkowy w kraju kontrahenta, jeśli go ma. Dane wpisz ręcznie.</string>
+    <string name="counterparty_id_fixed">Kraju i numeru zapisanego kontrahenta nie zmienia się — w razie pomyłki usuń kontrahenta i dodaj nowego.</string>
+    <string name="field_default_currency">Domyślna waluta</string>
+    <string name="default_currency_none">Brak</string>
+    <string name="default_currency_hint">Ustawiana w fakturze po wybraniu tego kontrahenta.</string>
     <string name="field_email">E-mail</string>
     <string name="field_phone">Telefon</string>
     <string name="bank_accounts_title">Rachunki bankowe</string>

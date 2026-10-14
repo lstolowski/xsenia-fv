@@ -34,7 +34,10 @@ import pl.xsenia.fv.lookup.CompanyLookupResult
 import pl.xsenia.fv.ui.theme.WarningAmber
 import pl.xsenia.fv.ui.theme.WarningText
 
-/** Single-line text field of the company / bank account / counterparty forms with the message of its [issues]. */
+/**
+ * Single-line text field of the company / bank account / counterparty forms with the message of its [issues]
+ * (or [supportingText] without one); [prefix] — e.g. the country prefix of a VAT UE number.
+ */
 @Composable
 fun ProfileTextField(
     label: String,
@@ -45,15 +48,20 @@ fun ProfileTextField(
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
     capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
+    readOnly: Boolean = false,
+    prefix: String? = null,
+    supportingText: String? = null,
 ) {
     val issue = issues.firstOrNull { it.field == field }
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        readOnly = readOnly,
         label = { Text(label) },
+        prefix = prefix?.let { { Text(it) } },
         singleLine = true,
         isError = issue != null,
-        supportingText = issue?.let { { Text(fieldIssueText(it)) } },
+        supportingText = (issue?.let { fieldIssueText(it) } ?: supportingText)?.let { text -> { Text(text) } },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, capitalization = capitalization),
         modifier = modifier.fillMaxWidth(),
     )
