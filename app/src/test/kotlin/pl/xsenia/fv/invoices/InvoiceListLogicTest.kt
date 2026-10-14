@@ -137,4 +137,22 @@ class InvoiceListLogicTest {
         assertEquals(UnsentSummary(1, BigDecimal("2460.00")), InvoiceListLogic.unsentSummary(september))
         assertEquals(null, InvoiceListLogic.unsentSummary(listOf(row("01/09/2026", "2026-09-15"))))
     }
+
+    @Test
+    fun `unsent invoice keeps its currency`() {
+        val unsent = pl.xsenia.fv.issue.UnsentInvoice.create(
+            pl.xsenia.fv.issue.InvoiceForm(
+                issueDate = LocalDate.parse("2026-10-01"),
+                deliveryDate = LocalDate.parse("2026-09-30"),
+                lines = listOf(pl.xsenia.fv.issue.LineForm("Usługa testowa", "10", "godz.", "100")),
+                currency = pl.xsenia.fv.invoice.currency.InvoiceCurrency.EUR,
+            ),
+            Instant.EPOCH,
+        )
+
+        val row = InvoiceListLogic.toRow(unsent, profile = null)
+
+        assertEquals("EUR", row.currency)
+        assertEquals(BigDecimal("1230.00"), row.grossAmount)
+    }
 }

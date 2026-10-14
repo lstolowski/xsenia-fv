@@ -1,5 +1,6 @@
 package pl.xsenia.fv.profile
 
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.BankAccount
 import pl.xsenia.fv.invoice.profile.BankAccountInput
 import pl.xsenia.fv.invoice.profile.Company
@@ -101,9 +102,9 @@ data class BankAccountFormFields(
     }
 }
 
-/** Currencies offered for a bank account; invoices use PLN accounts only (ADR 0006). */
+/** Currencies offered for a bank account — the invoice currencies (ADR 0008). */
 object BankAccountCurrencies {
-    val ALL = listOf(CompanyProfile.DEFAULT_CURRENCY, "EUR", "USD", "GBP")
+    val ALL = InvoiceCurrency.entries.map { it.code }
 
     /** An account saved earlier with another currency keeps it as an extra option until the user changes it. */
     fun options(current: String): List<String> = if (current in ALL) ALL else ALL + current

@@ -37,4 +37,10 @@ class FormatsTest {
         assertEquals("30.09.2026", Formats.date(LocalDate.parse("2026-09-30")))
         assertEquals("Wrzesień 2026", Formats.month(YearMonth.of(2026, 9)))
     }
+
+    @Test
+    fun `formats an NBP rate with four decimals`() {
+        assertEquals("4,3775", Formats.exchangeRate(BigDecimal("4.3775")))
+        assertEquals("4,3800", Formats.exchangeRate(BigDecimal("4.3800")))
+    }
 }

@@ -74,6 +74,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -86,6 +87,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
+import pl.xsenia.fv.currency.problemMessage
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.profile.ProfileGap
 import pl.xsenia.fv.invoice.issue.DraftIssue
@@ -259,6 +262,8 @@ private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewM
             index = index,
             line = line,
             canRemove = form.lines.size > 1,
+            currency = form.currency,
+            onCurrencyChange = viewModel::selectCurrency,
             formIssues = formIssues.filter { it.lineIndex == index },
             draftIssues = if (state.showErrors) draftIssues.filter { it.lineIndex == index } else emptyList(),
             onChange = { viewModel.updateLine(index, it) },
@@ -269,6 +274,8 @@ private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewM
         Icon(Icons.Filled.Add, contentDescription = null)
         Text(stringResource(R.string.line_add))
     }
+    // A foreign currency (chosen next to the line price) shows the working NBP rate (ADR 0008)
+    ExchangeRateInfo(state.rate, onRetry = viewModel::retryRate)
 
     // Bank account: below the lines, before the payment term (ADR 0005), chosen like the counterparty
     FormSectionTitle(stringResource(R.string.field_bank_account))
@@ -280,6 +287,9 @@ private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewM
         error = formIssues.messageFor(FormIssueType.BANK_ACCOUNT_MISSING),
         onSelect = viewModel::selectBankAccount,
     ) { BankAccountText(it) }
+    profile.invoiceBankAccounts.firstOrNull { it.number == form.bankAccountNumber }?.takeIf { it.currency != form.currency.code }?.let {
+        WarningText(stringResource(R.string.bank_account_currency_mismatch, it.currency, form.currency.code))
+    }
 
     // Payment and totals
     Text(
@@ -287,17 +297,20 @@ private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewM
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    val totals = check?.draft?.let { InvoiceCalculator.totals(it.lines) }
+    val totals = check?.draft?.let { InvoiceCalculator.totals(it) }
     if (totals != null) {
+        val currency = form.currency.code
         Tile {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                InfoRow(stringResource(R.string.details_total_net), Formats.money(totals.net, "PLN"))
-                InfoRow(stringResource(R.string.details_total_vat), Formats.money(totals.vat, "PLN"))
-                InfoRow(stringResource(R.string.details_total_gross), Formats.money(totals.gross, "PLN"), emphasized = true)
+                InfoRow(stringResource(R.string.details_total_net), Formats.money(totals.net, currency))
+                InfoRow(stringResource(R.string.details_total_vat), Formats.money(totals.vat, currency))
+                totals.vatPln?.let { InfoRow(stringResource(R.string.total_vat_pln), Formats.money(it, "PLN")) }
+                InfoRow(stringResource(R.string.details_total_gross), Formats.money(totals.gross, currency), emphasized = true)
             }
         }
     }
-    draftIssues.filter { it.lineIndex == null && it.type !in NUMBER_ISSUES && it.type != DraftIssueType.ISSUE_DATE_IN_FUTURE }.forEach {
+    // The bank account warning is shown at the account, the date error at the date.
+    draftIssues.filter { it.lineIndex == null && it.type !in NUMBER_ISSUES && it.type !in FIELD_ISSUES }.forEach {
         ErrorText(draftIssueText(it))
     }
     PrimaryButton(onClick = viewModel::openPreview, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_preview)) }
@@ -308,6 +321,9 @@ private fun LineCard(
     index: Int,
     line: LineForm,
     canRemove: Boolean,
+    /** The invoice currency — shown next to the price of every line; a change applies to the whole invoice. */
+    currency: InvoiceCurrency,
+    onCurrencyChange: (InvoiceCurrency) -> Unit,
     formIssues: List<FormIssue>,
     draftIssues: List<DraftIssue>,
     onChange: (LineForm) -> Unit,
@@ -358,16 +374,28 @@ private fun LineCard(
             }
             val priceError = formIssues.messageFor(FormIssueType.LINE_PRICE_INVALID)
                 ?: draftIssues.messageFor(DraftIssueType.LINE_PRICE_NEGATIVE, DraftIssueType.LINE_PRICE_TOO_PRECISE)
-            OutlinedTextField(
-                value = line.unitNetPrice,
-                onValueChange = { onChange(line.copy(unitNetPrice = it)) },
-                label = { Text(stringResource(R.string.line_price)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                isError = priceError != null,
-                supportingText = priceError?.let { { Text(it) } },
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // Price 3/5, currency 2/5 — wide enough for the code next to the arrow, also with a larger font (US-011).
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = line.unitNetPrice,
+                    onValueChange = { onChange(line.copy(unitNetPrice = it)) },
+                    label = { Text(stringResource(R.string.line_price)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    isError = priceError != null,
+                    supportingText = priceError?.let { { Text(it) } },
+                    modifier = Modifier.weight(3f),
+                )
+                DropdownField(
+                    label = stringResource(R.string.field_currency_invoice),
+                    options = InvoiceCurrency.entries,
+                    selected = currency,
+                    optionText = { it.code },
+                    error = null,
+                    onSelect = onCurrencyChange,
+                    modifier = Modifier.weight(2f),
+                )
+            }
             DropdownField(
                 label = stringResource(R.string.line_vat_rate),
                 options = VatRate.entries,
@@ -382,7 +410,7 @@ private fun LineCard(
             if (quantity != null && price != null) {
                 val amounts = InvoiceCalculator.line(DraftLine(line.name, quantity, line.unit, price, line.vatRate))
                 Text(
-                    stringResource(R.string.line_amounts, Formats.money(amounts.net, "PLN"), Formats.money(amounts.gross, "PLN")),
+                    stringResource(R.string.line_amounts, Formats.money(amounts.net, currency.code), Formats.money(amounts.gross, currency.code)),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
@@ -605,6 +633,34 @@ private fun ErrorText(text: String) {
     Text(text, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
 }
 
+@Composable
+private fun WarningText(text: String) {
+    Text(text, color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.bodySmall)
+}
+
+/** Working NBP rate of a foreign currency invoice; nothing for PLN. */
+@Composable
+private fun ExchangeRateInfo(status: RateStatus, onRetry: () -> Unit) {
+    val secondary = MaterialTheme.colorScheme.onSurfaceVariant
+    when (status) {
+        RateStatus.None -> Unit
+        RateStatus.Loading -> Text(stringResource(R.string.rate_loading), style = MaterialTheme.typography.bodySmall, color = secondary)
+        is RateStatus.Ready -> Column {
+            val rate = status.rate
+            Text(
+                stringResource(R.string.rate_working, rate.currency.code, Formats.exchangeRate(rate.rate), Formats.date(rate.effectiveDate), rate.tableNumber),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(stringResource(R.string.rate_working_hint), style = MaterialTheme.typography.bodySmall, color = secondary)
+        }
+        is RateStatus.Unavailable -> Column {
+            status.problem.problemMessage(LocalResources.current)?.let { WarningText(it) }
+            Text(stringResource(R.string.rate_later), style = MaterialTheme.typography.bodySmall, color = secondary)
+            TextButton(onClick = onRetry, shape = ButtonShape) { Text(stringResource(R.string.rate_retry)) }
+        }
+    }
+}
+
 /** Tile with the chosen option (or a prompt to choose one); a click opens a dialog with all options as tiles. */
 @Composable
 private fun <T> TileChoiceField(
@@ -725,6 +781,8 @@ private fun selectableFieldColors() = OutlinedTextFieldDefaults.colors(
     disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
     disabledSupportingTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
 )
+
+private val FIELD_ISSUES = setOf(DraftIssueType.ISSUE_DATE_IN_FUTURE, DraftIssueType.BANK_ACCOUNT_CURRENCY_MISMATCH)
 
 private val NUMBER_ISSUES = setOf(
     DraftIssueType.NUMBER_MISSING,

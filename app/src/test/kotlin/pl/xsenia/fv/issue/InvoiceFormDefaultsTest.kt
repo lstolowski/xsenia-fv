@@ -1,5 +1,6 @@
 package pl.xsenia.fv.issue
 
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import pl.xsenia.fv.invoice.profile.Address
@@ -73,5 +74,26 @@ class InvoiceFormDefaultsTest {
 
         val chosen = empty.copy(counterpartyNip = "9945082500", bankAccountNumber = "55109004081797992973253811")
         assertEquals(chosen, InvoiceFormDefaults.fillMissing(chosen, profile))
+    }
+
+    @Test
+    fun `changing the currency picks an account in that currency when the chosen one does not fit`() {
+        val pln = BankAccount("Konto testowe Toyota", "Toyota Bank", "85216097583216850246002152")
+        val eur = BankAccount("Konto testowe EUR", "Toyota Bank", "83216097587877893287921742", "EUR")
+        val profile = CompanyProfile(nip = "1996845518", bankAccounts = listOf(pln, eur))
+        val form = InvoiceFormDefaults.newForm(profile, LocalDate.parse("2026-10-12"), existing)
+        assertEquals(pln.number, form.bankAccountNumber)
+
+        val euro = InvoiceFormDefaults.changeCurrency(form, InvoiceCurrency.EUR, profile)
+        assertEquals(InvoiceCurrency.EUR, euro.currency)
+        assertEquals(eur.number, euro.bankAccountNumber)
+
+        // No GBP account: the chosen one stays (the form shows a warning).
+        assertEquals(eur.number, InvoiceFormDefaults.changeCurrency(euro, InvoiceCurrency.GBP, profile).bankAccountNumber)
+        assertEquals(pln.number, InvoiceFormDefaults.changeCurrency(euro, InvoiceCurrency.PLN, profile).bankAccountNumber)
+
+        // An account added later is filled in for the invoice currency.
+        val empty = InvoiceFormDefaults.newForm(null, LocalDate.parse("2026-10-12"), existing).copy(currency = InvoiceCurrency.EUR)
+        assertEquals(eur.number, InvoiceFormDefaults.fillMissing(empty, profile).bankAccountNumber)
     }
 }

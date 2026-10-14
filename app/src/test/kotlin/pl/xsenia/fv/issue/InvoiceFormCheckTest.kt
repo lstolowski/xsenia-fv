@@ -1,5 +1,6 @@
 package pl.xsenia.fv.issue
 
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -103,5 +104,64 @@ class InvoiceFormCheckTest {
         val check = InvoiceFormCheck.check(form(LineForm("A", "1", "szt.", "10")), config, listOf("01/09/2026"), today)
 
         assertFalse(check.canPreview)
+    }
+
+    private val euroAccount = BankAccount("Konto testowe EUR", "Toyota Bank", "83216097587877893287921742", "EUR")
+    private val euroRate = SavedExchangeRate(InvoiceCurrency.EUR, "4.3775", "197/A/NBP/2026", LocalDate.parse("2026-10-09"), LocalDate.parse("2026-09-30"))
+
+    @Test
+    fun `currency and working rate are passed to the draft`() {
+        val form = form(LineForm("Usługa testowa", "1", "szt.", "100"))
+            .copy(currency = InvoiceCurrency.EUR, exchangeRate = euroRate, bankAccountNumber = euroAccount.number)
+        val check = InvoiceFormCheck.check(form, config.copy(bankAccounts = listOf(euroAccount)), emptyList(), today)
+
+        assertTrue(check.canPreview)
+        val draft = requireNotNull(check.draft)
+        assertEquals(InvoiceCurrency.EUR, draft.currency)
+        assertEquals(BigDecimal("4.3775"), draft.exchangeRate?.rate)
+    }
+
+    @Test
+    fun `working rate of other dates or another currency is not used`() {
+        val base = form(LineForm("Usługa testowa", "1", "szt.", "100")).copy(currency = InvoiceCurrency.EUR, exchangeRate = euroRate)
+        val profile = config.copy(bankAccounts = config.bankAccounts + euroAccount)
+
+        // Delivery date moved: the rate was chosen for 2026-09-30, now the reference day is 2026-10-01.
+        val moved = base.copy(deliveryDate = LocalDate.parse("2026-10-01"), bankAccountNumber = euroAccount.number)
+        assertNull(moved.workingRate)
+        assertFalse(InvoiceFormCheck.check(moved, profile, emptyList(), today).canPreview)
+        assertEquals(
+            listOf(DraftIssue(DraftIssueType.EXCHANGE_RATE_MISSING)),
+            InvoiceFormCheck.check(moved, profile, emptyList(), today).draftIssues.filter { it.blocking },
+        )
+
+        assertNull(base.copy(currency = InvoiceCurrency.USD).workingRate)
+        assertNull(base.copy(currency = InvoiceCurrency.PLN).workingRate)
+        assertNull(base.copy(exchangeRate = euroRate.copy(rate = "abc")).workingRate)
+        assertEquals(BigDecimal("4.3775"), base.workingRate?.rate)
+    }
+
+    @Test
+    fun `account in another currency is only a warning`() {
+        val form = form(LineForm("Usługa testowa", "1", "szt.", "100")).copy(currency = InvoiceCurrency.EUR, exchangeRate = euroRate)
+        val check = InvoiceFormCheck.check(form, config, emptyList(), today)
+
+        assertTrue(check.canPreview)
+        assertEquals(listOf(DraftIssue(DraftIssueType.BANK_ACCOUNT_CURRENCY_MISMATCH, blocking = false)), check.draftIssues)
+    }
+
+    @Test
+    fun `draft saved before currencies were added loads in PLN without a rate`() {
+        val form = Json.decodeFromString(InvoiceForm.serializer(), """{"issueDate": "2026-10-01", "deliveryDate": "2026-09-30"}""")
+
+        assertEquals(InvoiceCurrency.PLN, form.currency)
+        assertNull(form.exchangeRate)
+    }
+
+    @Test
+    fun `currency and working rate survive saving`() {
+        val form = form(LineForm("Usługa testowa", "1", "szt.", "100")).copy(currency = InvoiceCurrency.EUR, exchangeRate = euroRate)
+
+        assertEquals(form, Json.decodeFromString(InvoiceForm.serializer(), Json.encodeToString(InvoiceForm.serializer(), form)))
     }
 }

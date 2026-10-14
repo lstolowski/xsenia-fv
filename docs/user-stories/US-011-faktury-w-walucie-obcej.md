@@ -1,7 +1,7 @@
 # US-011. Faktury w walucie obcej (EUR, USD, GBP) z kursem NBP
 
 - Priorytet: MVP
-- Status: W realizacji (ZAD-026, ZAD-027 zrobione)
+- Status: W realizacji (ZAD-026…028 zrobione)
 - Zgłoszone: 2026-10-13
 
 ## Historyjka
@@ -20,16 +20,16 @@ Uzupełnia stawkę „np” (reverse charge, [US-009](US-009-stawki-vat-jednostk
 
 ### Formularz „Nowa faktura”
 
-- [ ] Lista „Waluta”: PLN (domyślnie), EUR, USD, GBP. Stare szkice i faktury niewysłane otwierają się w PLN.
-- [ ] Kwoty pozycji i sumy pokazywane w walucie faktury.
-- [ ] Rachunek bankowy: do wyboru wszystkie rachunki; rachunek w innej walucie niż faktura — ostrzeżenie „Rachunek jest w PLN, a faktura w EUR” (nie blokuje). Po zmianie waluty, gdy wybrany rachunek nie pasuje, a jest rachunek w nowej walucie — wybierany jest pierwszy pasujący.
-- [ ] Dla waluty obcej formularz pokazuje kurs roboczy: „Kurs NBP EUR 4,3775 z 2026-10-09 (tabela 197/A/NBP/2026)” i VAT w PLN; kurs wg reguły z sekcji „Reguła kursu”, odświeżany po zmianie waluty lub dat.
-- [ ] Zapis bez wysyłki (szkic, faktura niewysłana) zapisuje walutę i kurs roboczy; bez sieci zapis działa, a formularz pokazuje „Kurs zostanie pobrany przy wysyłce”.
+- [x] Lista „Waluta”: PLN (domyślnie), EUR, USD, GBP — w każdej pozycji obok ceny jednostkowej netto (cena 3/5, waluta 2/5); waluta jest wspólna dla całej faktury. Stare szkice i faktury niewysłane otwierają się w PLN.
+- [x] Kwoty pozycji i sumy pokazywane w walucie faktury.
+- [x] Rachunek bankowy: do wyboru wszystkie rachunki; rachunek w innej walucie niż faktura — ostrzeżenie „Rachunek jest w PLN, a faktura w EUR” (nie blokuje). Po zmianie waluty, gdy wybrany rachunek nie pasuje, a jest rachunek w nowej walucie — wybierany jest pierwszy pasujący.
+- [x] Dla waluty obcej formularz pokazuje kurs roboczy: „Kurs NBP EUR 4,3775 z 2026-10-09 (tabela 197/A/NBP/2026)” i VAT w PLN; kurs wg reguły z sekcji „Reguła kursu”, odświeżany po zmianie waluty lub dat.
+- [x] Zapis bez wysyłki (szkic, faktura niewysłana) zapisuje walutę i kurs roboczy; bez sieci zapis działa, a formularz pokazuje „Kurs zostanie pobrany przy podglądzie i wysyłce.”
 
 ### Reguła kursu
 
 - [x] Dzień odniesienia = wcześniejsza z dat: data dostawy, dzień wystawienia. Kurs = tabela A NBP z ostatniego dnia roboczego **przed** dniem odniesienia.
-- [ ] Przy zapisie bez wysyłki dzień wystawienia = data wystawienia z formularza (kurs roboczy).
+- [x] Przy zapisie bez wysyłki dzień wystawienia = data wystawienia z formularza (kurs roboczy).
 - [ ] Przy wysyłce do KSeF dzień wystawienia = dzień wysyłki; kurs ostateczny pobierany ponownie i aktualizowany w locie.
 
 ### Podgląd i wysyłka
@@ -49,7 +49,7 @@ Uzupełnia stawkę „np” (reverse charge, [US-009](US-009-stawki-vat-jednostk
 ### Pozostałe
 
 - [ ] Szczegóły wysłanej faktury w walucie obcej — kurs i VAT w PLN.
-- [ ] Listy: faktura niewysłana pokazuje kwotę w swojej walucie; sumy miesiąca liczone osobno per waluta (już działa dla faktur z KSeF).
+- [x] Listy: faktura niewysłana pokazuje kwotę w swojej walucie; sumy miesiąca liczone osobno per waluta (już działa dla faktur z KSeF).
 - [x] Formularz rachunku w „Moja firma” ma listę walut PLN, EUR, USD, GBP.
 - [x] Do wystawienia faktury wystarczy dowolny rachunek (dotąd wymagany rachunek PLN — US-010).
 
@@ -64,6 +64,7 @@ Decyzje z sesji pytań (2026-10-13):
 - Q5 (a) — uwaga „Kurs waluty” z numerem i datą tabeli NBP; bez netto/brutto w PLN.
 - Q6 (a) — `P_14_xW` = VAT w walucie × kurs.
 - Po rundzie 1: kurs z **4 miejscami** po przecinku (jak `mid` NBP), nie 6; wyłącznie NBP, tabela A, endpoint dzienny; waluty obce tylko EUR, USD, GBP.
+- 2026-10-14: lista „Waluta” obok ceny jednostkowej netto w pozycji — decyzja użytkownika przy ZAD-028; najpierw 2/3 cena i 1/3 waluta, potem poszerzona do 3/5 i 2/5 (kod waluty był przycięty).
 - Założenia potwierdzone: dzień obowiązku podatkowego = data dostawy; `P_1` przy wysyłce bez zmian; numeracja wspólna dla wszystkich walut; termin płatności 21 dni; brak waluty domyślnej per kontrahent.
 
 ## Zadania

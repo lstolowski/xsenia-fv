@@ -8,15 +8,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.xsenia.fv.AppContainer
+import pl.xsenia.fv.exchangerates.ExchangeRateResult
+import pl.xsenia.fv.invoice.currency.ExchangeRate
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
 import pl.xsenia.fv.invoice.issue.InvoiceNumbering
@@ -28,6 +34,7 @@ import pl.xsenia.fv.issue.InvoiceFormCheck
 import pl.xsenia.fv.issue.InvoiceFormDefaults
 import pl.xsenia.fv.issue.LineForm
 import pl.xsenia.fv.issue.Rejection
+import pl.xsenia.fv.issue.SavedExchangeRate
 import pl.xsenia.fv.issue.SendState
 import pl.xsenia.fv.issue.TakenNumbers
 import pl.xsenia.fv.issue.UnsentInvoice
@@ -37,6 +44,19 @@ import java.time.Instant
 import java.time.LocalDate
 
 enum class IssueStep { FORM, PREVIEW, STATUS }
+
+/** Working NBP rate of the form (ADR 0008). */
+sealed interface RateStatus {
+    /** PLN invoice — no rate. */
+    data object None : RateStatus
+
+    data object Loading : RateStatus
+
+    data class Ready(val rate: ExchangeRate) : RateStatus
+
+    /** [problem] — not published or a failure; the rate is fetched again before the preview. */
+    data class Unavailable(val problem: ExchangeRateResult) : RateStatus
+}
 
 data class NewInvoiceUiState(
     val form: InvoiceForm,
@@ -50,6 +70,7 @@ data class NewInvoiceUiState(
     val unsentId: String?,
     /** Why KSeF rejected this invoice the last time it was sent (Q4). */
     val rejection: Rejection?,
+    val rate: RateStatus = RateStatus.None,
 )
 
 /**
@@ -60,10 +81,13 @@ data class NewInvoiceUiState(
 @OptIn(FlowPreview::class)
 class NewInvoiceViewModel(container: AppContainer, private val session: ProfileSession, initialUnsentId: String?) : ViewModel() {
 
+    private val exchangeRates = container.exchangeRates
+
     private val form = MutableStateFlow<InvoiceForm?>(null)
     private val ksefNumbers = MutableStateFlow<List<String>>(emptyList())
     private val showErrors = MutableStateFlow(false)
     private val unsentId = MutableStateFlow(initialUnsentId)
+    private val rateStatus = MutableStateFlow<RateStatus>(RateStatus.None)
 
     private val _step = MutableStateFlow(IssueStep.FORM)
     val step: StateFlow<IssueStep> = _step.asStateFlow()
@@ -79,12 +103,12 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
     val environment = container.environment
 
     val state: StateFlow<NewInvoiceUiState?> = combine(
-        combine(form, session.profile.profile, ::Pair),
+        combine(form, session.profile.profile, rateStatus, ::Triple),
         ksefNumbers,
         session.unsentInvoices.invoices,
         showErrors,
         unsentId,
-    ) { (form, profile), ksef, unsent, showErrors, unsentId ->
+    ) { (form, profile, rate), ksef, unsent, showErrors, unsentId ->
         if (form == null) return@combine null
         val taken = TakenNumbers.of(ksef, unsent, excludeUnsentId = unsentId)
         NewInvoiceUiState(
@@ -95,6 +119,7 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
             showErrors = showErrors,
             unsentId = unsentId,
             rejection = unsent.firstOrNull { it.id == unsentId }?.rejection,
+            rate = rate,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
@@ -119,6 +144,10 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
         viewModelScope.launch {
             session.profile.profile.filterNotNull().collect { profile -> update { InvoiceFormDefaults.fillMissing(it, profile) } }
         }
+        // Working NBP rate: fetched again whenever the currency or the day it depends on changes (ADR 0008).
+        viewModelScope.launch {
+            form.filterNotNull().map { it.currency to it.rateReferenceDate }.distinctUntilChanged().collectLatest { refreshRate() }
+        }
         // Auto-save after every change: into the unsent invoice being edited, otherwise into the new-invoice draft.
         viewModelScope.launch {
             form.filterNotNull().drop(1).debounce(400).collect { saveCurrent(it) }
@@ -128,6 +157,12 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
     fun selectCounterparty(nip: String) = update { it.copy(counterpartyNip = nip) }
 
     fun selectBankAccount(number: String) = update { it.copy(bankAccountNumber = number) }
+
+    fun selectCurrency(currency: InvoiceCurrency) = update { InvoiceFormDefaults.changeCurrency(it, currency, session.profile.profile.value) }
+
+    fun retryRate() {
+        viewModelScope.launch { refreshRate() }
+    }
 
     fun setIssueDate(date: LocalDate) = update { it.copy(issueDate = date, datesEdited = true) }
 
@@ -149,14 +184,58 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
 
     fun removeLine(index: Int) = update { form -> form.copy(lines = form.lines.filterIndexed { i, _ -> i != index }) }
 
-    /** Shows the invoice exactly as it will be sent: generated FA(3) XML read back by the parser. */
+    /**
+     * Shows the invoice exactly as it will be sent: generated FA(3) XML read back by the parser.
+     * A missing working rate (e.g. no connection while editing) is fetched first.
+     */
     fun openPreview() {
         showErrors.value = true
-        val check = state.value?.check ?: return
+        val current = form.value ?: return
+        if (current.currency.isForeign && current.workingRate == null) {
+            viewModelScope.launch {
+                refreshRate()
+                showPreview()
+            }
+        } else {
+            showPreview()
+        }
+    }
+
+    private fun showPreview() {
+        val current = form.value ?: return
+        val profile = session.profile.profile.value ?: return
+        val check = InvoiceFormCheck.check(current, profile, taken(), today())
         val draft = check.draft
         if (!check.canPreview || draft == null) return
         _preview.value = InvoiceXmlParser.parse(Fa3XmlWriter.write(draft, Instant.now()))
         _step.value = IssueStep.PREVIEW
+    }
+
+    /** Keeps the saved working rate while it fits; otherwise fetches it (rule: ADR 0008) and saves it with the form. */
+    private suspend fun refreshRate() {
+        val current = form.value ?: return
+        val currency = current.currency
+        if (!currency.isForeign) {
+            rateStatus.value = RateStatus.None
+            return
+        }
+        current.workingRate?.let {
+            rateStatus.value = RateStatus.Ready(it)
+            return
+        }
+        val referenceDate = current.rateReferenceDate
+        rateStatus.value = RateStatus.Loading
+        val result = exchangeRates.rateFor(currency, current.deliveryDate, current.issueDate)
+        // The form may have changed meanwhile: the result is used only for the same currency and day.
+        val latest = form.value ?: return
+        if (latest.currency != currency || latest.rateReferenceDate != referenceDate) return
+        rateStatus.value = when (result) {
+            is ExchangeRateResult.Found -> {
+                update { it.copy(exchangeRate = SavedExchangeRate.of(result.rate, referenceDate)) }
+                RateStatus.Ready(result.rate)
+            }
+            else -> RateStatus.Unavailable(result)
+        }
     }
 
     /** Q5: move an old issue date to today (the delivery date stays) and refresh the preview. */

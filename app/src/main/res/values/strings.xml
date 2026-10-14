@@ -230,7 +230,7 @@
     <string name="line_name">Nazwa towaru lub usługi</string>
     <string name="line_quantity">Ilość</string>
     <string name="line_unit">Jednostka</string>
-    <string name="line_price">Cena jedn. netto (zł)</string>
+    <string name="line_price">Cena jedn. netto</string>
     <string name="line_amounts">netto %1$s · brutto %2$s</string>
     <string name="line_add">Dodaj pozycję</string>
     <string name="line_vat_rate">Stawka VAT</string>
@@ -371,6 +371,14 @@
     <string name="action_fill">Uzupełnij</string>
 
     <!-- NBP exchange rates (US-011, ADR 0008) -->
+    <string name="field_currency_invoice">Waluta</string>
+    <string name="rate_loading">Pobieranie kursu NBP…</string>
+    <string name="rate_working">Kurs NBP %1$s %2$s z %3$s (tabela %4$s)</string>
+    <string name="rate_working_hint">Kurs roboczy — przy wysyłce do KSeF zostanie ustalony ponownie według dnia wysyłki.</string>
+    <string name="rate_later">Kurs zostanie pobrany przy podglądzie i wysyłce.</string>
+    <string name="rate_retry">Pobierz kurs ponownie</string>
+    <string name="total_vat_pln">VAT w PLN</string>
+    <string name="bank_account_currency_mismatch">Rachunek jest w %1$s, a faktura w %2$s.</string>
     <string name="exchange_rate_network">Nie udało się pobrać kursu NBP — sprawdź połączenie z internetem.</string>
     <string name="exchange_rate_server">Serwis kursów NBP nie odpowiada poprawnie. Spróbuj ponownie później.</string>
     <string name="exchange_rate_not_published">Nie znaleziono tabeli kursów NBP dla tego dnia.</string>

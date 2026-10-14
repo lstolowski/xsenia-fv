@@ -26,6 +26,9 @@ object Formats {
         return "$number ${if (currency == "PLN") "zł" else currency}"
     }
 
+    /** NBP rate with its four decimals and a Polish decimal comma: `4,3775`. */
+    fun exchangeRate(rate: BigDecimal): String = rate.toPlainString().replace('.', ',')
+
     /** Quantity without trailing zeros, Polish decimal comma: `2,5`, `1`. */
     fun quantity(value: BigDecimal): String =
         NumberFormat.getNumberInstance(POLISH).apply { maximumFractionDigits = 6 }.format(value.stripTrailingZeros())
