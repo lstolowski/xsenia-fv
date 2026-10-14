@@ -16,6 +16,7 @@
 2. [02-warianty-architektury.md](analiza/02-warianty-architektury.md) — web, backend, Android
 3. [03-pytania-warsztat.md](analiza/03-pytania-warsztat.md) — warsztat: ustalenia i pytania otwarte
 4. [04-faktury-w-walucie-obcej.md](analiza/04-faktury-w-walucie-obcej.md) — faktury w EUR/USD/GBP: pola FA(3), reguła kursu, API NBP
+5. [05-nabywca-zagraniczny.md](analiza/05-nabywca-zagraniczny.md) — nabywca bez polskiego NIP-u: Podmiot2 w FA(3), np I / np II, VIES
 
 ## Środowisko
 

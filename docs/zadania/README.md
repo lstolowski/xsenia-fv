@@ -33,6 +33,10 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-027](ZAD-027-faktura-w-walucie-model-xml.md) | Faktura w walucie obcej: model, VAT w PLN, XML FA(3) | US-011 | Zrobione |
 | [ZAD-028](ZAD-028-ui-waluta-formularz.md) | UI: lista „Waluta”, rachunek z ostrzeżeniem, kurs roboczy | US-011 | Zrobione |
 | [ZAD-029](ZAD-029-wysylka-kurs-ostateczny.md) | Podgląd i wysyłka faktury w walucie: kurs ostateczny w locie, szczegóły | US-011 | Zrobione |
+| [ZAD-030](ZAD-030-kontrahent-zagraniczny-model.md) | Kontrahent zagraniczny: model, walidacja, migracja | US-012 | Do zrobienia |
+| [ZAD-031](ZAD-031-fa3-nabywca-zagraniczny.md) | FA(3): nabywca z numerem VAT UE lub innym identyfikatorem, „np I” / „np II” | US-012 | Do zrobienia |
+| [ZAD-032](ZAD-032-ui-kontrahent-zagraniczny.md) | UI: formularz kontrahenta z krajem, domyślna waluta, wartości domyślne faktury | US-012 | Do zrobienia |
+| [ZAD-033](ZAD-033-listy-identyfikator-nabywcy.md) | Listy, szczegóły i wyszukiwanie: numer VAT UE / identyfikator nabywcy | US-012 | Do zrobienia |
 
 Weryfikacja na urządzeniu fizycznym (2026-10-13): użytkownik sprawdził zadania 001–020 (poza 002 — infrastruktura testów integracyjnych) na swoim telefonie z KSeF TEST — aplikacja działa i wygląda poprawnie.
 
@@ -41,3 +45,5 @@ Kolejność realizacji (F1): 001 → 002 → 003 → 004 → 005 → 006 → 007
 US-010: 021 → 022 → 023 → 024 → 025 (021 i 022 mogą iść równolegle).
 
 US-011 (po US-010): 026 → 027 → 028 → 029 (026 może iść równolegle z US-010; 027–029 wymagają ZAD-022, ZAD-023 i ZAD-025).
+
+US-012: 030 → 031 → 032 → 033.
