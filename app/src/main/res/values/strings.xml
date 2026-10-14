@@ -88,7 +88,7 @@
     <string name="month_previous">Poprzedni miesiąc</string>
     <string name="month_next">Następny miesiąc</string>
     <string name="month_picker_title">Wybierz miesiąc (data dostawy)</string>
-    <string name="search_label">Szukaj (NIP lub nazwa)</string>
+    <string name="search_label">Szukaj: nazwa lub numer</string>
     <string name="search_clear">Wyczyść</string>
     <string name="list_empty_month">Brak faktur w tym miesiącu.</string>
     <string name="list_empty_query">Brak faktur pasujących do „%1$s”.</string>
@@ -96,6 +96,8 @@
     <string name="list_no_name">(brak nazwy)</string>
     <string name="list_delivery">Dostawa %1$s</string>
     <string name="list_nip">NIP %1$s</string>
+    <string name="list_vat_ue">VAT UE %1$s</string>
+    <string name="list_tax_id">ID %1$s</string>
     <string name="list_number">nr %1$s</string>
     <string name="list_net">netto %1$s</string>
     <string name="list_unsent">Niewysłana do KSeF</string>
@@ -131,7 +133,7 @@
     <string name="details_seller">Sprzedawca</string>
     <string name="details_buyer">Nabywca</string>
     <string name="details_other_party">Podmiot trzeci (rola %1$s)</string>
-    <string name="details_eu_vat">NIP UE: %1$s</string>
+    <string name="details_eu_vat">Numer VAT UE: %1$s</string>
     <string name="details_other_id">Identyfikator: %1$s</string>
     <string name="details_lines">Pozycje</string>
     <string name="details_line_state_before">Stan przed korektą</string>

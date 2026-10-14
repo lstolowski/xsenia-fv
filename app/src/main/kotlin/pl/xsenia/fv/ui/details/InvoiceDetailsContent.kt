@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import pl.xsenia.fv.R
+import pl.xsenia.fv.invoice.profile.Countries
 import pl.xsenia.fv.invoice.model.Invoice
 import pl.xsenia.fv.invoice.model.InvoiceLine
 import pl.xsenia.fv.invoice.model.Party
@@ -149,6 +150,8 @@ private fun PartyCard(title: String, party: Party) {
         party.euVatNumber?.let { Text(stringResource(R.string.details_eu_vat, it)) }
         party.otherId?.let { Text(stringResource(R.string.details_other_id, it)) }
         party.addressLines.forEach { Text(it) }
+        // Foreign buyer (ADR 0009): the country is not part of the address lines.
+        party.countryCode?.takeIf { it != Countries.POLAND }?.let { Text(Countries.name(it)) }
         (party.emails + party.phones).forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
     }
 }

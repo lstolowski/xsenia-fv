@@ -25,6 +25,7 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Kontrahenci | `counterparties` | Lista nabywców w Ustawieniach → „Kontrahenci”; NIP niezmienny po utworzeniu | ADR 0006 (dawniej plik `counterparties.json`) |
 | Kontrahent zagraniczny | `Counterparty` (`countryCode`, `taxNumber`, `taxIdType`, `id`) | Nabywca spoza Polski: z UE — numer VAT UE (`KodUE` + `NrVatUE`, Grecja `EL`), spoza UE — identyfikator (`KodKraju` + `NrID`) albo `BrakID`; aplikacja wskazuje kontrahenta przez `id` (polscy: `id` = NIP) | ADR 0009 |
 | Kraj | `Countries` (`countryCode`) | Kod ISO 3166 jak `KodKraju` w FA(3), polska nazwa | ADR 0009 |
+| Identyfikator kontrahenta (na liście) | `CounterpartyTaxId` (`InvoiceRow.counterpartyTaxId`) | NIP, numer VAT UE z prefiksem (`DE999999990`) albo inny identyfikator jak w metadanych KSeF (`US00-0000000`); etykiety „NIP”, „VAT UE”, „ID”; wyszukiwanie bez separatorów | ADR 0009 |
 | Domyślna waluta kontrahenta | `Counterparty.defaultCurrency` | Waluta ustawiana w fakturze po wyborze kontrahenta | ADR 0009 |
 | Biała lista (wykaz podatników VAT) | `whitelist` (`WhiteListClient`, `WhiteListResult`, `WhiteListSubject`) | API MF `wl-api.mf.gov.pl` — dane firmy po NIP-ie: nazwa, adres, status VAT, rachunki | ADR 0007 |
 | Pobieranie danych po NIP-ie | `CompanyLookupService` → `LookedUpCompany` | Wypełnienie formularza „Moja firma” / „Kontrahent” danymi z Białej listy (ikona pobierania obok NIP-u); komunikaty: `CompanyLookupMessages` | ADR 0007 |

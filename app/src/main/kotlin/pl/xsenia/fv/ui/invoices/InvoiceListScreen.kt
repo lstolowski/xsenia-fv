@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import pl.xsenia.fv.R
+import pl.xsenia.fv.invoice.profile.TaxIdType
 import pl.xsenia.fv.invoices.CurrencyTotals
 import pl.xsenia.fv.invoices.InvoiceRow
 import pl.xsenia.fv.invoices.UnsentSummary
@@ -220,8 +221,13 @@ private fun InvoiceTile(invoice: InvoiceRow, onClick: () -> Unit) {
                     )
                 }
                 Text(stringResource(R.string.list_number, invoice.invoiceNumber), style = MaterialTheme.typography.bodyMedium)
-                invoice.counterpartyNip?.let {
-                    Text(stringResource(R.string.list_nip, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                invoice.counterpartyTaxId?.let { taxId ->
+                    val label = when (taxId.type) {
+                        TaxIdType.NIP -> R.string.list_nip
+                        TaxIdType.VAT_UE -> R.string.list_vat_ue
+                        TaxIdType.OTHER, TaxIdType.NONE -> R.string.list_tax_id
+                    }
+                    Text(stringResource(label, taxId.value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Text(
                     listOfNotNull(stringResource(R.string.list_delivery, Formats.date(invoice.deliveryDate)), typeLabel).joinToString(" · "),

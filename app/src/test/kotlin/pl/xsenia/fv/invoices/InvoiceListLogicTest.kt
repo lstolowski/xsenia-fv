@@ -4,6 +4,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import pl.xsenia.fv.invoice.profile.Address
+import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.profile.Counterparty
+import pl.xsenia.fv.invoice.profile.TaxIdType
 import pl.xsenia.fv.ksef.invoices.InvoiceMetadata
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.mirror.MirrorEntry
@@ -19,6 +23,7 @@ class InvoiceListLogicTest {
         delivery: String,
         name: String = "Testowa Sp. z o.o.",
         nip: String = "6691034274",
+        taxId: CounterpartyTaxId = CounterpartyTaxId(TaxIdType.NIP, nip),
         net: String = "100.00",
         gross: String = "123.00",
         currency: String = "PLN",
@@ -29,7 +34,7 @@ class InvoiceListLogicTest {
         deliveryDate = LocalDate.parse(delivery),
         issueDate = LocalDate.parse(issue),
         counterpartyName = name,
-        counterpartyNip = nip,
+        counterpartyTaxId = taxId,
         netAmount = BigDecimal(net),
         grossAmount = BigDecimal(gross),
         currency = currency,
@@ -94,6 +99,62 @@ class InvoiceListLogicTest {
         assertEquals(8, months.size)
     }
 
+    private fun metadata(buyer: InvoiceMetadata.BuyerIdentifier) = InvoiceMetadata(
+        ksefNumber = "K", invoiceNumber = "01/09/2026", issueDate = LocalDate.parse("2026-10-01"),
+        invoicingDate = Instant.EPOCH, acquisitionDate = Instant.EPOCH, permanentStorageDate = Instant.EPOCH,
+        seller = InvoiceMetadata.Seller("9945082500", "Jan Testowy"),
+        buyer = InvoiceMetadata.Buyer(buyer, "Lorem Testowy"),
+        netAmount = BigDecimal("500"), grossAmount = BigDecimal("500"), vatAmount = BigDecimal.ZERO,
+        currency = "EUR", invoicingMode = "Online", invoiceType = "Vat",
+        formCode = InvoiceMetadata.FormCode("FA (3)", "1-0E", "FA"), isSelfInvoicing = false, hasAttachment = false, invoiceHash = "x",
+    )
+
+    // As KSeF TEST listed the invoices of ZAD-031 (2026-10-14), fictitious buyers.
+    @Test
+    fun `foreign buyer identifiers from KSeF metadata`() {
+        fun taxId(type: String, value: String?) =
+            InvoiceListLogic.toRow(InvoiceCategory.SALES, MirrorEntry(metadata(InvoiceMetadata.BuyerIdentifier(type, value)), LocalDate.parse("2026-10-14"))).counterpartyTaxId
+
+        assertEquals(CounterpartyTaxId(TaxIdType.VAT_UE, "DE999999990"), taxId("VatUe", "DE999999990"))
+        assertEquals(CounterpartyTaxId(TaxIdType.OTHER, "US00-0000000"), taxId("Other", "US00-0000000"))
+        assertEquals(null, taxId("None", null))
+        assertEquals(null, taxId("Unknown", "X"))
+        val purchase = InvoiceListLogic.toRow(InvoiceCategory.PURCHASE, MirrorEntry(metadata(InvoiceMetadata.BuyerIdentifier("VatUe", "DE999999990")), LocalDate.parse("2026-10-14")))
+        assertEquals(CounterpartyTaxId(TaxIdType.NIP, "9945082500"), purchase.counterpartyTaxId)
+    }
+
+    @Test
+    fun `searches VAT UE numbers and foreign identifiers ignoring prefix and separators`() {
+        val german = row("A", "2026-10-01", name = "Lorem Testowy GmbH", taxId = CounterpartyTaxId(TaxIdType.VAT_UE, "DE999999990"))
+        val american = row("B", "2026-10-02", name = "Lorem Test Inc.", taxId = CounterpartyTaxId(TaxIdType.OTHER, "US00-0000000"))
+
+        assertTrue(InvoiceListLogic.matches(german, "999 999 990"))
+        assertTrue(InvoiceListLogic.matches(german, "de999999990"))
+        assertTrue(InvoiceListLogic.matches(american, "00-0000000"))
+        assertTrue(InvoiceListLogic.matches(american, "us 000"))
+        assertFalse(InvoiceListLogic.matches(german, "US"))
+    }
+
+    @Test
+    fun `unsent invoice shows the identifier of its foreign buyer`() {
+        val german = Counterparty("Lorem Testowy GmbH", address = Address("Teststraße 1"), countryCode = "DE", taxNumber = "999999990")
+        val american = Counterparty("Lorem Test Inc.", address = Address("1 Test Street"), countryCode = "US", taxNumber = "00-0000000")
+        val british = Counterparty("Ipsum Test Ltd", address = Address("1 Test Lane"), countryCode = "GB")
+        val profile = CompanyProfile("9945082500", counterparties = listOf(german, american, british))
+        fun rowFor(buyer: Counterparty) = InvoiceListLogic.toRow(
+            pl.xsenia.fv.issue.UnsentInvoice.create(
+                pl.xsenia.fv.issue.InvoiceForm(counterpartyId = buyer.id, issueDate = LocalDate.parse("2026-10-14"), deliveryDate = LocalDate.parse("2026-10-14")),
+                Instant.EPOCH,
+            ),
+            profile,
+        )
+
+        assertEquals(CounterpartyTaxId(TaxIdType.VAT_UE, "DE999999990"), rowFor(german).counterpartyTaxId)
+        assertEquals(CounterpartyTaxId(TaxIdType.OTHER, "US00-0000000"), rowFor(american).counterpartyTaxId)
+        assertEquals(null, rowFor(british).counterpartyTaxId)
+        assertEquals("Ipsum Test Ltd", rowFor(british).counterpartyName)
+    }
+
     @Test
     fun `counterparty is the buyer on sales and the seller on purchase invoices`() {
         val metadata = InvoiceMetadata(
@@ -107,7 +168,7 @@ class InvoiceListLogicTest {
         )
         val entry = MirrorEntry(metadata, LocalDate.parse("2026-09-30"))
 
-        assertEquals("6691034274", InvoiceListLogic.toRow(InvoiceCategory.SALES, entry).counterpartyNip)
+        assertEquals(CounterpartyTaxId(TaxIdType.NIP, "6691034274"), InvoiceListLogic.toRow(InvoiceCategory.SALES, entry).counterpartyTaxId)
         assertEquals("Jan Testowy", InvoiceListLogic.toRow(InvoiceCategory.PURCHASE, entry).counterpartyName)
         assertEquals(LocalDate.parse("2026-09-30"), InvoiceListLogic.toRow(InvoiceCategory.SALES, entry).deliveryDate)
     }

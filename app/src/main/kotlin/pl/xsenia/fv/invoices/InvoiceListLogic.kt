@@ -1,6 +1,8 @@
 package pl.xsenia.fv.invoices
 
 import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.profile.Counterparty
+import pl.xsenia.fv.invoice.profile.TaxIdType
 import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.InvoiceCalculator
 import pl.xsenia.fv.issue.DecimalInput
@@ -17,7 +19,7 @@ data class InvoiceRow(
     val deliveryDate: java.time.LocalDate,
     val issueDate: java.time.LocalDate,
     val counterpartyName: String?,
-    val counterpartyNip: String?,
+    val counterpartyTaxId: CounterpartyTaxId?,
     val netAmount: BigDecimal,
     val grossAmount: BigDecimal,
     val currency: String,
@@ -34,6 +36,12 @@ data class InvoiceRow(
     val key: String get() = unsentId?.let { "unsent:$it" } ?: ksefNumber
 }
 
+/**
+ * Identifier of the counterparty on a row (ADR 0009): NIP, VAT UE number with its prefix (`DE999999990`) or another
+ * identifier — as KSeF lists it, with the country code in front (`US00-0000000`).
+ */
+data class CounterpartyTaxId(val type: TaxIdType, val value: String)
+
 /** Unsent invoices of the month — shown below the totals, not included in them (decision Q2). */
 data class UnsentSummary(val count: Int, val gross: BigDecimal)
 
@@ -43,13 +51,20 @@ data class CurrencyTotals(val currency: String, val count: Int, val net: BigDeci
 /** Filtering and totals of the invoice lists (US-003, US-004). */
 object InvoiceListLogic {
 
-    private val NIP_SEPARATORS = Regex("[\\s-]")
+    private val ID_SEPARATORS = Regex("[\\s.\\-]")
+
+    // KSeF metadata `buyer.identifier.type`; `None` — no identifier.
+    private val KSEF_ID_TYPES = mapOf("Nip" to TaxIdType.NIP, "VatUe" to TaxIdType.VAT_UE, "Other" to TaxIdType.OTHER)
 
     fun toRow(category: InvoiceCategory, entry: MirrorEntry): InvoiceRow {
         val metadata = entry.metadata
-        val (name, nip) = when (category) {
-            InvoiceCategory.SALES -> metadata.buyer.name to metadata.buyer.identifier.value
-            InvoiceCategory.PURCHASE -> metadata.seller.name to metadata.seller.nip
+        val (name, taxId) = when (category) {
+            InvoiceCategory.SALES -> {
+                val identifier = metadata.buyer.identifier
+                val type = KSEF_ID_TYPES[identifier.type]
+                metadata.buyer.name to identifier.value?.let { value -> type?.let { CounterpartyTaxId(it, value) } }
+            }
+            InvoiceCategory.PURCHASE -> metadata.seller.name to CounterpartyTaxId(TaxIdType.NIP, metadata.seller.nip)
         }
         return InvoiceRow(
             ksefNumber = metadata.ksefNumber,
@@ -57,7 +72,7 @@ object InvoiceListLogic {
             deliveryDate = entry.deliveryDate,
             issueDate = metadata.issueDate,
             counterpartyName = name,
-            counterpartyNip = nip,
+            counterpartyTaxId = taxId,
             netAmount = metadata.netAmount,
             grossAmount = metadata.grossAmount,
             currency = metadata.currency,
@@ -82,7 +97,8 @@ object InvoiceListLogic {
             issueDate = form.issueDate,
             counterpartyName = buyer?.name,
             // Without the counterparty in the profile only a NIP-like id can still be shown.
-            counterpartyNip = buyer?.taxIdText ?: form.counterpartyId?.takeIf { id -> id.length == NIP_LENGTH && id.all(Char::isDigit) },
+            counterpartyTaxId = buyer?.let(::taxIdOf)
+                ?: form.counterpartyId?.takeIf { id -> id.length == NIP_LENGTH && id.all(Char::isDigit) }?.let { CounterpartyTaxId(TaxIdType.NIP, it) },
             netAmount = totals.net,
             grossAmount = totals.gross,
             currency = form.currency.code,
@@ -104,15 +120,23 @@ object InvoiceListLogic {
             .sortedWith(compareByDescending<InvoiceRow> { it.deliveryDate }.thenByDescending { it.issueDate }.thenByDescending { it.invoiceNumber })
 
     /**
-     * Case-insensitive match of a name fragment or NIP; spaces and dashes in the query are ignored for the NIP
-     * (`669-103-42-74` finds `6691034274`).
+     * Case-insensitive match of a name fragment or of the identifier (NIP, VAT UE number, another ID); spaces, dots
+     * and dashes are ignored there (`669-103-42-74` finds `6691034274`, `999 999 990` finds `DE999999990`).
      */
     fun matches(row: InvoiceRow, query: String): Boolean {
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return true
-        val nipQuery = trimmed.replace(NIP_SEPARATORS, "")
+        val idQuery = trimmed.replace(ID_SEPARATORS, "")
         return row.counterpartyName?.contains(trimmed, ignoreCase = true) == true ||
-            (nipQuery.isNotEmpty() && row.counterpartyNip?.contains(nipQuery, ignoreCase = true) == true)
+            (idQuery.isNotEmpty() && row.counterpartyTaxId?.value?.replace(ID_SEPARATORS, "")?.contains(idQuery, ignoreCase = true) == true)
+    }
+
+    /** Identifier of a counterparty from the profile, in the form KSeF lists it. */
+    fun taxIdOf(counterparty: Counterparty): CounterpartyTaxId? = when (counterparty.taxIdType) {
+        TaxIdType.NIP -> counterparty.nip?.let { CounterpartyTaxId(TaxIdType.NIP, it) }
+        TaxIdType.VAT_UE -> counterparty.taxIdText?.let { CounterpartyTaxId(TaxIdType.VAT_UE, it) }
+        TaxIdType.OTHER -> counterparty.taxNumber?.let { CounterpartyTaxId(TaxIdType.OTHER, counterparty.countryCode + it) }
+        TaxIdType.NONE -> null
     }
 
     /** Totals per currency (PLN first) of invoices in KSeF — unsent invoices excluded; VAT = gross − net. */

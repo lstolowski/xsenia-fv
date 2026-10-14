@@ -1,7 +1,7 @@
 # US-012. Nabywca zagraniczny (bez polskiego NIP-u)
 
 - Priorytet: MVP
-- Status: W realizacji (ZAD-030…032 zrobione)
+- Status: Zrobiona (2026-10-14)
 - Zgłoszone: 2026-10-14 (wydzielone z US-011, decyzja Q1)
 
 ## Historyjka
@@ -32,7 +32,7 @@ Analiza: [05-nabywca-zagraniczny.md](../analiza/05-nabywca-zagraniczny.md), decy
 
 ### Listy i szczegóły
 
-- [ ] Listy, szczegóły i wyszukiwanie pokazują i znajdują numer VAT UE / identyfikator nabywcy (z metadanych KSeF i z faktur niewysłanych).
+- [x] Listy, szczegóły i wyszukiwanie pokazują i znajdują numer VAT UE / identyfikator nabywcy (z metadanych KSeF i z faktur niewysłanych).
 
 ### Zgodność
 
