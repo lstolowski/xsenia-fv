@@ -1,6 +1,6 @@
 # Przykładowe odpowiedzi API kursów NBP
 
-Do mocków klienta NBP (ZAD-026, [ADR 0008](../adr/0008-kursy-walut-nbp.md)). Struktura **odwzorowuje prawdziwe odpowiedzi** `GET https://api.nbp.pl/api/exchangerates/rates/a/{code}/{date}/?format=json` (tabela A, waluty `eur`, `usd`, `gbp`) sprawdzone 2026-10-13. Kursy walut to dane publiczne (nie dane użytkownika), ale w testach używaj wartości z tego pliku — nie pobieraj ich na bieżąco. Bierzemy pole `mid` (4 miejsca po przecinku).
+Do mocków klienta NBP (ZAD-026 — fixture'y w `exchangerates/src/test/resources/nbp/`, [ADR 0008](../adr/0008-kursy-walut-nbp.md)). Struktura **odwzorowuje prawdziwe odpowiedzi** `GET https://api.nbp.pl/api/exchangerates/rates/a/{code}/{date}/?format=json` (tabela A, waluty `eur`, `usd`, `gbp`) sprawdzone 2026-10-13. Kursy walut to dane publiczne (nie dane użytkownika), ale w testach używaj wartości z tego pliku — nie pobieraj ich na bieżąco. Bierzemy pole `mid` (4 miejsca po przecinku).
 
 Kalendarz w przykładach: 2026-10-09 — piątek, 2026-10-10/11 — weekend, 2026-10-12 — poniedziałek.
 
@@ -56,7 +56,7 @@ Przykład z dokumentacji użytkownika (stały, do testu integracyjnego): `/rates
 
 - `5xx` lub odpowiedź nie-JSON przy `200` → `Failure.Server`,
 - brak sieci / przekroczenie czasu 15 s → `Failure.Network`,
-- 10 kolejnych dni bez tabeli w `lastRateBefore` → `Failure` (nie powinno wystąpić).
+- 10 kolejnych dni bez tabeli w `lastRateBefore` → `NotPublished` (nie powinno wystąpić).
 
 ## 6. Faktura w EUR — wyliczenie (do testów XML)
 

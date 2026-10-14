@@ -107,6 +107,7 @@ dependencies {
     implementation(project(":invoice"))
     implementation(project(":mirror"))
     implementation(project(":whitelist"))
+    implementation(project(":exchangerates"))
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.core.ktx)

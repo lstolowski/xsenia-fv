@@ -14,7 +14,7 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Kurs waluty (kurs NBP) | `ExchangeRate` (`rate`, `tableNumber`, `effectiveDate`) | Kurs średni (`mid`) z tabeli A NBP, 4 miejsca po przecinku; w FA(3) `KursWaluty` w każdej pozycji i uwaga „Kurs waluty” z numerem tabeli | ADR 0008 |
 | Kurs roboczy / kurs ostateczny | `InvoiceForm.exchangeRate` / kurs przy wysyłce | Roboczy — wg daty wystawienia z formularza (szkic, niewysłana); ostateczny — wg dnia wysyłki do KSeF, pokazany w podglądzie | ADR 0008 |
 | Dzień odniesienia kursu | `ExchangeRateDateRule.referenceDate` | Wcześniejsza z dat: data dostawy, dzień wystawienia; kurs = tabela NBP z ostatniego dnia roboczego przed nim | ADR 0008 |
-| Serwis kursów walut | `ExchangeRateService` / `NbpClient` | Kurs z `api.nbp.pl/api/exchangerates/rates/a/{code}/{date}/`, pamięć podręczna w profilu | ADR 0008 |
+| Serwis kursów walut | `ExchangeRateService` (aplikacja) / `NbpClient`, `CachedExchangeRateSource` (moduł `exchangerates`) | Kurs z `api.nbp.pl/api/exchangerates/rates/a/{code}/{date}/`; pamięć podręczna dni z przeszłości w `cacheDir` | ADR 0008 |
 | VAT w PLN | `vatPln` | `P_14_1W`/`P_14_2W`/`P_14_3W` — VAT stawek 23/8/5 przeliczony na PLN na fakturze w walucie obcej: VAT × kurs | ADR 0008 |
 | Kwota netto / VAT / brutto | `netAmount` / `vatAmount` / `grossAmount` | Sumy faktury (`P_13_1` / `P_14_1` / `P_15`) | |
 | Moja firma | `company` | Dane sprzedawcy (Podmiot1) wprowadzane w Ustawieniach → „Moja firma”; NIP = NIP z tokena KSeF | ADR 0006 (dawniej plik `company.json`, ADR 0004) |

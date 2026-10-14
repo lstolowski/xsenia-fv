@@ -6,6 +6,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import pl.xsenia.fv.currency.ExchangeRateService
+import pl.xsenia.fv.exchangerates.CachedExchangeRateSource
+import pl.xsenia.fv.exchangerates.NbpClient
 import pl.xsenia.fv.ksef.KsefAccess
 import pl.xsenia.fv.ksef.KsefConnectionChecker
 import pl.xsenia.fv.ksef.KsefEnvironment
@@ -22,6 +25,7 @@ import pl.xsenia.fv.settings.AppSettings
 import pl.xsenia.fv.settings.settingsDataStore
 import pl.xsenia.fv.storage.LocalCache
 import pl.xsenia.fv.whitelist.WhiteListClient
+import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -51,6 +55,20 @@ class AppContainer(context: Context) {
 
     /** Company data by NIP from the MF White List (ADR 0007) — used by the company and counterparty forms. */
     val companyLookup by lazy { CompanyLookupService(WhiteListClient.create(), today = { LocalDate.now(POLAND) }) }
+
+    // Past NBP tables never change; kept in cacheDir, so "Wyczyść cache" clears them too (ADR 0008).
+    private val exchangeRateCacheFile = File(context.cacheDir, "exchange-rates.json")
+
+    /** NBP exchange rates (ADR 0008) — used by the invoice form, preview and sending. */
+    val exchangeRates by lazy {
+        ExchangeRateService(
+            CachedExchangeRateSource(
+                delegate = NbpClient(NbpClient.createHttpClient()),
+                file = exchangeRateCacheFile,
+                today = { LocalDate.now(POLAND) },
+            ),
+        )
+    }
 
     /** The active company profile — the NIP of the KSeF token (ADR 0006). */
     val profiles = ProfileManager(context.filesDir, tokenStore.tokenNip, applicationScope) { nip, directory ->

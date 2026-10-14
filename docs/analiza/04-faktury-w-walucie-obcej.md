@@ -76,7 +76,7 @@ GET https://api.nbp.pl/api/exchangerates/rates/a/{code}/{date}/?format=json
 - bierzemy `mid` (4 miejsca po przecinku), numer tabeli `no` i `effectiveDate`,
 - dzień bez tabeli (weekend, święto, dziś przed publikacją ok. 12:00) → `404` z treścią tekstową `404 NotFound - Not Found - Brak danych`,
 - „ostatni dzień roboczy przed D”: zapytania o kolejne dni wstecz (D−1, D−2, …) aż do pierwszej odpowiedzi `200`; najdłuższa przerwa w tabelach to kilka dni (święta) — limit 10 dni wstecz, potem błąd,
-- kursy z przeszłości się nie zmieniają → pamięć podręczna w profilu (także informacja „brak tabeli w dniu D” dla dni z przeszłości).
+- kursy z przeszłości się nie zmieniają → pamięć podręczna w `cacheDir` aplikacji (także informacja „brak tabeli w dniu D” dla dni z przeszłości).
 
 Odrzucone: EBC (kursy względem EUR — przeliczenia krzyżowe), zapytanie o zakres dat `/rates/a/{code}/{od}/{do}/` (mniej zapytań, ale użytkownik wskazał endpoint dzienny — przy pamięci podręcznej różnica pomijalna).
 

@@ -367,4 +367,9 @@
     <string name="gap_bank_account">rachunku bankowego w PLN</string>
     <string name="gap_counterparty">kontrahenta</string>
     <string name="action_fill">Uzupełnij</string>
+
+    <!-- NBP exchange rates (US-011, ADR 0008) -->
+    <string name="exchange_rate_network">Nie udało się pobrać kursu NBP — sprawdź połączenie z internetem.</string>
+    <string name="exchange_rate_server">Serwis kursów NBP nie odpowiada poprawnie. Spróbuj ponownie później.</string>
+    <string name="exchange_rate_not_published">Nie znaleziono tabeli kursów NBP dla tego dnia.</string>
 </resources>

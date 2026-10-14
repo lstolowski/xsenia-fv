@@ -42,10 +42,10 @@ Stan: implementacja — postęp w [docs/zadania/](docs/zadania/README.md). Szcze
 JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`). Android SDK wskazany w `local.properties` (poza gitem).
 
 - `./gradlew build` — kompilacja wszystkich modułów i wariantów, testy jednostkowe, lint (ostrzeżenia = błędy)
-- `./gradlew :ksef:test :invoice:test :mirror:test :whitelist:test` — szybkie testy modułów JVM
+- `./gradlew :ksef:test :invoice:test :mirror:test :whitelist:test :exchangerates:test` — szybkie testy modułów JVM
 - `./gradlew integrationTest -PsendInvoices` — dodatkowo test **wysyłający fakturę** do KSeF TEST (każde uruchomienie tworzy nową, nieusuwalną fakturę testową)
 - `./gradlew :ksef:integrationTest --tests '*PurchaseTestDataGenerator*' -PcreatePurchaseInvoices` — tworzy 5 zmyślonych faktur **zakupowych** od drugiego kontekstu TEST (`ksef.supplier.*` w secrets)
-- `./gradlew integrationTest` — testy z prawdziwym KSeF **TEST** (wymaga `secrets/ksef-test.properties`, bez niego testy są pomijane; nie wchodzi w `build`). Unikaj 16:00–18:00 (prace serwisowe TEST). Obejmuje też `:whitelist:integrationTest` — jedno zapytanie do prawdziwej Białej listy MF z testowym NIP-em (limit API: 100 zapytań dziennie)
+- `./gradlew integrationTest` — testy z prawdziwym KSeF **TEST** (wymaga `secrets/ksef-test.properties`, bez niego testy są pomijane; nie wchodzi w `build`). Unikaj 16:00–18:00 (prace serwisowe TEST). Obejmuje też `:whitelist:integrationTest` — jedno zapytanie do prawdziwej Białej listy MF z testowym NIP-em (limit API: 100 zapytań dziennie) i `:exchangerates:integrationTest` — prawdziwe API kursów NBP (bez sekretów)
 - `./gradlew :app:assembleKsefTestDebug` — APK wersji testowej (KSeF TEST); `installKsefTestDebug` instaluje na emulatorze
 - `./gradlew releaseApk` — podpisany APK produkcyjny (R8) w `build/dist/`; klucz w `secrets/keystore.properties` (poza gitem, instrukcja w README.md). `releaseApkTest` — to samo dla KSeF TEST. Klucza produkcyjnego nie generuj ani nie odczytuj — do sprawdzenia buildu release użyj klucza debug: `-Pxsenia.signingProperties=<plik poza repo>`
 - Wersje aplikacji (product flavors): `ksefTest` → `pl.xsenia.fv.test`, `ksefProd` → `pl.xsenia.fv`

@@ -26,9 +26,10 @@
 - Endpoint: `GET /api/exchangerates/rates/a/{code}/{date}/?format=json`, `code` = `eur` / `usd` / `gbp`; z odpowiedzi bierzemy `rates[0].mid`, `no`, `effectiveDate`.
 - `NbpClient`:
   - `rateOn(currency, date)` → kurs z dnia `date` albo `NotPublished` (`404`, dzień bez tabeli),
-  - `lastRateBefore(currency, date)` → `rateOn` dla `date − 1`, `date − 2`, … do pierwszego kursu, maks. 10 dni wstecz,
+  - `lastRateBefore(currency, date)` → `rateOn` dla `date − 1`, `date − 2`, … do pierwszego kursu, maks. 10 dni wstecz (potem `NotPublished`); pierwszy błąd przerywa,
   - wynik: `ExchangeRate(currency, rate: BigDecimal, tableNumber, effectiveDate)` — `rate` z **4 miejscami po przecinku**, jak `mid` w tabeli NBP; błędy `Failure` (`Network`, `Server`); limit czasu 15 s.
-- `ExchangeRateService` w aplikacji — jedyny punkt dostępu do kursów (formularz, podgląd, wysyłka, w przyszłości inne miejsca): pamięć podręczna w profilu dla dni z przeszłości (kursy i dni bez tabeli się nie zmieniają).
+- `CachedExchangeRateSource` — pamięć podręczna w pliku dla dni sprzed dziś (kursy i dni bez tabeli się nie zmieniają; dziś pytamy zawsze — tabela pojawia się ok. 12:00).
+- `ExchangeRateService` w aplikacji — jedyny punkt dostępu do kursów (formularz, podgląd, wysyłka, w przyszłości inne miejsca); plik pamięci podręcznej w `cacheDir` — kursy nie zależą od firmy, więc nie w profilu, a „Wyczyść cache” je usuwa.
 - Waluty: `InvoiceCurrency` = `PLN` (domyślna, bez kursu), `EUR`, `USD`, `GBP`. Kolejna waluta = nowa pozycja enuma (o ile jest w tabeli A).
 
 ### Reguła daty kursu
