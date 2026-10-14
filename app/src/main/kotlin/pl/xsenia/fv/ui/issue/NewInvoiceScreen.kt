@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -120,6 +122,8 @@ import pl.xsenia.fv.ui.format.Formats
 import pl.xsenia.fv.ui.theme.ButtonShape
 import pl.xsenia.fv.ui.theme.FailureColor
 import pl.xsenia.fv.ui.theme.SuccessColor
+import pl.xsenia.fv.ui.theme.WarningAmber
+import pl.xsenia.fv.ui.theme.WarningText as WarningTextColor
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -473,6 +477,8 @@ private fun PreviewContent(viewModel: NewInvoiceViewModel) {
         }
     }
     InvoiceDetailsContent(invoice, ksefNumber = null)
+    val swiftMissing by viewModel.previewSwiftMissing.collectAsStateWithLifecycle()
+    if (swiftMissing) SwiftMissingWarning()
     PrimaryButton(
         onClick = {
             BiometricGate.authenticate(activity, title, subtitle, onSuccess = viewModel::send, onFailure = {})
@@ -683,6 +689,23 @@ private fun FormSectionTitle(text: String) {
 @Composable
 private fun ErrorText(text: String) {
     Text(text, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+}
+
+/** Yellow notice before sending an invoice to a foreign buyer from an account without BIC (SWIFT) (US-014). */
+@Composable
+private fun SwiftMissingWarning() {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(WarningAmber.copy(alpha = 0.15f))
+            .padding(12.dp),
+    ) {
+        Icon(Icons.Filled.Warning, contentDescription = null, tint = WarningAmber, modifier = Modifier.size(24.dp))
+        Text(stringResource(R.string.preview_swift_missing), color = WarningTextColor, style = MaterialTheme.typography.bodyMedium)
+    }
 }
 
 @Composable

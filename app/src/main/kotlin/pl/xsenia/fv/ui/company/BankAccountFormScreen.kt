@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -92,6 +93,11 @@ fun BankAccountFormScreen(viewModel: BankAccountFormViewModel, onClose: () -> Un
                 Text(stringResource(R.string.bank_account_used), color = WarningText, style = MaterialTheme.typography.bodySmall)
             }
             ProfileTextField(stringResource(R.string.field_bank_name), fields.bank, { value -> viewModel.update { it.copy(bank = value) } }, ProfileField.BANK, issues)
+            ProfileTextField(
+                stringResource(R.string.field_swift), fields.swift, { value -> viewModel.update { it.copy(swift = value) } },
+                ProfileField.SWIFT, issues, capitalization = KeyboardCapitalization.Characters,
+                supportingText = stringResource(R.string.field_swift_hint),
+            )
             DropdownField(
                 label = stringResource(R.string.field_currency),
                 options = BankAccountCurrencies.options(fields.currency),

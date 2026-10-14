@@ -27,6 +27,10 @@ data class SalesInvoiceDraft(
     /** The rate used on the invoice: only for a foreign currency and only when it is of that currency. */
     val effectiveExchangeRate: ExchangeRate?
         get() = exchangeRate?.takeIf { currency.isForeign && it.currency == currency }
+
+    /** A foreign buyer may not be able to pay without the BIC (SWIFT) of the bank — warned about in the preview (US-014). */
+    val swiftMissingForForeignBuyer: Boolean
+        get() = buyer.isForeign && bankAccount.swift == null
 }
 
 /** Invoice line as entered: the user types the unit net price (decision C5). */

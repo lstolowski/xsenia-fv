@@ -105,6 +105,7 @@ class InvoicePdfLabels private constructor(val bilingual: Boolean) {
     fun dueDate(date: String) = "${t("Termin płatności", "Due date")}: $date"
     fun bankAccount(number: String) = "${t("Rachunek", "Bank account")}: $number"
     fun bank(name: String) = "${t("Bank", "Bank")}: $name"
+    fun swift(code: String) = "BIC (SWIFT): $code"
     val paid = t("Zapłacono", "Paid")
 
     val remarksHeading = t("Uwagi", "Remarks")

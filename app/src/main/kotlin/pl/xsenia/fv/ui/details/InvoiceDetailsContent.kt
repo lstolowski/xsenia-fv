@@ -94,7 +94,10 @@ fun InvoiceDetailsContent(invoice: Invoice, ksefNumber: String?) {
                     SelectionContainer {
                         Text(stringResource(R.string.details_bank_account, Formats.bankAccount(account.number)))
                     }
-                    listOfNotNull(account.bankName, account.swift, account.description).takeIf { it.isNotEmpty() }?.let {
+                    account.swift?.let {
+                        SelectionContainer { Text(stringResource(R.string.details_bank_swift, it), style = MaterialTheme.typography.bodySmall) }
+                    }
+                    listOfNotNull(account.bankName, account.description).takeIf { it.isNotEmpty() }?.let {
                         Text(it.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
                     }
                 }

@@ -314,4 +314,17 @@ class Fa3XmlWriterTest {
         assertTrue(text.contains("<P_12>np II</P_12>"))
         assertTrue(text.contains("<P_13_9>"))
     }
+
+    @Test
+    fun `BIC (SWIFT) of the account follows the account number and is left out when empty`() {
+        val withSwift = writeValid(draft(account = TestDrafts.account.copy(swift = "TESTPLPWXXX")))
+        val text = String(withSwift, Charsets.UTF_8)
+
+        assertTrue(Regex("<NrRB>85216097583216850246002152</NrRB>\\s*<SWIFT>TESTPLPWXXX</SWIFT>\\s*<NazwaBanku>").containsMatchIn(text), text)
+        assertEquals(
+            listOf(BankAccountInfo("85216097583216850246002152", "Toyota Bank", "TESTPLPWXXX", null)),
+            InvoiceXmlParser.parse(withSwift).payment?.bankAccounts,
+        )
+        assertFalse(String(writeValid(draft()), Charsets.UTF_8).contains("<SWIFT>"))
+    }
 }

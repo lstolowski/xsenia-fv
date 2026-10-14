@@ -5,9 +5,9 @@ import pl.xsenia.fv.invoice.validation.BankAccountNumberValidator
 import pl.xsenia.fv.invoice.validation.NipValidator
 
 /** Form field of the company, bank account and counterparty forms. */
-enum class ProfileField { NAME, NIP, TAX_NUMBER, ADDRESS_LINE1, ADDRESS_LINE2, COUNTRY, EMAIL, PHONE, BANK, ACCOUNT_NUMBER, CURRENCY }
+enum class ProfileField { NAME, NIP, TAX_NUMBER, ADDRESS_LINE1, ADDRESS_LINE2, COUNTRY, EMAIL, PHONE, BANK, ACCOUNT_NUMBER, SWIFT, CURRENCY }
 
-enum class FieldIssueType { REQUIRED, TOO_LONG, INVALID_NIP, INVALID_VAT_UE, INVALID_COUNTRY, INVALID_ACCOUNT_NUMBER, INVALID_EMAIL, INVALID_CURRENCY, DUPLICATE }
+enum class FieldIssueType { REQUIRED, TOO_LONG, INVALID_NIP, INVALID_VAT_UE, INVALID_COUNTRY, INVALID_ACCOUNT_NUMBER, INVALID_SWIFT, INVALID_EMAIL, INVALID_CURRENCY, DUPLICATE }
 
 /** Problem with one form field; the UI turns it into a Polish message. [maxLength] is set for [FieldIssueType.TOO_LONG]. */
 data class FieldIssue(val field: ProfileField, val type: FieldIssueType, val maxLength: Int? = null)
@@ -33,6 +33,7 @@ data class BankAccountInput(
     val number: String,
     val bank: String = "",
     val currency: String = CompanyProfile.DEFAULT_CURRENCY,
+    val swift: String = "",
 )
 
 /**
@@ -52,8 +53,8 @@ data class CounterpartyInput(
 
 /**
  * Validates form input before it is saved (ADR 0006): required fields, NIP and NRB checksums, FA(3) length limits,
- * e-mail format and uniqueness. Values are trimmed; blank optional fields become null; NIP and account numbers are
- * normalized (spaces, dashes and the `PL` prefix are accepted). All issues are reported at once.
+ * e-mail format and uniqueness. Values are trimmed; blank optional fields become null; NIP, account numbers and BIC (SWIFT)
+ * codes are normalized (spaces, dashes and the `PL` prefix are accepted; BIC in capitals). All issues are reported at once.
  */
 object ProfileValidator {
 
@@ -69,6 +70,10 @@ object ProfileValidator {
     const val MAX_TAX_ID = 50
     private val VAT_UE = Regex("^[0-9A-Z+*]{1,12}$")
     private val SEPARATORS = Regex("[\\s.\\-]")
+
+    // FA(3): SWIFT_Type — 8 or 11 characters: bank (4 letters), country (2 letters), location (2), branch (3, optional).
+    private val SWIFT = Regex("^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$")
+    private val WHITESPACE = Regex("\\s")
 
     private val EMAIL = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
     private val CURRENCY = Regex("^[A-Z]{3}$")
@@ -92,9 +97,11 @@ object ProfileValidator {
                 ?.also { number -> if (others.any { it.number == number }) report(ProfileField.ACCOUNT_NUMBER, FieldIssueType.DUPLICATE) }
                 ?: null.also { report(ProfileField.ACCOUNT_NUMBER, FieldIssueType.INVALID_ACCOUNT_NUMBER) }
         }
+        val swift = input.swift.replace(WHITESPACE, "").uppercase().takeIf { it.isNotEmpty() }
+        if (swift != null && !SWIFT.matches(swift)) report(ProfileField.SWIFT, FieldIssueType.INVALID_SWIFT)
         val currency = input.currency.trim().uppercase().ifEmpty { CompanyProfile.DEFAULT_CURRENCY }
         if (!CURRENCY.matches(currency)) report(ProfileField.CURRENCY, FieldIssueType.INVALID_CURRENCY)
-        if (name == null || number == null) null else BankAccount(name, bank, number, currency)
+        if (name == null || number == null) null else BankAccount(name, bank, number, currency, swift)
     }
 
     /**

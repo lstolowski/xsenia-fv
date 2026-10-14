@@ -155,6 +155,7 @@
     <string name="details_payment_paid">Zapłacono %1$s</string>
     <string name="details_payment_paid_no_date">Zapłacono</string>
     <string name="details_bank_account">Rachunek: %1$s</string>
+    <string name="details_bank_swift">BIC (SWIFT): %1$s</string>
     <string name="details_annotations">Adnotacje</string>
     <string name="details_split_payment">Mechanizm podzielonej płatności</string>
     <string name="details_reverse_charge">Odwrotne obciążenie</string>
@@ -335,6 +336,8 @@
     <string name="field_account_name">Nazwa rachunku</string>
     <string name="field_account_number">Numer rachunku (26 cyfr)</string>
     <string name="field_bank_name">Bank</string>
+    <string name="field_swift">BIC (SWIFT)</string>
+    <string name="field_swift_hint">Opcjonalny; potrzebny kontrahentom zagranicznym do przelewu.</string>
     <string name="field_currency">Waluta</string>
     <string name="bank_account_currency_hint">Pierwszy rachunek na liście jest domyślny na fakturze. Rachunek w innej walucie niż faktura można wybrać — formularz pokaże ostrzeżenie.</string>
     <string name="bank_account_used">Rachunek jest wybrany w szkicu lub w fakturze niewysłanej — po usunięciu lub zmianie numeru trzeba tam wybrać rachunek ponownie.</string>
@@ -355,6 +358,7 @@
     <string name="field_issue_invalid_country">Nieznany kraj.</string>
     <string name="field_issue_invalid_nip">Niepoprawny NIP — sprawdź 10 cyfr.</string>
     <string name="field_issue_invalid_account">Niepoprawny numer rachunku — sprawdź 26 cyfr.</string>
+    <string name="field_issue_invalid_swift">Niepoprawny BIC (SWIFT) — 8 lub 11 liter i cyfr, np. TESTPLPW.</string>
     <string name="field_issue_invalid_email">Niepoprawny adres e-mail.</string>
     <string name="field_issue_invalid_currency">Podaj trzyliterowy kod waluty, np. PLN.</string>
     <string name="field_issue_duplicate_account">Ten rachunek jest już zapisany.</string>
@@ -403,6 +407,7 @@
     <string name="status_rate_unavailable">Nie wysłano faktury %1$s — brak kursu NBP na dzień wysyłki.</string>
     <string name="status_rate_kept_draft">Faktura nie trafiła do KSeF i czeka w formularzu „Nowa faktura”.</string>
     <string name="status_rate_kept_unsent">Faktura nie trafiła do KSeF i pozostaje na liście niewysłanych.</string>
+    <string name="preview_swift_missing">Nie wprowadziłeś BIC (SWIFT) do danych banku. Kontrahent może mieć problem z płatnością</string>
     <string name="bank_account_currency_mismatch">Rachunek jest w %1$s, a faktura w %2$s.</string>
     <string name="exchange_rate_network">Nie udało się pobrać kursu NBP — sprawdź połączenie z internetem.</string>
     <string name="exchange_rate_server">Serwis kursów NBP nie odpowiada poprawnie. Spróbuj ponownie później.</string>

@@ -39,6 +39,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-033](ZAD-033-listy-identyfikator-nabywcy.md) | Listy, szczegóły i wyszukiwanie: numer VAT UE / identyfikator nabywcy | US-012 | Zrobione |
 | [ZAD-034](ZAD-034-pdf-uklad.md) | PDF faktury: układ, strony, etykiety PL / PL+EN | US-013 | Zrobione |
 | [ZAD-035](ZAD-035-pdf-rysowanie-udostepnianie.md) | PDF faktury: rysowanie, udostępnianie, ikony w aplikacji | US-013 | Zrobione |
+| [ZAD-036](ZAD-036-bic-swift-rachunku.md) | BIC (SWIFT) rachunku: model, formularz, XML FA(3), PDF, ostrzeżenie | US-014 | Zrobione |
 
 Weryfikacja na urządzeniu fizycznym (2026-10-13): użytkownik sprawdził zadania 001–020 (poza 002 — infrastruktura testów integracyjnych) na swoim telefonie z KSeF TEST — aplikacja działa i wygląda poprawnie.
 
@@ -51,3 +52,5 @@ US-011 (po US-010): 026 → 027 → 028 → 029 (026 może iść równolegle z U
 US-012: 030 → 031 → 032 → 033.
 
 US-013: 034 → 035.
+
+US-014: 036.

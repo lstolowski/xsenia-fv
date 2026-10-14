@@ -70,6 +70,7 @@ class InvoicePdfLayoutTest {
         assertTrue("286,59 zł" in texts)
         assertTrue("Termin płatności: 22.10.2026" in texts)
         assertTrue("Rachunek: 85 2160 9758 3216 8502 4600 2152" in texts)
+        assertFalse(texts.any { "BIC" in it })
         assertTrue("Strona 1 z 1" in texts)
         assertFalse(texts.any { "Seller" in it || "Faktura nie wysłana" in it })
     }
@@ -185,5 +186,15 @@ class InvoicePdfLayoutTest {
 
         val polish = layout.layout(invoice(), ksefNumber = "K").texts()
         assertFalse(polish.any { it.startsWith("(") && it.endsWith("PLN)") })
+    }
+
+    @Test
+    fun `BIC (SWIFT) under the account number`() {
+        val texts = layout.layout(invoice(germanBuyer, account = eurAccount.copy(swift = "TESTPLPW")), ksefNumber = null).texts()
+
+        val account = texts.indexOf("Rachunek / Bank account: 83 2160 9758 7877 8932 8792 1742")
+        assertTrue(account >= 0, texts.toString())
+        assertEquals("BIC (SWIFT): TESTPLPW", texts[account + 1])
+        assertEquals("Bank: Toyota Bank", texts[account + 2])
     }
 }

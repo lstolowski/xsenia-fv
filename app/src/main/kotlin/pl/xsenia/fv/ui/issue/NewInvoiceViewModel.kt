@@ -113,6 +113,10 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
     private val _previewRate = MutableStateFlow<PreviewRate?>(null)
     val previewRate: StateFlow<PreviewRate?> = _previewRate.asStateFlow()
 
+    /** The preview warns that a foreign buyer may not be able to pay without the BIC (SWIFT) of the account (US-014). */
+    private val _previewSwiftMissing = MutableStateFlow(false)
+    val previewSwiftMissing: StateFlow<Boolean> = _previewSwiftMissing.asStateFlow()
+
     /** Emits true when the screen should close (saved without sending, deleted). */
     private val _closed = MutableStateFlow(false)
     val closed: StateFlow<Boolean> = _closed.asStateFlow()
@@ -237,6 +241,7 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
         if (!check.canPreview || draft == null) return
         previewDraft = draft
         _previewRate.value = finalRate?.let { PreviewRate(it, current.workingRate) }
+        _previewSwiftMissing.value = draft.swiftMissingForForeignBuyer
         _preview.value = InvoiceXmlParser.parse(Fa3XmlWriter.write(draft, Instant.now()))
         _step.value = IssueStep.PREVIEW
     }

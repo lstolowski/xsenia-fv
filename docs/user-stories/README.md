@@ -18,3 +18,4 @@ Z każdej historyjki rozpisujemy zadania w [../zadania/](../zadania/README.md).
 | [US-011](US-011-faktury-w-walucie-obcej.md) | Faktury w walucie obcej (EUR, USD, GBP) z kursem NBP | MVP | Zrobiona |
 | [US-012](US-012-nabywca-zagraniczny.md) | Nabywca zagraniczny (bez polskiego NIP-u) | MVP | Zrobiona |
 | [US-013](US-013-pdf-kod-qr.md) | PDF faktury sprzedażowej i udostępnianie | MVP | Zrobiona |
+| [US-014](US-014-bic-swift-rachunku.md) | BIC (SWIFT) rachunku bankowego | MVP | Zrobiona |

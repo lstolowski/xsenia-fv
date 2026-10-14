@@ -82,6 +82,16 @@ class CompanyProfileStoreTest {
         assertTrue("\"account\": \"85216097583216850246002152\"" in text, text)
         assertTrue("\"currency\": \"PLN\"" in text, text)
         assertTrue("\"version\": 1" in text, text)
+        assertFalse("swift" in text, text)
+    }
+
+    @Test
+    fun `BIC (SWIFT) is saved and read back`() {
+        val account = toyota.copy(swift = "TESTPLPW")
+        store.saveBankAccount(account)
+
+        assertTrue("\"swift\": \"TESTPLPW\"" in File(directory, CompanyProfileStore.BANK_ACCOUNTS_FILE).readText())
+        assertEquals(listOf(account), store.load().bankAccounts)
     }
 
     @Test

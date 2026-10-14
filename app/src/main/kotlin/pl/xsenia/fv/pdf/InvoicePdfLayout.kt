@@ -210,8 +210,8 @@ class InvoicePdfLayout(private val measurer: TextMeasurer) {
             if (payment.paid) text(labels.paid + (payment.paymentDate?.let { " " + Formats.date(it) }.orEmpty()), PdfTextStyle.NORMAL)
             payment.bankAccounts.forEach { account ->
                 text(labels.bankAccount(Formats.bankAccount(account.number)), PdfTextStyle.NORMAL)
+                account.swift?.let { text(labels.swift(it), PdfTextStyle.NORMAL) }
                 account.bankName?.let { text(labels.bank(it), PdfTextStyle.NORMAL) }
-                account.swift?.let { text("SWIFT: $it", PdfTextStyle.NORMAL) }
             }
             gap(SECTION_GAP)
         }

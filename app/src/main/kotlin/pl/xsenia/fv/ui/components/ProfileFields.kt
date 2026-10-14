@@ -139,6 +139,7 @@ fun fieldIssueText(issue: FieldIssue): String = when (issue.type) {
     FieldIssueType.INVALID_VAT_UE -> stringResource(R.string.field_issue_invalid_vat_ue)
     FieldIssueType.INVALID_COUNTRY -> stringResource(R.string.field_issue_invalid_country)
     FieldIssueType.INVALID_ACCOUNT_NUMBER -> stringResource(R.string.field_issue_invalid_account)
+    FieldIssueType.INVALID_SWIFT -> stringResource(R.string.field_issue_invalid_swift)
     FieldIssueType.INVALID_EMAIL -> stringResource(R.string.field_issue_invalid_email)
     FieldIssueType.INVALID_CURRENCY -> stringResource(R.string.field_issue_invalid_currency)
     FieldIssueType.DUPLICATE ->

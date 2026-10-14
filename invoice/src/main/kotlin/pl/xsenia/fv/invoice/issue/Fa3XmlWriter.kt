@@ -114,6 +114,7 @@ object Fa3XmlWriter {
                     value("FormaPlatnosci", PAYMENT_TRANSFER)
                     element("RachunekBankowy") {
                         value("NrRB", draft.bankAccount.number)
+                        draft.bankAccount.swift?.let { value("SWIFT", it) }
                         draft.bankAccount.bank?.let { value("NazwaBanku", it) }
                     }
                 }

@@ -21,13 +21,17 @@ data class Company(
     val phone: String? = null,
 )
 
-/** Bank account of my company; [number] is the 26-digit NRB. */
+/**
+ * Bank account of my company; [number] is the 26-digit NRB. [swift] — BIC (SWIFT) code of the bank, optional;
+ * a foreign buyer needs it to pay (US-014).
+ */
 @Serializable
 data class BankAccount(
     val name: String,
     val bank: String? = null,
     @SerialName("account") val number: String,
     val currency: String = CompanyProfile.DEFAULT_CURRENCY,
+    val swift: String? = null,
 )
 
 /**

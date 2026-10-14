@@ -73,6 +73,24 @@ class ProfileValidatorTest {
     }
 
     @Test
+    fun `BIC (SWIFT) is optional and normalized to capitals without spaces`() {
+        val input = BankAccountInput(name = "Konto testowe EUR", number = "83216097587877893287921742", currency = "EUR")
+
+        assertEquals(null, (ProfileValidator.bankAccount(input.copy(swift = "  "), emptyList()) as Validation.Valid).value.swift)
+        assertEquals("TESTPLPW", (ProfileValidator.bankAccount(input.copy(swift = " testplpw "), emptyList()) as Validation.Valid).value.swift)
+        assertEquals("TESTPLPWXXX", (ProfileValidator.bankAccount(input.copy(swift = "TEST PL PW XXX"), emptyList()) as Validation.Valid).value.swift)
+    }
+
+    @Test
+    fun `BIC (SWIFT) must have 8 or 11 characters of the FA(3) pattern`() {
+        val input = BankAccountInput(name = "Konto testowe EUR", number = "83216097587877893287921742", currency = "EUR")
+
+        listOf("TESTPL", "TESTPLPWX", "TESTPLPWXXXX", "1234PLPW", "TEST-PLPW").forEach { swift ->
+            assertEquals(listOf(FieldIssue(ProfileField.SWIFT, FieldIssueType.INVALID_SWIFT)), issues(ProfileValidator.bankAccount(input.copy(swift = swift), emptyList())), swift)
+        }
+    }
+
+    @Test
     fun `bank account number must be unique`() {
         val existing = BankAccount("Konto testowe Toyota", "Toyota Bank", "85216097583216850246002152")
 

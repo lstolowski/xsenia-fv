@@ -94,12 +94,13 @@ data class BankAccountFormFields(
     val bank: String = "",
     val number: String = "",
     val currency: String = CompanyProfile.DEFAULT_CURRENCY,
+    val swift: String = "",
 ) {
-    fun toInput() = BankAccountInput(name, number, bank, currency)
+    fun toInput() = BankAccountInput(name, number, bank, currency, swift)
 
     companion object {
         fun of(account: BankAccount?): BankAccountFormFields = account?.let {
-            BankAccountFormFields(it.name, it.bank.orEmpty(), it.number, it.currency)
+            BankAccountFormFields(it.name, it.bank.orEmpty(), it.number, it.currency, it.swift.orEmpty())
         } ?: BankAccountFormFields()
     }
 }
