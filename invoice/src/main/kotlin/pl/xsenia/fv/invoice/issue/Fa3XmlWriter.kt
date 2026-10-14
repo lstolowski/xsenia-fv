@@ -66,7 +66,8 @@ object Fa3XmlWriter {
             }
             element("Podmiot2") {
                 element("DaneIdentyfikacyjne") {
-                    value("NIP", draft.buyer.nip)
+                    // Foreign buyers (VAT UE / other identifier) come with the FA(3) part of ADR 0009.
+                    value("NIP", requireNotNull(draft.buyer.nip) { "Buyer without a NIP is not supported yet" })
                     value("Nazwa", draft.buyer.name)
                 }
                 address(draft.buyer.address)

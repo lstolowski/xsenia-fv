@@ -69,10 +69,10 @@ class InvoiceFormDefaultsTest {
         val empty = InvoiceFormDefaults.newForm(profile = null, today = LocalDate.parse("2026-10-12"), existingNumbers = existing)
 
         val filled = InvoiceFormDefaults.fillMissing(empty, profile)
-        assertEquals("6691034274", filled.counterpartyNip)
+        assertEquals("6691034274", filled.counterpartyId)
         assertEquals("85216097583216850246002152", filled.bankAccountNumber)
 
-        val chosen = empty.copy(counterpartyNip = "9945082500", bankAccountNumber = "55109004081797992973253811")
+        val chosen = empty.copy(counterpartyId = "9945082500", bankAccountNumber = "55109004081797992973253811")
         assertEquals(chosen, InvoiceFormDefaults.fillMissing(chosen, profile))
     }
 

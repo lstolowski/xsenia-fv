@@ -1,5 +1,6 @@
 package pl.xsenia.fv.issue
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.currency.ExchangeRate
@@ -19,7 +20,8 @@ import java.time.LocalDate
 /** Form of a new sales invoice exactly as typed — saved as a draft after every change (US-006). */
 @Serializable
 data class InvoiceForm(
-    val counterpartyNip: String? = null,
+    /** [Counterparty.id] of the buyer — the NIP for Polish ones, so drafts saved before US-012 keep their buyer. */
+    @SerialName("counterpartyNip") val counterpartyId: String? = null,
     val bankAccountNumber: String? = null,
     @Serializable(with = LocalDateSerializer::class) val issueDate: LocalDate,
     @Serializable(with = LocalDateSerializer::class) val deliveryDate: LocalDate,
@@ -85,7 +87,7 @@ object InvoiceFormDefaults {
     fun newForm(profile: CompanyProfile?, today: LocalDate, existingNumbers: Collection<String>): InvoiceForm {
         val deliveryDate = DefaultDates.deliveryDate(today)
         return InvoiceForm(
-            counterpartyNip = profile?.counterparties?.singleOrNull()?.nip,
+            counterpartyId = profile?.counterparties?.singleOrNull()?.id,
             bankAccountNumber = profile?.defaultBankAccount(InvoiceCurrency.DEFAULT.code)?.number,
             issueDate = today,
             deliveryDate = deliveryDate,
@@ -98,7 +100,7 @@ object InvoiceFormDefaults {
      * of the invoice currency and the only counterparty. Choices already made are kept.
      */
     fun fillMissing(form: InvoiceForm, profile: CompanyProfile): InvoiceForm = form.copy(
-        counterpartyNip = form.counterpartyNip ?: profile.counterparties.singleOrNull()?.nip,
+        counterpartyId = form.counterpartyId ?: profile.counterparties.singleOrNull()?.id,
         bankAccountNumber = form.bankAccountNumber ?: profile.defaultBankAccount(form.currency.code)?.number,
     )
 
@@ -152,7 +154,7 @@ object InvoiceFormCheck {
         exchangeRate: ExchangeRate? = form.workingRate,
     ): FormCheck {
         val formIssues = mutableListOf<FormIssue>()
-        val buyer = profile.counterparties.firstOrNull { it.nip == form.counterpartyNip }
+        val buyer = profile.counterparties.firstOrNull { it.id == form.counterpartyId }
         if (buyer == null) formIssues += FormIssue(FormIssueType.COUNTERPARTY_MISSING)
         val account = profile.invoiceBankAccounts.firstOrNull { it.number == form.bankAccountNumber }
         if (account == null) formIssues += FormIssue(FormIssueType.BANK_ACCOUNT_MISSING)

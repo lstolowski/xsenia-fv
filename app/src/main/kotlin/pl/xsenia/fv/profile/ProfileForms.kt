@@ -6,13 +6,14 @@ import pl.xsenia.fv.invoice.profile.BankAccountInput
 import pl.xsenia.fv.invoice.profile.Company
 import pl.xsenia.fv.invoice.profile.CompanyInput
 import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.profile.Countries
 import pl.xsenia.fv.invoice.profile.Counterparty
 import pl.xsenia.fv.invoice.profile.CounterpartyInput
 import pl.xsenia.fv.issue.InvoiceForm
 import pl.xsenia.fv.issue.UnsentInvoice
 import pl.xsenia.fv.lookup.LookedUpCompany
 
-/** Default country of a new company or counterparty — the app issues invoices to Polish companies only. */
+/** Default country of my company (the address on invoices is always in Poland). */
 const val DEFAULT_COUNTRY = "Polska"
 
 /** Fields of the „Moja firma” form exactly as typed. */
@@ -49,38 +50,39 @@ data class CompanyFormFields(
     }
 }
 
-/** Fields of the counterparty form exactly as typed; [nip] is read-only once the counterparty is saved (ADR 0006). */
+/**
+ * Fields of the counterparty form exactly as typed (ADR 0009): [nip] for Poland, [taxNumber] for another country;
+ * the country and the identifier are read-only once the counterparty is saved.
+ */
 data class CounterpartyFormFields(
     val nip: String = "",
     val name: String = "",
     val addressLine1: String = "",
     val addressLine2: String = "",
-    val country: String = DEFAULT_COUNTRY,
     val email: String = "",
+    val countryCode: String = Countries.POLAND,
+    val taxNumber: String = "",
+    val defaultCurrency: InvoiceCurrency? = null,
 ) {
-    fun toInput() = CounterpartyInput(nip, name, addressLine1, addressLine2, country, email)
+    fun toInput() = CounterpartyInput(nip, name, addressLine1, addressLine2, email, countryCode, taxNumber, defaultCurrency)
 
     /** Like [CompanyFormFields.withLookup]: name and address from the White List, the NIP normalized, e-mail kept. */
     fun withLookup(company: LookedUpCompany): CounterpartyFormFields {
         val line1 = company.addressLine1 ?: return copy(nip = company.nip, name = company.name)
-        return copy(
-            nip = company.nip,
-            name = company.name,
-            addressLine1 = line1,
-            addressLine2 = company.addressLine2.orEmpty(),
-            country = company.country,
-        )
+        return copy(nip = company.nip, name = company.name, addressLine1 = line1, addressLine2 = company.addressLine2.orEmpty())
     }
 
     companion object {
         fun of(counterparty: Counterparty?): CounterpartyFormFields = counterparty?.let {
             CounterpartyFormFields(
-                nip = it.nip,
+                nip = it.nip.orEmpty(),
                 name = it.name,
                 addressLine1 = it.address.line1,
                 addressLine2 = it.address.line2.orEmpty(),
-                country = it.address.country.orEmpty(),
                 email = it.email.orEmpty(),
+                countryCode = it.countryCode,
+                taxNumber = it.taxNumber.orEmpty(),
+                defaultCurrency = it.defaultCurrency,
             )
         } ?: CounterpartyFormFields()
     }
@@ -135,8 +137,8 @@ object ProfileUsage {
     fun bankAccountUsed(number: String, draft: InvoiceForm?, unsent: List<UnsentInvoice>): Boolean =
         forms(draft, unsent).any { it.bankAccountNumber == number }
 
-    fun counterpartyUsed(nip: String, draft: InvoiceForm?, unsent: List<UnsentInvoice>): Boolean =
-        forms(draft, unsent).any { it.counterpartyNip == nip }
+    fun counterpartyUsed(id: String, draft: InvoiceForm?, unsent: List<UnsentInvoice>): Boolean =
+        forms(draft, unsent).any { it.counterpartyId == id }
 
     private fun forms(draft: InvoiceForm?, unsent: List<UnsentInvoice>) = listOfNotNull(draft) + unsent.map { it.form }
 }

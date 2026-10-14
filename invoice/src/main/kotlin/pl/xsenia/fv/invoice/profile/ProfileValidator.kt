@@ -1,12 +1,13 @@
 package pl.xsenia.fv.invoice.profile
 
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.validation.BankAccountNumberValidator
 import pl.xsenia.fv.invoice.validation.NipValidator
 
 /** Form field of the company, bank account and counterparty forms. */
-enum class ProfileField { NAME, NIP, ADDRESS_LINE1, ADDRESS_LINE2, COUNTRY, EMAIL, PHONE, BANK, ACCOUNT_NUMBER, CURRENCY }
+enum class ProfileField { NAME, NIP, TAX_NUMBER, ADDRESS_LINE1, ADDRESS_LINE2, COUNTRY, EMAIL, PHONE, BANK, ACCOUNT_NUMBER, CURRENCY }
 
-enum class FieldIssueType { REQUIRED, TOO_LONG, INVALID_NIP, INVALID_ACCOUNT_NUMBER, INVALID_EMAIL, INVALID_CURRENCY, DUPLICATE }
+enum class FieldIssueType { REQUIRED, TOO_LONG, INVALID_NIP, INVALID_VAT_UE, INVALID_COUNTRY, INVALID_ACCOUNT_NUMBER, INVALID_EMAIL, INVALID_CURRENCY, DUPLICATE }
 
 /** Problem with one form field; the UI turns it into a Polish message. [maxLength] is set for [FieldIssueType.TOO_LONG]. */
 data class FieldIssue(val field: ProfileField, val type: FieldIssueType, val maxLength: Int? = null)
@@ -34,13 +35,19 @@ data class BankAccountInput(
     val currency: String = CompanyProfile.DEFAULT_CURRENCY,
 )
 
+/**
+ * [nip] is used for a Polish counterparty, [taxNumber] for a foreign one (VAT UE number or another tax identifier);
+ * the address country is the name of [countryCode].
+ */
 data class CounterpartyInput(
     val nip: String,
     val name: String,
     val addressLine1: String,
     val addressLine2: String = "",
-    val country: String = "",
     val email: String = "",
+    val countryCode: String = Countries.POLAND,
+    val taxNumber: String = "",
+    val defaultCurrency: InvoiceCurrency? = null,
 )
 
 /**
@@ -57,6 +64,11 @@ object ProfileValidator {
     const val MAX_EMAIL = 255
     const val MAX_PHONE = 16
     const val MAX_COUNTRY = 64
+
+    // FA(3): NrVatUE — (\d|[A-Z]|\+|\*){1,12}; NrID — TNrIdentyfikacjiPodatkowej (1–50).
+    const val MAX_TAX_ID = 50
+    private val VAT_UE = Regex("^[0-9A-Z+*]{1,12}$")
+    private val SEPARATORS = Regex("[\\s.\\-]")
 
     private val EMAIL = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
     private val CURRENCY = Regex("^[A-Z]{3}$")
@@ -86,15 +98,40 @@ object ProfileValidator {
     }
 
     /**
-     * [others] — the counterparties already saved, without the one being edited. The NIP of an existing counterparty
-     * cannot change (ADR 0006) — the form keeps it read-only.
+     * Counterparty by its country (ADR 0009): Poland — NIP (checksum); another EU country — VAT UE number (FA(3) pattern,
+     * the country prefix and separators are dropped); another country — optional tax identifier.
+     *
+     * @param others the counterparties already saved, without the one being edited — the identifier must be unique
+     * @param existing the counterparty being edited: its id, country and identifier do not change (the form keeps them read-only)
      */
-    fun counterparty(input: CounterpartyInput, others: List<Counterparty>): Validation<Counterparty> = collect {
-        val nip = nip(input.nip)?.also { nip -> if (others.any { it.nip == nip }) report(ProfileField.NIP, FieldIssueType.DUPLICATE) }
+    fun counterparty(input: CounterpartyInput, others: List<Counterparty>, existing: Counterparty? = null): Validation<Counterparty> = collect {
+        val countryCode = existing?.countryCode ?: input.countryCode.trim().uppercase()
+        val knownCountry = Countries.isKnown(countryCode)
+        if (!knownCountry) report(ProfileField.COUNTRY, FieldIssueType.INVALID_COUNTRY)
+        var nip: String? = null
+        var taxNumber: String? = null
+        when {
+            existing != null -> {
+                nip = existing.nip
+                taxNumber = existing.taxNumber
+            }
+            countryCode == Countries.POLAND -> nip = nip(input.nip)
+            Countries.isOtherEu(countryCode) -> taxNumber = vatUe(countryCode, input.taxNumber)
+            else -> taxNumber = optional(ProfileField.TAX_NUMBER, input.taxNumber, MAX_TAX_ID)
+        }
+        val id = existing?.id ?: Counterparty.idFor(countryCode, nip, taxNumber)
+        if ((nip != null || taxNumber != null) && others.any { it.id == id }) {
+            report(if (nip != null) ProfileField.NIP else ProfileField.TAX_NUMBER, FieldIssueType.DUPLICATE)
+        }
         val name = required(ProfileField.NAME, input.name, MAX_NAME)
-        val address = address(input.addressLine1, input.addressLine2, input.country)
+        val address = address(input.addressLine1, input.addressLine2, Countries.name(countryCode))
         val email = email(input.email)
-        if (nip == null || name == null || address == null) null else Counterparty(name, nip, address, email)
+        val identified = nip != null || taxNumber != null || !(countryCode == Countries.POLAND || Countries.isOtherEu(countryCode))
+        if (!knownCountry || !identified || name == null || address == null) {
+            null
+        } else {
+            Counterparty(name, nip, address, email, countryCode, taxNumber, input.defaultCurrency, id)
+        }
     }
 
     private fun <T> collect(build: Collector.() -> T?): Validation<T> {
@@ -122,6 +159,15 @@ object ProfileValidator {
         fun nip(raw: String): String? {
             if (raw.isBlank()) return null.also { report(ProfileField.NIP, FieldIssueType.REQUIRED) }
             return NipValidator.normalize(raw.trim()) ?: null.also { report(ProfileField.NIP, FieldIssueType.INVALID_NIP) }
+        }
+
+        /** VAT UE number without the country prefix, e.g. `de 123.456.789` → `123456789` for Germany. */
+        fun vatUe(countryCode: String, raw: String): String? {
+            if (raw.isBlank()) return null.also { report(ProfileField.TAX_NUMBER, FieldIssueType.REQUIRED) }
+            val compact = raw.uppercase().replace(SEPARATORS, "")
+            val number = listOf(Countries.vatPrefix(countryCode), countryCode).firstOrNull { compact.startsWith(it) }
+                ?.let { compact.removePrefix(it) } ?: compact
+            return number.takeIf(VAT_UE::matches) ?: null.also { report(ProfileField.TAX_NUMBER, FieldIssueType.INVALID_VAT_UE) }
         }
 
         fun email(raw: String): String? =

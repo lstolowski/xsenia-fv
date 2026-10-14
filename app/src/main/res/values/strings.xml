@@ -337,11 +337,14 @@
     <string name="discard_confirm">Porzuć</string>
     <string name="field_issue_required">Pole wymagane.</string>
     <string name="field_issue_too_long">Za długie — maksymalnie %1$d znaków.</string>
+    <string name="field_issue_invalid_vat_ue">Niepoprawny numer VAT UE — do 12 cyfr i wielkich liter, bez prefiksu kraju.</string>
+    <string name="field_issue_invalid_country">Nieznany kraj.</string>
     <string name="field_issue_invalid_nip">Niepoprawny NIP — sprawdź 10 cyfr.</string>
     <string name="field_issue_invalid_account">Niepoprawny numer rachunku — sprawdź 26 cyfr.</string>
     <string name="field_issue_invalid_email">Niepoprawny adres e-mail.</string>
     <string name="field_issue_invalid_currency">Podaj trzyliterowy kod waluty, np. PLN.</string>
     <string name="field_issue_duplicate_account">Ten rachunek jest już zapisany.</string>
+    <string name="field_issue_duplicate_tax_number">Kontrahent z tym numerem już istnieje.</string>
     <string name="field_issue_duplicate_nip">Kontrahent z tym NIP-em już istnieje.</string>
 
     <!-- Counterparties (ZAD-024) -->

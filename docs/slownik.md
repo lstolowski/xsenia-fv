@@ -23,6 +23,9 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Walidacja danych profilu | `ProfileValidator` → `FieldIssue` (`ProfileField`, `FieldIssueType`) | Sprawdzenie formularza firmy / rachunku / kontrahenta przed zapisem (pola wymagane, NIP, NRB, limity FA(3), e-mail, duplikaty) | ADR 0006 |
 | Rachunek bankowy / konto | `bankAccount` | Rachunek mojej firmy (`NrRB` w FA(3)); wiele na firmę; na fakturze domyślny pierwszy w walucie faktury (`defaultBankAccount`), inaczej pierwszy; rachunek w innej walucie — ostrzeżenie | ADR 0006 (dawniej plik `banks.json`), ADR 0008 |
 | Kontrahenci | `counterparties` | Lista nabywców w Ustawieniach → „Kontrahenci”; NIP niezmienny po utworzeniu | ADR 0006 (dawniej plik `counterparties.json`) |
+| Kontrahent zagraniczny | `Counterparty` (`countryCode`, `taxNumber`, `taxIdType`, `id`) | Nabywca spoza Polski: z UE — numer VAT UE (`KodUE` + `NrVatUE`, Grecja `EL`), spoza UE — identyfikator (`KodKraju` + `NrID`) albo `BrakID`; aplikacja wskazuje kontrahenta przez `id` (polscy: `id` = NIP) | ADR 0009 |
+| Kraj | `Countries` (`countryCode`) | Kod ISO 3166 jak `KodKraju` w FA(3), polska nazwa | ADR 0009 |
+| Domyślna waluta kontrahenta | `Counterparty.defaultCurrency` | Waluta ustawiana w fakturze po wyborze kontrahenta | ADR 0009 |
 | Biała lista (wykaz podatników VAT) | `whitelist` (`WhiteListClient`, `WhiteListResult`, `WhiteListSubject`) | API MF `wl-api.mf.gov.pl` — dane firmy po NIP-ie: nazwa, adres, status VAT, rachunki | ADR 0007 |
 | Pobieranie danych po NIP-ie | `CompanyLookupService` → `LookedUpCompany` | Wypełnienie formularza „Moja firma” / „Kontrahent” danymi z Białej listy (ikona pobierania obok NIP-u); komunikaty: `CompanyLookupMessages` | ADR 0007 |
 | Status VAT | `vatStatus` / `isActiveVatPayer` | `statusVat` z Białej listy: „Czynny”, „Zwolniony”, …; inny niż czynny → „Firma nie jest czynnym podatnikiem” | ADR 0007 |

@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import pl.xsenia.fv.R
 import pl.xsenia.fv.invoice.profile.BankAccount
 import pl.xsenia.fv.invoice.profile.Counterparty
+import pl.xsenia.fv.invoice.profile.Countries
 import pl.xsenia.fv.ui.format.Formats
 import androidx.compose.ui.unit.dp
 
@@ -27,12 +28,18 @@ fun BankAccountText(account: BankAccount) {
     }
 }
 
-/** Content of a counterparty tile: name, NIP, address. */
+/** Content of a counterparty tile: name, NIP (or VAT UE number / foreign identifier with the country), address. */
 @Composable
 fun CounterpartyText(counterparty: Counterparty) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(counterparty.name, style = MaterialTheme.typography.titleSmall)
-        Text(stringResource(R.string.list_nip, counterparty.nip), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val taxId = counterparty.taxIdText
+        val identifier = when {
+            !counterparty.isForeign -> stringResource(R.string.list_nip, taxId.orEmpty())
+            taxId != null -> "${Countries.name(counterparty.countryCode)} · $taxId"
+            else -> Countries.name(counterparty.countryCode)
+        }
+        Text(identifier, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
             listOfNotNull(counterparty.address.line1, counterparty.address.line2).joinToString(", "),
             style = MaterialTheme.typography.bodySmall,

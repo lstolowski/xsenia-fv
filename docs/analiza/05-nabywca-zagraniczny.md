@@ -36,7 +36,7 @@ Dziś „np” = zawsze `np II` + `P_18 = 1` + uwaga „Reverse charge” ([ADR 
   - tylko kraje UE (+ XI — Irlandia Płn.); dla GB, US, CH nie ma odpowiednika.
 - Spoza UE — dane wpisywane ręcznie.
 - Decyzja Q3 (b): **bez VIES** — także dla UE dane ręcznie, numer sprawdzany tylko formatem.
-- Kody krajów: `KodUE` ma Grecję jako `EL` i Irlandię Płn. jako `XI`, a `KodKraju` (adres) — `GR`, `GB`, `XI`; `NrVatUE` — wzorzec `(\d|[A-Z]|\+|\*){1,12}` (bez prefiksu).
+- Kody krajów: `KodUE` ma Grecję jako `EL` (i `XI` — Irlandia Płn., tylko dla towarów, w aplikacji nieużywane), a `KodKraju` (adres) — `GR`, `GB`; `NrVatUE` — wzorzec `(\d|[A-Z]|\+|\*){1,12}` (bez prefiksu).
 
 ## 4. KSeF a nabywca zagraniczny
 

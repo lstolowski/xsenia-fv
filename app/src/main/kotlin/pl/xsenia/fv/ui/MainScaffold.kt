@@ -1,5 +1,6 @@
 package pl.xsenia.fv.ui
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -58,8 +59,8 @@ private const val BANK_ACCOUNT_ROUTE = "bank-account"
 private const val COUNTERPARTIES_ROUTE = "counterparties"
 private const val COUNTERPARTY_ROUTE = "counterparty"
 
-/** Saved-state key: NIP of a counterparty created from the invoice form, to select it there (ZAD-024). */
-private const val CREATED_COUNTERPARTY_KEY = "createdCounterpartyNip"
+/** Saved-state key: id of a counterparty created from the invoice form, to select it there (ZAD-024). */
+private const val CREATED_COUNTERPARTY_KEY = "createdCounterpartyId"
 
 private enum class Tab(val route: String, val label: Int, val icon: ImageVector) {
     SALES("sales", R.string.nav_sales, Icons.AutoMirrored.Filled.Send),
@@ -175,21 +176,22 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
                     session = session,
                     onBack = { navController.popIfOn(COUNTERPARTIES_ROUTE) },
                     onAdd = { navController.navigate(COUNTERPARTY_ROUTE) },
-                    onEdit = { nip -> navController.navigate("$COUNTERPARTY_ROUTE?nip=$nip") },
+                    // A foreign identifier may contain any characters (ADR 0009).
+                    onEdit = { id -> navController.navigate("$COUNTERPARTY_ROUTE?id=${Uri.encode(id)}") },
                 )
             }
             composable(
-                "$COUNTERPARTY_ROUTE?nip={nip}",
-                arguments = listOf(navArgument("nip") { type = NavType.StringType; nullable = true; defaultValue = null }),
+                "$COUNTERPARTY_ROUTE?id={id}",
+                arguments = listOf(navArgument("id") { type = NavType.StringType; nullable = true; defaultValue = null }),
             ) { entry ->
-                val nip = entry.arguments?.getString("nip")
+                val id = entry.arguments?.getString("id")
                 val counterpartyViewModel: CounterpartyFormViewModel = viewModel(
-                    key = "counterparty-${nip ?: "new"}",
-                    factory = viewModelFactory { initializer { CounterpartyFormViewModel(session, container.companyLookup, nip) } },
+                    key = "counterparty-${id ?: "new"}",
+                    factory = viewModelFactory { initializer { CounterpartyFormViewModel(session, container.companyLookup, id) } },
                 )
-                CounterpartyFormScreen(counterpartyViewModel, onClose = { savedNip ->
+                CounterpartyFormScreen(counterpartyViewModel, onClose = { savedId ->
                     // Opened from the invoice form: the new counterparty is selected there.
-                    savedNip?.let { navController.previousBackStackEntry?.savedStateHandle?.set(CREATED_COUNTERPARTY_KEY, it) }
+                    savedId?.let { navController.previousBackStackEntry?.savedStateHandle?.set(CREATED_COUNTERPARTY_KEY, it) }
                     navController.popIfOn(COUNTERPARTY_ROUTE)
                 })
             }

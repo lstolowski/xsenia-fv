@@ -29,18 +29,18 @@ data class CounterpartyFormUiState(
     /** Shown after the first „Zapisz”. */
     val issues: List<FieldIssue>,
     val lookup: LookupUiState,
-    /** Editing a saved counterparty — its NIP is read-only (ADR 0006). */
+    /** Editing a saved counterparty — its country and identifier are read-only (ADR 0009). */
     val editing: Boolean,
     /** Chosen in the draft or in an unsent invoice — warned about before deleting. */
     val usedByInvoices: Boolean,
     val dirty: Boolean,
 )
 
-/** New or edited counterparty (ZAD-024); [originalNip] null for a new one. */
+/** New or edited counterparty (ZAD-024); [originalId] — its [Counterparty.id], null for a new one. */
 class CounterpartyFormViewModel(
     private val session: ProfileSession,
     private val lookupService: CompanyLookupService,
-    private val originalNip: String?,
+    private val originalId: String?,
 ) : ViewModel() {
 
     private val fields = MutableStateFlow<CounterpartyFormFields?>(null)
@@ -49,7 +49,7 @@ class CounterpartyFormViewModel(
     private val lookup = MutableStateFlow(LookupUiState())
     private val usedByInvoices = MutableStateFlow(false)
 
-    /** NIP of the saved counterparty (to select it on the invoice form), or "" after deleting; null while open. */
+    /** Id of the saved counterparty (to select it on the invoice form), or "" after deleting; null while open. */
     private val _closedWith = MutableStateFlow<String?>(null)
     val closedWith: StateFlow<String?> = _closedWith.asStateFlow()
 
@@ -62,9 +62,9 @@ class CounterpartyFormViewModel(
         if (fields == null || profile == null) return@combine null
         CounterpartyFormUiState(
             fields = fields,
-            issues = if (showErrors) issuesOf(fields, others(profile.counterparties)) else emptyList(),
+            issues = if (showErrors) issuesOf(fields, profile.counterparties) else emptyList(),
             lookup = lookup,
-            editing = originalNip != null,
+            editing = originalId != null,
             usedByInvoices = used,
             dirty = fields != original,
         )
@@ -73,21 +73,24 @@ class CounterpartyFormViewModel(
     init {
         viewModelScope.launch {
             val counterparties = session.profile.profile.filterNotNull().first().counterparties
-            CounterpartyFormFields.of(counterparties.firstOrNull { it.nip == originalNip }).let {
+            CounterpartyFormFields.of(counterparties.firstOrNull { it.id == originalId }).let {
                 original.value = it
                 fields.value = it
             }
-            if (originalNip != null) {
+            if (originalId != null) {
                 usedByInvoices.value = withContext(Dispatchers.IO) {
-                    ProfileUsage.counterpartyUsed(originalNip, session.issueStorage.loadDraft(), session.unsentInvoices.invoices.value)
+                    ProfileUsage.counterpartyUsed(originalId, session.issueStorage.loadDraft(), session.unsentInvoices.invoices.value)
                 }
             }
         }
     }
 
     fun update(change: (CounterpartyFormFields) -> CounterpartyFormFields) {
-        // The NIP of a saved counterparty never changes.
-        fields.value = fields.value?.let(change)?.let { if (originalNip != null) it.copy(nip = originalNip) else it }
+        // The country and identifier of a saved counterparty never change.
+        val saved = original.value
+        fields.value = fields.value?.let(change)?.let {
+            if (originalId != null && saved != null) it.copy(nip = saved.nip, countryCode = saved.countryCode, taxNumber = saved.taxNumber) else it
+        }
     }
 
     /** Fetches the company by the typed NIP from the White List; name and address are overwritten. */
@@ -106,23 +109,26 @@ class CounterpartyFormViewModel(
         showErrors.value = true
         val current = fields.value ?: return
         val counterparties = session.profile.profile.value?.counterparties.orEmpty()
-        val counterparty = (ProfileValidator.counterparty(current.toInput(), others(counterparties)) as? Validation.Valid)?.value ?: return
+        val existing = counterparties.firstOrNull { it.id == originalId }
+        val counterparty = (ProfileValidator.counterparty(current.toInput(), others(counterparties), existing) as? Validation.Valid)?.value ?: return
         viewModelScope.launch {
             withContext(Dispatchers.IO) { session.profile.saveCounterparty(counterparty) }
-            _closedWith.value = counterparty.nip
+            _closedWith.value = counterparty.id
         }
     }
 
     fun delete() {
-        val nip = originalNip ?: return
+        val id = originalId ?: return
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { session.profile.deleteCounterparty(nip) }
+            withContext(Dispatchers.IO) { session.profile.deleteCounterparty(id) }
             _closedWith.value = ""
         }
     }
 
-    private fun others(counterparties: List<Counterparty>) = counterparties.filter { it.nip != originalNip }
+    private fun others(counterparties: List<Counterparty>) = counterparties.filter { it.id != originalId }
 
-    private fun issuesOf(fields: CounterpartyFormFields, others: List<Counterparty>): List<FieldIssue> =
-        (ProfileValidator.counterparty(fields.toInput(), others) as? Validation.Invalid)?.issues.orEmpty()
+    private fun issuesOf(fields: CounterpartyFormFields, counterparties: List<Counterparty>): List<FieldIssue> {
+        val existing = counterparties.firstOrNull { it.id == originalId }
+        return (ProfileValidator.counterparty(fields.toInput(), others(counterparties), existing) as? Validation.Invalid)?.issues.orEmpty()
+    }
 }

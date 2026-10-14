@@ -45,7 +45,7 @@ class ProfileRepositoryTest {
         // Another repository (e.g. after an app restart) reads the same data.
         assertEquals(profile, repository().profile.filterNotNull().first())
 
-        repository.deleteCounterparty(counterparty.nip)
+        repository.deleteCounterparty(counterparty.id)
         repository.deleteBankAccount(account.number)
         assertEquals(emptyList<Counterparty>(), repository.profile.value?.counterparties)
         assertEquals(emptyList<BankAccount>(), repository.profile.value?.bankAccounts)

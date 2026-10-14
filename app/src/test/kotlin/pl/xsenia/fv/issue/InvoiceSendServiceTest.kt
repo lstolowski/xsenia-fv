@@ -39,7 +39,7 @@ class InvoiceSendServiceTest {
 
     private val submitted = SubmittedInvoice("SO-1", "INV-1")
     private val form = InvoiceForm(
-        counterpartyNip = "6691034274",
+        counterpartyId = "6691034274",
         issueDate = LocalDate.parse("2026-10-01"),
         deliveryDate = LocalDate.parse("2026-09-30"),
         invoiceNumber = "04/09/2026",

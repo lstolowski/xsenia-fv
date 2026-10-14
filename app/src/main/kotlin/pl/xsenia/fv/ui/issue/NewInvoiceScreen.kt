@@ -218,8 +218,8 @@ private fun FormContent(state: NewInvoiceUiState, profile: CompanyProfile, viewM
     FormSectionTitle(stringResource(R.string.field_counterparty))
     TileChoiceField(
         options = profile.counterparties,
-        key = { it.nip },
-        selectedKey = form.counterpartyNip,
+        key = { it.id },
+        selectedKey = form.counterpartyId,
         placeholder = stringResource(R.string.field_counterparty_choose),
         error = formIssues.messageFor(FormIssueType.COUNTERPARTY_MISSING),
         onSelect = viewModel::selectCounterparty,

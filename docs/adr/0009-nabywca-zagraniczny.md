@@ -25,10 +25,10 @@
 - `Counterparty`: `id` (wewnętrzny, niezmienny), `name`, `countryCode` (ISO 3166, jak `KodKraju` w FA(3); domyślnie `PL`), `taxId` — rodzaj i numer, `address` (linie 1–2), `email`, `defaultCurrency` (opcjonalna).
 - Rodzaj identyfikatora wynika z kraju:
   - `PL` → `NIP` (wymagany, suma kontrolna, Biała lista — jak dziś),
-  - kraj UE → `VAT_UE`: numer bez prefiksu (wzorzec XSD `(\d|[A-Z]|\+|\*){1,12}`), prefiks `KodUE` z kraju — **Grecja `EL`** (adres `GR`), Irlandia Płn. `XI`,
+  - kraj UE → `VAT_UE`: numer bez prefiksu (wzorzec XSD `(\d|[A-Z]|\+|\*){1,12}`), prefiks `KodUE` z kraju — **Grecja `EL`** (adres `GR`); bez `XI` (Irlandia Płn. — prefiks tylko dla towarów, przy usługach nabywca to GB),
   - inny kraj → `OTHER` (`NrID`, opcjonalny); bez numeru → `BrakID`.
 - Kraj i identyfikator są niezmienne po zapisie (jak dziś NIP); unikalność: kraj + numer (kontrahent bez numeru — bez sprawdzania).
-- Migracja: istniejący kontrahenci → `countryCode = PL`, `NIP`; `id` z NIP-u. Szkic i faktury niewysłane wskazują kontrahenta przez `id` (dotychczasowe `counterpartyNip` czytane przy wczytywaniu).
+- Migracja: istniejący kontrahenci → `countryCode = PL`, `NIP`; `id` = NIP. Szkic i faktury niewysłane wskazują kontrahenta przez `id`, zapisywane w JSON pod dotychczasową nazwą `counterpartyNip` — stare dane działają bez przepisywania.
 - Bez VIES (Q3) — numer VAT UE sprawdzany tylko formatem; dane wpisywane ręcznie.
 
 ### Faktura (FA(3))

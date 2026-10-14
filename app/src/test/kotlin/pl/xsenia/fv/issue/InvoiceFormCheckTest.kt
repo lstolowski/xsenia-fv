@@ -29,7 +29,7 @@ class InvoiceFormCheckTest {
     private val today = LocalDate.parse("2026-10-01")
 
     private fun form(vararg lines: LineForm, nip: String? = "6691034274", number: String = "01/09/2026") = InvoiceForm(
-        counterpartyNip = nip,
+        counterpartyId = nip,
         bankAccountNumber = "85216097583216850246002152",
         issueDate = today,
         deliveryDate = LocalDate.parse("2026-09-30"),
@@ -163,5 +163,24 @@ class InvoiceFormCheckTest {
         val form = form(LineForm("Usługa testowa", "1", "szt.", "100")).copy(currency = InvoiceCurrency.EUR, exchangeRate = euroRate)
 
         assertEquals(form, Json.decodeFromString(InvoiceForm.serializer(), Json.encodeToString(InvoiceForm.serializer(), form)))
+    }
+
+    @Test
+    fun `draft saved before US-012 points to its counterparty by NIP, which is the counterparty id`() {
+        val form = Json.decodeFromString(InvoiceForm.serializer(), """{"counterpartyNip": "6691034274", "issueDate": "2026-10-01", "deliveryDate": "2026-09-30"}""")
+
+        assertEquals("6691034274", form.counterpartyId)
+        assertEquals(config.counterparties.single().id, form.counterpartyId)
+        assertTrue(Json.encodeToString(InvoiceForm.serializer(), form).contains("\"counterpartyNip\":\"6691034274\""))
+    }
+
+    @Test
+    fun `foreign counterparty is found by its id`() {
+        val german = Counterparty("Lorem Testowy GmbH", address = Address("Teststraße 1", null, null), countryCode = "DE", taxNumber = "999999990")
+        val form = form(LineForm("Usługa testowa", "1", "szt.", "100"), nip = german.id)
+
+        val draft = requireNotNull(InvoiceFormCheck.check(form, config.copy(counterparties = config.counterparties + german), emptyList(), today).draft)
+
+        assertEquals(german, draft.buyer)
     }
 }

@@ -174,7 +174,7 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
         }
     }
 
-    fun selectCounterparty(nip: String) = update { it.copy(counterpartyNip = nip) }
+    fun selectCounterparty(id: String) = update { it.copy(counterpartyId = id) }
 
     fun selectBankAccount(number: String) = update { it.copy(bankAccountNumber = number) }
 

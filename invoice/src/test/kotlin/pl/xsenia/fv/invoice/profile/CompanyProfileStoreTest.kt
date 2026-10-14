@@ -1,5 +1,6 @@
 package pl.xsenia.fv.invoice.profile
 
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -61,7 +62,7 @@ class CompanyProfileStoreTest {
     }
 
     @Test
-    fun `counterparties are replaced by NIP and deleted`() {
+    fun `counterparties are replaced by id and deleted`() {
         store.saveCounterparty(testowa)
         store.saveCounterparty(lorem)
         val edited = testowa.copy(name = "Testowa Spółka", email = null)
@@ -69,7 +70,7 @@ class CompanyProfileStoreTest {
 
         assertEquals(listOf(edited, lorem), store.load().counterparties)
 
-        store.deleteCounterparty(testowa.nip)
+        store.deleteCounterparty(testowa.id)
         assertEquals(listOf(lorem), store.load().counterparties)
     }
 
@@ -90,5 +91,39 @@ class CompanyProfileStoreTest {
         assertEquals(emptyList<Counterparty>(), store.load().counterparties)
         assertTrue(directory.listFiles().orEmpty().any { it.name.startsWith("counterparties.json.damaged-") })
         assertNull(store.load().company)
+    }
+
+    @Test
+    fun `counterparties saved before US-012 load as Polish ones with the NIP as id and are rewritten with the country`() {
+        directory.mkdirs()
+        File(directory, CompanyProfileStore.COUNTERPARTIES_FILE).writeText(
+            """{"version": 1, "counterparties": [{"name": "Testowa Sp. z o.o.", "nip": "6691034274", "address": {"line1": "ul. Testowa 6"}}]}""",
+        )
+
+        val old = store.load().counterparties.single()
+        assertEquals("6691034274", old.id)
+        assertEquals(Countries.POLAND, old.countryCode)
+        assertEquals(TaxIdType.NIP, old.taxIdType)
+
+        store.saveCounterparty(old.copy(email = "faktury@example.com"))
+        val text = File(directory, CompanyProfileStore.COUNTERPARTIES_FILE).readText()
+        assertTrue(text.contains("\"countryCode\": \"PL\""), text)
+        assertTrue(text.contains("\"id\": \"6691034274\""), text)
+        assertEquals(listOf(old.copy(email = "faktury@example.com")), store.load().counterparties)
+    }
+
+    @Test
+    fun `foreign counterparties are saved with their country, number and default currency`() {
+        val german = Counterparty(
+            "Lorem Testowy GmbH", address = Address("Teststraße 1", "00000 Testdorf", "Niemcy"),
+            countryCode = "DE", taxNumber = "999999990", defaultCurrency = InvoiceCurrency.EUR,
+        )
+        val american = Counterparty("Lorem Test Inc.", address = Address("1 Test Street", "Testville"), countryCode = "US")
+
+        store.saveCounterparty(german)
+        store.saveCounterparty(american)
+
+        assertEquals(listOf(german, american), store.load().counterparties)
+        assertEquals("DE-999999990", german.id)
     }
 }

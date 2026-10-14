@@ -73,8 +73,8 @@ class ProfileFormsTest {
 
     @Test
     fun `usage in the draft and unsent invoices`() {
-        val draft = InvoiceForm(counterpartyNip = "6691034274", bankAccountNumber = "85216097583216850246002152", issueDate = LocalDate.parse("2026-10-13"), deliveryDate = LocalDate.parse("2026-09-30"))
-        val unsent = UnsentInvoice.create(draft.copy(counterpartyNip = "9945082500", bankAccountNumber = "55109004081797992973253811"), Instant.parse("2026-10-13T12:00:00Z"))
+        val draft = InvoiceForm(counterpartyId = "6691034274", bankAccountNumber = "85216097583216850246002152", issueDate = LocalDate.parse("2026-10-13"), deliveryDate = LocalDate.parse("2026-09-30"))
+        val unsent = UnsentInvoice.create(draft.copy(counterpartyId = "9945082500", bankAccountNumber = "55109004081797992973253811"), Instant.parse("2026-10-13T12:00:00Z"))
 
         assertTrue(ProfileUsage.bankAccountUsed("85216097583216850246002152", draft, emptyList()))
         assertTrue(ProfileUsage.bankAccountUsed("55109004081797992973253811", null, listOf(unsent)))
@@ -94,7 +94,6 @@ class ProfileFormsTest {
                 name = "TESTOWA SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ",
                 addressLine1 = "TESTOWA 6",
                 addressLine2 = "00-002 TESTOWO",
-                country = "Polska",
                 email = "faktury@example.com",
             ),
             typed.withLookup(company),
@@ -106,10 +105,10 @@ class ProfileFormsTest {
         val counterparty = Counterparty("Lorem Ipsum Testowy S.A.", "9945082500", Address("ul. Dolor Sit Amet 12/3", "00-003 Testowo"))
 
         assertEquals(
-            CounterpartyFormFields("9945082500", "Lorem Ipsum Testowy S.A.", "ul. Dolor Sit Amet 12/3", "00-003 Testowo", "", ""),
+            CounterpartyFormFields("9945082500", "Lorem Ipsum Testowy S.A.", "ul. Dolor Sit Amet 12/3", "00-003 Testowo", ""),
             CounterpartyFormFields.of(counterparty),
         )
-        assertEquals(CounterpartyFormFields(country = "Polska"), CounterpartyFormFields.of(null))
+        assertEquals(CounterpartyFormFields(countryCode = "PL"), CounterpartyFormFields.of(null))
     }
 
     @Test

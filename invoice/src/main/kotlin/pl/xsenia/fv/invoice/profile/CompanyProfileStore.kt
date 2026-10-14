@@ -42,11 +42,14 @@ class CompanyProfileStore(private val directory: File, private val nip: String) 
 
     fun deleteBankAccount(number: String) = writeBankAccounts(load().bankAccounts.filter { it.number != number })
 
-    /** Replaces the counterparty with the same NIP (keeping its position), or appends a new one. */
+    /**
+     * Replaces the counterparty with the same id (keeping its position), or appends a new one. Counterparties saved
+     * before US-012 are written in the new format (country, id) with the next change (ADR 0009).
+     */
     fun saveCounterparty(counterparty: Counterparty) =
-        writeCounterparties(load().counterparties.upsert(counterparty) { it.nip == counterparty.nip })
+        writeCounterparties(load().counterparties.upsert(counterparty) { it.id == counterparty.id })
 
-    fun deleteCounterparty(nip: String) = writeCounterparties(load().counterparties.filter { it.nip != nip })
+    fun deleteCounterparty(id: String) = writeCounterparties(load().counterparties.filter { it.id != id })
 
     private fun writeBankAccounts(accounts: List<BankAccount>) =
         write(BANK_ACCOUNTS_FILE, BankAccountsFile.serializer(), BankAccountsFile(bankAccounts = accounts))

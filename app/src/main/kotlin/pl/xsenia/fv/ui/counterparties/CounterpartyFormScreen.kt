@@ -46,7 +46,7 @@ import pl.xsenia.fv.ui.theme.WarningText
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CounterpartyFormScreen(viewModel: CounterpartyFormViewModel, onClose: (savedNip: String?) -> Unit) {
+fun CounterpartyFormScreen(viewModel: CounterpartyFormViewModel, onClose: (savedId: String?) -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val closedWith by viewModel.closedWith.collectAsStateWithLifecycle()
     LaunchedEffect(closedWith) { closedWith?.let { onClose(it.ifEmpty { null }) } }
@@ -103,7 +103,6 @@ fun CounterpartyFormScreen(viewModel: CounterpartyFormViewModel, onClose: (saved
                 stringResource(R.string.field_address_line2), fields.addressLine2, { value -> viewModel.update { it.copy(addressLine2 = value) } },
                 ProfileField.ADDRESS_LINE2, issues,
             )
-            ProfileTextField(stringResource(R.string.field_country), fields.country, { value -> viewModel.update { it.copy(country = value) } }, ProfileField.COUNTRY, issues)
             ProfileTextField(
                 stringResource(R.string.field_email), fields.email, { value -> viewModel.update { it.copy(email = value) } }, ProfileField.EMAIL, issues,
                 keyboardType = KeyboardType.Email, capitalization = KeyboardCapitalization.None,

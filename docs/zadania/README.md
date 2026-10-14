@@ -33,7 +33,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-027](ZAD-027-faktura-w-walucie-model-xml.md) | Faktura w walucie obcej: model, VAT w PLN, XML FA(3) | US-011 | Zrobione |
 | [ZAD-028](ZAD-028-ui-waluta-formularz.md) | UI: lista „Waluta”, rachunek z ostrzeżeniem, kurs roboczy | US-011 | Zrobione |
 | [ZAD-029](ZAD-029-wysylka-kurs-ostateczny.md) | Podgląd i wysyłka faktury w walucie: kurs ostateczny w locie, szczegóły | US-011 | Zrobione |
-| [ZAD-030](ZAD-030-kontrahent-zagraniczny-model.md) | Kontrahent zagraniczny: model, walidacja, migracja | US-012 | Do zrobienia |
+| [ZAD-030](ZAD-030-kontrahent-zagraniczny-model.md) | Kontrahent zagraniczny: model, walidacja, migracja | US-012 | Zrobione |
 | [ZAD-031](ZAD-031-fa3-nabywca-zagraniczny.md) | FA(3): nabywca z numerem VAT UE lub innym identyfikatorem, „np I” / „np II” | US-012 | Do zrobienia |
 | [ZAD-032](ZAD-032-ui-kontrahent-zagraniczny.md) | UI: formularz kontrahenta z krajem, domyślna waluta, wartości domyślne faktury | US-012 | Do zrobienia |
 | [ZAD-033](ZAD-033-listy-identyfikator-nabywcy.md) | Listy, szczegóły i wyszukiwanie: numer VAT UE / identyfikator nabywcy | US-012 | Do zrobienia |

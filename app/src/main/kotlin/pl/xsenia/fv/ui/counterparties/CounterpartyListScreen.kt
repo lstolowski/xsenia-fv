@@ -64,8 +64,8 @@ fun CounterpartyListScreen(session: ProfileSession, onBack: () -> Unit, onAdd: (
                 Text(stringResource(R.string.counterparties_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(counterparties, key = { it.nip }) { counterparty ->
-                    Tile(onClick = { onEdit(counterparty.nip) }) {
+                items(counterparties, key = { it.id }) { counterparty ->
+                    Tile(onClick = { onEdit(counterparty.id) }) {
                         Row(
                             Modifier.fillMaxWidth().padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,

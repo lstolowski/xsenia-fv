@@ -43,7 +43,7 @@ class ProfileRepository(private val store: CompanyProfileStore, scope: Coroutine
     fun saveCounterparty(counterparty: Counterparty) = change { store.saveCounterparty(counterparty) }
 
     /** Call from a background thread. */
-    fun deleteCounterparty(nip: String) = change { store.deleteCounterparty(nip) }
+    fun deleteCounterparty(id: String) = change { store.deleteCounterparty(id) }
 
     private fun change(write: () -> Unit) = synchronized(lock) {
         write()

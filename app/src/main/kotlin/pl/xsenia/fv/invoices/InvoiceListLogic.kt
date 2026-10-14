@@ -74,13 +74,15 @@ object InvoiceListLogic {
             DraftLine(line.name, quantity, line.unit, price, line.vatRate)
         }
         val totals = InvoiceCalculator.totals(lines)
+        val buyer = profile?.counterparties?.firstOrNull { it.id == form.counterpartyId }
         return InvoiceRow(
             ksefNumber = "",
             invoiceNumber = form.invoiceNumber,
             deliveryDate = form.deliveryDate,
             issueDate = form.issueDate,
-            counterpartyName = profile?.counterparties?.firstOrNull { it.nip == form.counterpartyNip }?.name,
-            counterpartyNip = form.counterpartyNip,
+            counterpartyName = buyer?.name,
+            // Without the counterparty in the profile only a NIP-like id can still be shown.
+            counterpartyNip = buyer?.taxIdText ?: form.counterpartyId?.takeIf { id -> id.length == NIP_LENGTH && id.all(Char::isDigit) },
             netAmount = totals.net,
             grossAmount = totals.gross,
             currency = form.currency.code,
@@ -133,3 +135,5 @@ object InvoiceListLogic {
         return (range + counts.keys).distinct().sortedDescending().map { it to (counts[it] ?: 0) }.toList()
     }
 }
+
+private const val NIP_LENGTH = 10
