@@ -32,7 +32,7 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Faktura (treść) | `Invoice` | Faktura odczytana z XML FA(2)/FA(3) przez `InvoiceXmlParser` | |
 | Pozycja faktury | `InvoiceLine` | `FaWiersz`: nazwa `P_7`, jednostka `P_8A`, ilość `P_8B`, cena jedn. netto `P_9A`, wartość netto `P_11`, stawka `P_12` | Wartość brutto pozycji wyliczana do wyświetlenia |
 | Stawka VAT | `VatRate` (`RATE_23`, `RATE_8`, `RATE_5`, `RATE_0`, `NOT_TAXABLE`) | Stawka pozycji (`P_12`): `23`, `8`, `5`, `0 KR`, `np II` | ADR 0005 |
-| np (niepodlegające, reverse charge) | `VatRate.NOT_TAXABLE` | Pozycja, w której VAT rozlicza nabywca — w KSeF `np II` (art. 100 ust. 1 pkt 4), adnotacja `P_18 = 1` i uwaga „Reverse charge” | Dawniej „nd”; nie mylić z 0% ani ze zwolnieniem (`zw`) |
+| np (niepodlegające, reverse charge) | `VatRate.NOT_TAXABLE` (`codeFor`) | Pozycja, w której VAT rozlicza nabywca — w KSeF `np II` (art. 100 ust. 1 pkt 4, `P_13_9`) dla nabywcy polskiego i z UE, `np I` (`P_13_8`) dla nabywcy spoza UE; zawsze adnotacja `P_18 = 1` i uwaga „Reverse charge” | Dawniej „nd”; nie mylić z 0% ani ze zwolnieniem (`zw`); ADR 0005, ADR 0009 |
 | Uwagi | `DodatkowyOpis` (`REMARKS_KEY`) | Klucz–wartość w FA(3); „Uwagi: Reverse charge” na fakturach ze stawką „np” | ADR 0005 |
 | Jednostka | `unit` (`LineUnits`) | `P_8A`: szt., dni, godz., usł.; domyślnie godz. | ADR 0005 |
 | Szkic faktury (do wystawienia) | `SalesInvoiceDraft` / `DraftLine` | Dane nowej faktury sprzedażowej przed wygenerowaniem XML | |

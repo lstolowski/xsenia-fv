@@ -63,6 +63,9 @@ data class Counterparty(
 
     val isForeign: Boolean get() = countryCode != Countries.POLAND
 
+    /** Buyer from outside the EU — "np" services are `np I` for it (ADR 0009). */
+    val isOutsideEu: Boolean get() = countryCode !in Countries.EU
+
     /** The identifier as printed: `6691034274`, `DE123456789`, `EL123456789`, the foreign ID, or null. */
     val taxIdText: String?
         get() = when (taxIdType) {

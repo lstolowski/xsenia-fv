@@ -20,6 +20,14 @@ object TestDrafts {
     )
     val buyer = Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6", "00-002 Testowo", "Polska"), "faktury@example.com")
     val account = BankAccount("Konto testowe Toyota", "Toyota Bank", "85216097583216850246002152", "PLN")
+    // Foreign buyers (docs/przyklady/kontrahenci.md, ADR 0009).
+    val germanBuyer = Counterparty(
+        "Lorem Testowy GmbH", address = Address("Teststraße 1", "00000 Testdorf", "Niemcy"), countryCode = "DE", taxNumber = "999999990",
+    )
+    val greekBuyer = Counterparty("Dolor Testowy A.E.", address = Address("Odos Test 1", "00000 Testopoli", "Grecja"), countryCode = "GR", taxNumber = "000000000")
+    val americanBuyer = Counterparty("Lorem Test Inc.", address = Address("1 Test Street", "Testville, TS 00000", "Stany Zjednoczone"), countryCode = "US", taxNumber = "00-0000000")
+    val britishBuyer = Counterparty("Ipsum Test Ltd", address = Address("1 Test Lane", "Testbury TE1 1ST", "Wielka Brytania"), countryCode = "GB")
+
     val euroAccount = BankAccount("Konto testowe EUR", "Toyota Bank", "83216097587877893287921742", "EUR")
 
     /** docs/przyklady/kursy-nbp.md */

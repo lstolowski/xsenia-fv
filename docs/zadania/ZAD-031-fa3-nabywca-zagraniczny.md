@@ -1,7 +1,7 @@
 # ZAD-031. FA(3): nabywca z numerem VAT UE lub innym identyfikatorem, „np I” / „np II”
 
 - User story: US-012
-- Status: Do zrobienia
+- Status: Zrobione (2026-10-14)
 - Szacunek: M
 
 ## Cel
@@ -10,13 +10,13 @@ Faktura dla nabywcy zagranicznego ma właściwe `Podmiot2` i kod stawki „np”
 
 ## Zakres
 
-- [ ] `Fa3XmlWriter`: `Podmiot2/DaneIdentyfikacyjne` — `NIP` | `KodUE` + `NrVatUE` | `KodKraju` + `NrID` | `BrakID = 1`; `Podmiot2/Adres/KodKraju` = kraj kontrahenta
-- [ ] Kod „np”: nabywca z UE (poza PL) i polski → `np II` / `P_13_9`; spoza UE → `np I` / `P_13_8`; `P_18 = 1` i „Reverse charge” zawsze; `InvoiceCalculator` / suma stawek z kodem zależnym od nabywcy
-- [ ] Parser: odczyt identyfikatora nabywcy (już czyta `NrVatUE`, `NrID`) — sprawdzenie w testach
-- [ ] Test integracyjny (`-PsendInvoices`): faktura dla nabywcy z UE (EUR, „np II”) i spoza UE (USD, „np I”) — dwie faktury, dane zmyślone
+- [x] `Fa3XmlWriter`: `Podmiot2/DaneIdentyfikacyjne` — `NIP` | `KodUE` + `NrVatUE` | `KodKraju` + `NrID` | `BrakID = 1`; `Podmiot2/Adres/KodKraju` = kraj kontrahenta
+- [x] Kod „np”: `VatRate.codeFor(nabywca)` — nabywca z UE (poza PL) i polski → `np II` / `P_13_9`; spoza UE (`Counterparty.isOutsideEu`) → `np I` / `P_13_8`; `P_18 = 1` i „Reverse charge” zawsze; kwoty bez zmian (stawka ta sama, zmienia się tylko kod i pole sumy)
+- [x] Parser: odczyt identyfikatora nabywcy (już czytał `KodUE` + `NrVatUE`, `KodKraju` + `NrID`, `P_13_8`) — sprawdzony w testach
+- [x] Test integracyjny (`-PsendInvoices`): faktura dla nabywcy z UE (DE, EUR, „np II”) i spoza UE (US, USD, „np I”), kurs z NBP — dwie faktury, dane zmyślone
 
 ## Definicja ukończenia
 
-- [ ] Testy: XML zgodny ze schematem dla każdego wariantu identyfikatora, Grecja (`EL`), `np I` / `np II`, PL bez zmian
-- [ ] Sprawdzone na środowisku KSeF TEST
-- [ ] Zaktualizowana dokumentacja / słownik
+- [x] Testy: XML zgodny ze schematem dla każdego wariantu identyfikatora (DE, GR z `EL`, US z `NrID`, GB z `BrakID`), `np I` / `np II`, PL bez zmian; każdy kraj z listy jest w słowniku `TKodKraju`, każdy kraj UE ma prefiks z `TKodyKrajowUE`
+- [x] Sprawdzone na środowisku KSeF TEST (2026-10-14): obie faktury przyjęte z UPO, XML w KSeF identyczny, identyfikator nabywcy i kod „np” odczytane z powrotem
+- [x] Zaktualizowana dokumentacja / słownik

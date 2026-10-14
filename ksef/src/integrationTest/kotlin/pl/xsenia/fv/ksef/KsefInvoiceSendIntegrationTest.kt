@@ -13,6 +13,7 @@ import pl.xsenia.fv.invoice.profile.Counterparty
 import pl.xsenia.fv.exchangerates.ExchangeRateResult
 import pl.xsenia.fv.exchangerates.NbpClient
 import pl.xsenia.fv.exchangerates.lastRateBefore
+import pl.xsenia.fv.invoice.currency.ExchangeRate
 import pl.xsenia.fv.invoice.currency.ExchangeRateDateRule
 import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.issue.DraftLine
@@ -57,6 +58,7 @@ class KsefInvoiceSendIntegrationTest {
     private val today = LocalDate.now(ZoneId.of("Europe/Warsaw"))
     private val seller = Company("Jan Testowy Usługi Testowe", config.nip, Address("ul. Testowa 1", "00-001 Testowo", null), null, null)
     private val buyer = Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6", "00-002 Testowo", null), null)
+    private val euroAccount = BankAccount("Konto testowe EUR", "Toyota Bank", "83216097587877893287921742", "EUR")
 
     @Test
     fun `sends a generated FA(3) invoice and receives KSeF number and UPO`(): Unit = runBlocking {
@@ -86,13 +88,7 @@ class KsefInvoiceSendIntegrationTest {
     /** EUR invoice with the real NBP rate chosen by the VAT act rule for sending today (ADR 0008). */
     @Test
     fun `sends an EUR invoice with the NBP rate and VAT in PLN`(): Unit = runBlocking {
-        val nbp = NbpClient.createHttpClient()
-        val result = try {
-            NbpClient(nbp).lastRateBefore(InvoiceCurrency.EUR, ExchangeRateDateRule.referenceDate(deliveryDate = today, issueDay = today))
-        } finally {
-            nbp.close()
-        }
-        val rate = (result as? ExchangeRateResult.Found)?.rate ?: error("No NBP rate: $result")
+        val rate = nbpRate(InvoiceCurrency.EUR)
         val number = invoiceNumber("IT/EUR/")
         val draft = SalesInvoiceDraft(
             invoiceNumber = number,
@@ -100,7 +96,7 @@ class KsefInvoiceSendIntegrationTest {
             deliveryDate = today,
             seller = seller,
             buyer = buyer,
-            bankAccount = BankAccount("Konto testowe EUR", "Toyota Bank", "83216097587877893287921742", "EUR"),
+            bankAccount = euroAccount,
             lines = listOf(
                 DraftLine("Usługa testowa (test integracyjny, EUR 23%)", BigDecimal(10), "godz.", BigDecimal("100.00"), VatRate.RATE_23),
                 DraftLine("Usługa testowa (test integracyjny, EUR np)", BigDecimal.ONE, "usł.", BigDecimal("500.00"), VatRate.NOT_TAXABLE),
@@ -120,6 +116,59 @@ class KsefInvoiceSendIntegrationTest {
             listOf("Uwagi" to "Reverse charge", Fa3XmlWriter.EXCHANGE_RATE_KEY to Fa3XmlWriter.exchangeRateRemark(rate)),
             invoice.additionalInfo,
         )
+    }
+
+    /** Buyer from another EU country: VAT UE number, its country, `np II` (ADR 0009). Fictitious buyer. */
+    @Test
+    fun `sends an invoice to a buyer from another EU country`(): Unit = runBlocking {
+        val german = Counterparty(
+            "Lorem Testowy GmbH", address = Address("Teststraße 1", "00000 Testdorf", null), countryCode = "DE", taxNumber = "999999990",
+        )
+        val invoice = sendAndDownload(foreignDraft(invoiceNumber("IT/UE/"), german, InvoiceCurrency.EUR, euroAccount))
+
+        assertEquals("DE999999990", invoice.buyer.euVatNumber)
+        assertEquals("DE", invoice.buyer.countryCode)
+        assertEquals(listOf("np II"), invoice.lines.map { it.vatRate })
+        assertTrue(invoice.annotations.reverseCharge)
+    }
+
+    /** Buyer from outside the EU: its tax identifier, its country, `np I` (ADR 0009). Fictitious buyer. */
+    @Test
+    fun `sends an invoice to a buyer from outside the EU`(): Unit = runBlocking {
+        val american = Counterparty(
+            "Lorem Test Inc.", address = Address("1 Test Street", "Testville, TS 00000", null), countryCode = "US", taxNumber = "00-0000000",
+        )
+        val dollarAccount = BankAccount("Konto testowe USD", "Santander Bank Polska", "14109004081809679290810033", "USD")
+        val invoice = sendAndDownload(foreignDraft(invoiceNumber("IT/US/"), american, InvoiceCurrency.USD, dollarAccount))
+
+        assertEquals("US 00-0000000", invoice.buyer.otherId)
+        assertEquals("US", invoice.buyer.countryCode)
+        assertEquals(listOf("np I"), invoice.lines.map { it.vatRate })
+        assertTrue(invoice.annotations.reverseCharge)
+        assertEquals(listOf("Uwagi" to "Reverse charge"), invoice.additionalInfo.take(1))
+    }
+
+    private suspend fun foreignDraft(number: String, buyer: Counterparty, currency: InvoiceCurrency, account: BankAccount) = SalesInvoiceDraft(
+        invoiceNumber = number,
+        issueDate = today,
+        deliveryDate = today,
+        seller = seller,
+        buyer = buyer,
+        bankAccount = account,
+        lines = listOf(DraftLine("Usługa testowa (test integracyjny, nabywca ${buyer.countryCode})", BigDecimal.ONE, "usł.", BigDecimal("500.00"), VatRate.NOT_TAXABLE)),
+        currency = currency,
+        exchangeRate = nbpRate(currency),
+    )
+
+    /** The real NBP rate chosen by the VAT act rule for sending today (ADR 0008). */
+    private suspend fun nbpRate(currency: InvoiceCurrency): ExchangeRate {
+        val nbp = NbpClient.createHttpClient()
+        val result = try {
+            NbpClient(nbp).lastRateBefore(currency, ExchangeRateDateRule.referenceDate(deliveryDate = today, issueDay = today))
+        } finally {
+            nbp.close()
+        }
+        return (result as? ExchangeRateResult.Found)?.rate ?: error("No NBP rate: $result")
     }
 
     private fun invoiceNumber(prefix: String) =

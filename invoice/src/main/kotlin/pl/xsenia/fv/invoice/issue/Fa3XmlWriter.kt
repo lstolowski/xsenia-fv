@@ -2,6 +2,9 @@ package pl.xsenia.fv.invoice.issue
 
 import pl.xsenia.fv.invoice.currency.ExchangeRate
 import pl.xsenia.fv.invoice.profile.Address
+import pl.xsenia.fv.invoice.profile.Counterparty
+import pl.xsenia.fv.invoice.profile.Countries
+import pl.xsenia.fv.invoice.profile.TaxIdType
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
@@ -10,7 +13,7 @@ import java.time.temporal.ChronoUnit
 /**
  * Writes a sales invoice as FA(3) XML (`schemat_FA(3)_v1-0E.xsd`).
  *
- * Fixed content (decisions C1–C14, R4–R10): VAT invoice, Polish buyer with NIP, bank transfer due in 21 days,
+ * Fixed content (decisions C1–C14, R4–R10): VAT invoice, bank transfer due in 21 days,
  * no split payment, all annotations "no" except reverse charge for "np" lines. VAT rate per line (ADR 0005).
  * A foreign currency invoice (ADR 0008) adds VAT in PLN (`P_14_xW`), the NBP rate in every line (`KursWaluty`)
  * and the remark "Kurs waluty" with the NBP table; a PLN invoice has none of them.
@@ -56,7 +59,7 @@ object Fa3XmlWriter {
                     value("NIP", draft.seller.nip)
                     value("Nazwa", draft.seller.name)
                 }
-                address(draft.seller.address)
+                address(draft.seller.address, COUNTRY_CODE)
                 if (draft.seller.email != null || draft.seller.phone != null) {
                     element("DaneKontaktowe") {
                         draft.seller.email?.let { value("Email", it) }
@@ -65,12 +68,8 @@ object Fa3XmlWriter {
                 }
             }
             element("Podmiot2") {
-                element("DaneIdentyfikacyjne") {
-                    // Foreign buyers (VAT UE / other identifier) come with the FA(3) part of ADR 0009.
-                    value("NIP", requireNotNull(draft.buyer.nip) { "Buyer without a NIP is not supported yet" })
-                    value("Nazwa", draft.buyer.name)
-                }
-                address(draft.buyer.address)
+                buyerIdentification(draft.buyer)
+                address(draft.buyer.address, draft.buyer.countryCode)
                 draft.buyer.email?.let { email -> element("DaneKontaktowe") { value("Email", email) } }
                 // Not a local government unit, not a VAT group member.
                 value("JST", NO)
@@ -82,7 +81,7 @@ object Fa3XmlWriter {
                 value("P_2", draft.invoiceNumber)
                 // P_6 only when the delivery date differs from the issue date.
                 if (draft.deliveryDate != draft.issueDate) value("P_6", draft.deliveryDate.toString())
-                totals.byRate.forEach { rateSummary(it) }
+                totals.byRate.forEach { rateSummary(it, draft.buyer) }
                 value("P_15", amount(totals.gross))
                 val reverseCharge = draft.lines.any { it.vatRate == VatRate.NOT_TAXABLE }
                 element("Adnotacje") {
@@ -106,7 +105,7 @@ object Fa3XmlWriter {
                         value("P_8B", decimal(line.quantity))
                         value("P_9A", decimal(line.unitNetPrice))
                         value("P_11", amount(InvoiceCalculator.lineNet(line)))
-                        value("P_12", line.vatRate.code)
+                        value("P_12", line.vatRate.codeFor(draft.buyer))
                         exchangeRate?.let { value("KursWaluty", it.rate.toPlainString()) }
                     }
                 }
@@ -123,14 +122,17 @@ object Fa3XmlWriter {
         return xml.toBytes()
     }
 
-    /** Summary fields of one rate; [VatRate] order matches the FA(3) element order. */
-    private fun XmlBuilder.rateSummary(totals: RateTotals) {
+    /**
+     * Summary fields of one rate; [VatRate] order matches the FA(3) element order — "np" is the last rate,
+     * so `P_13_8` (buyer from outside the EU) or `P_13_9` keeps the order too.
+     */
+    private fun XmlBuilder.rateSummary(totals: RateTotals, buyer: Counterparty) {
         when (totals.rate) {
             VatRate.RATE_23 -> netAndVat("P_13_1", "P_14_1", totals)
             VatRate.RATE_8 -> netAndVat("P_13_2", "P_14_2", totals)
             VatRate.RATE_5 -> netAndVat("P_13_3", "P_14_3", totals)
             VatRate.RATE_0 -> value("P_13_6_1", amount(totals.net))
-            VatRate.NOT_TAXABLE -> value("P_13_9", amount(totals.net))
+            VatRate.NOT_TAXABLE -> value(if (buyer.isOutsideEu) "P_13_8" else "P_13_9", amount(totals.net))
         }
     }
 
@@ -149,8 +151,25 @@ object Fa3XmlWriter {
     fun exchangeRateRemark(rate: ExchangeRate): String =
         "1 ${rate.currency.code} = ${rate.rate.toPlainString().replace('.', ',')} PLN, tabela NBP ${rate.tableNumber} z ${rate.effectiveDate}"
 
-    private fun XmlBuilder.address(address: Address) = element("Adres") {
-        value("KodKraju", COUNTRY_CODE)
+    /** Buyer identifier by country (ADR 0009): NIP, VAT UE number with its prefix, another identifier, or none. */
+    private fun XmlBuilder.buyerIdentification(buyer: Counterparty) = element("DaneIdentyfikacyjne") {
+        when (buyer.taxIdType) {
+            TaxIdType.NIP -> value("NIP", requireNotNull(buyer.nip))
+            TaxIdType.VAT_UE -> {
+                value("KodUE", Countries.vatPrefix(buyer.countryCode))
+                value("NrVatUE", requireNotNull(buyer.taxNumber))
+            }
+            TaxIdType.OTHER -> {
+                value("KodKraju", buyer.countryCode)
+                value("NrID", requireNotNull(buyer.taxNumber))
+            }
+            TaxIdType.NONE -> value("BrakID", YES)
+        }
+        value("Nazwa", buyer.name)
+    }
+
+    private fun XmlBuilder.address(address: Address, countryCode: String) = element("Adres") {
+        value("KodKraju", countryCode)
         value("AdresL1", address.line1)
         address.line2?.let { value("AdresL2", it) }
     }

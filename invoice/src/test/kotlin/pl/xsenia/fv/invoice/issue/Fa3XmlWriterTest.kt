@@ -253,4 +253,65 @@ class Fa3XmlWriterTest {
         )
         assertTrue(Fa3XmlWriter.write(draft(), createdAt).toString(Charsets.UTF_8).contains("<DataWytworzeniaFa>2026-10-01T08:15:30Z</DataWytworzeniaFa>"))
     }
+
+    @Test
+    fun `buyer from another EU country has the VAT UE number, its country and np II`() {
+        val xml = writeValid(draft(buyer = TestDrafts.germanBuyer, lines = listOf(line(price = "500", rate = VatRate.NOT_TAXABLE))))
+        val text = xml.toString(Charsets.UTF_8)
+        val invoice = InvoiceXmlParser.parse(xml)
+
+        assertTrue(text.contains("<KodUE>DE</KodUE>\n      <NrVatUE>999999990</NrVatUE>\n      <Nazwa>Lorem Testowy GmbH</Nazwa>"))
+        assertFalse(text.contains("<Podmiot2>\n    <DaneIdentyfikacyjne>\n      <NIP>"))
+        assertEquals("DE999999990", invoice.buyer.euVatNumber)
+        assertEquals("DE", invoice.buyer.countryCode)
+        assertEquals("PL", invoice.seller.countryCode)
+        assertEquals(listOf("np II"), invoice.lines.map { it.vatRate })
+        assertEquals(VatCategory.NOT_TAXABLE_ART_100, invoice.vatSummary.single().category)
+        assertTrue(invoice.annotations.reverseCharge)
+    }
+
+    @Test
+    fun `Greek buyer has the EL prefix and the GR country`() {
+        val text = writeValid(draft(buyer = TestDrafts.greekBuyer, lines = listOf(line(rate = VatRate.NOT_TAXABLE)))).toString(Charsets.UTF_8)
+
+        assertTrue(text.contains("<KodUE>EL</KodUE>"))
+        assertTrue(text.contains("<KodKraju>GR</KodKraju>"))
+    }
+
+    @Test
+    fun `buyer from outside the EU has its identifier and np I with reverse charge`() {
+        val xml = writeValid(
+            draft(buyer = TestDrafts.americanBuyer, lines = listOf(line(price = "500", rate = VatRate.NOT_TAXABLE), line(price = "100", rate = VatRate.RATE_23))),
+        )
+        val text = xml.toString(Charsets.UTF_8)
+        val invoice = InvoiceXmlParser.parse(xml)
+
+        assertTrue(text.contains("<KodKraju>US</KodKraju>\n      <NrID>00-0000000</NrID>"))
+        assertEquals("US 00-0000000", invoice.buyer.otherId)
+        assertEquals("US", invoice.buyer.countryCode)
+        assertEquals(listOf("np I", "23"), invoice.lines.map { it.vatRate })
+        assertTrue(text.contains("<P_13_8>500.00</P_13_8>"))
+        assertFalse(text.contains("P_13_9"))
+        assertEquals(listOf(VatCategory.STANDARD, VatCategory.NOT_TAXABLE_ABROAD), invoice.vatSummary.map { it.category })
+        assertTrue(invoice.annotations.reverseCharge)
+        assertEquals(listOf("Uwagi" to "Reverse charge"), invoice.additionalInfo)
+    }
+
+    @Test
+    fun `buyer from outside the EU without an identifier gets BrakID`() {
+        val text = writeValid(draft(buyer = TestDrafts.britishBuyer, lines = listOf(line(rate = VatRate.NOT_TAXABLE)))).toString(Charsets.UTF_8)
+
+        assertTrue(text.contains("<BrakID>1</BrakID>\n      <Nazwa>Ipsum Test Ltd</Nazwa>"))
+        assertTrue(text.contains("<KodKraju>GB</KodKraju>"))
+        assertTrue(text.contains("<P_12>np I</P_12>"))
+    }
+
+    @Test
+    fun `Polish buyer keeps NIP, PL and np II`() {
+        val text = writeValid(draft(lines = listOf(line(rate = VatRate.NOT_TAXABLE)))).toString(Charsets.UTF_8)
+
+        assertTrue(text.contains("<NIP>6691034274</NIP>"))
+        assertTrue(text.contains("<P_12>np II</P_12>"))
+        assertTrue(text.contains("<P_13_9>"))
+    }
 }

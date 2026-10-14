@@ -1,7 +1,7 @@
 # US-012. Nabywca zagraniczny (bez polskiego NIP-u)
 
 - Priorytet: MVP
-- Status: Gotowa
+- Status: W realizacji (ZAD-030, ZAD-031 zrobione)
 - Zgłoszone: 2026-10-14 (wydzielone z US-011, decyzja Q1)
 
 ## Historyjka
@@ -26,9 +26,9 @@ Analiza: [05-nabywca-zagraniczny.md](../analiza/05-nabywca-zagraniczny.md), decy
 
 - [ ] Wybór kontrahenta z domyślną walutą ustawia walutę faktury.
 - [ ] Dla nabywcy zagranicznego nowe pozycje mają stawkę „np”; puste pozycje zmieniają się na „np” przy wyborze takiego nabywcy.
-- [ ] `Podmiot2`: numer VAT UE (`KodUE` + `NrVatUE`), inny identyfikator (`KodKraju` + `NrID`) albo `BrakID`; `Adres/KodKraju` = kraj kontrahenta.
-- [ ] „np” dla nabywcy z UE — `np II` (`P_13_9`), spoza UE — `np I` (`P_13_8`); zawsze z „odwrotnym obciążeniem” i uwagą „Reverse charge”.
-- [ ] Faktury dla nabywcy z UE i spoza UE (w EUR / USD) są przyjmowane przez KSeF TEST (dane zmyślone).
+- [x] `Podmiot2`: numer VAT UE (`KodUE` + `NrVatUE`), inny identyfikator (`KodKraju` + `NrID`) albo `BrakID`; `Adres/KodKraju` = kraj kontrahenta.
+- [x] „np” dla nabywcy z UE — `np II` (`P_13_9`), spoza UE — `np I` (`P_13_8`); zawsze z „odwrotnym obciążeniem” i uwagą „Reverse charge”.
+- [x] Faktury dla nabywcy z UE i spoza UE (w EUR / USD) są przyjmowane przez KSeF TEST (dane zmyślone).
 
 ### Listy i szczegóły
 
