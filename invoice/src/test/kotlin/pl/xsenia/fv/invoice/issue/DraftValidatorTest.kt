@@ -3,7 +3,9 @@ package pl.xsenia.fv.invoice.issue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import pl.xsenia.fv.invoice.issue.TestDrafts.draft
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.issue.TestDrafts.line
+import pl.xsenia.fv.invoice.issue.TestDrafts.rate
 import java.time.LocalDate
 
 class DraftValidatorTest {
@@ -63,5 +65,23 @@ class DraftValidatorTest {
         assertEquals(listOf(DraftIssue(DraftIssueType.NO_LINES)), issues(draft(lines = emptyList())))
         assertEquals(listOf(DraftIssue(DraftIssueType.TOTAL_NOT_POSITIVE)), issues(draft(lines = listOf(line(price = "0")))))
         assertEquals(listOf(DraftIssue(DraftIssueType.ISSUE_DATE_IN_FUTURE)), issues(draft(issueDate = "2026-10-02", deliveryDate = "2026-10-02", number = "01/10/2026")))
+    }
+
+    @Test
+    fun `foreign currency invoice needs the rate of its currency`() {
+        val missing = listOf(DraftIssue(DraftIssueType.EXCHANGE_RATE_MISSING))
+        val euro = TestDrafts.euroAccount
+
+        assertEquals(missing, issues(draft(currency = InvoiceCurrency.EUR, account = euro)))
+        assertEquals(missing, issues(draft(currency = InvoiceCurrency.EUR, account = euro, exchangeRate = rate(InvoiceCurrency.USD))))
+        assertEquals(emptyList<DraftIssue>(), issues(draft(currency = InvoiceCurrency.EUR, account = euro, exchangeRate = rate())))
+    }
+
+    @Test
+    fun `bank account in another currency is only a warning`() {
+        val warning = DraftIssue(DraftIssueType.BANK_ACCOUNT_CURRENCY_MISMATCH, blocking = false)
+
+        assertEquals(listOf(warning), issues(draft(currency = InvoiceCurrency.EUR, exchangeRate = rate())))
+        assertEquals(listOf(warning), issues(draft(account = TestDrafts.euroAccount)))
     }
 }

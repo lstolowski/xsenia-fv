@@ -1,6 +1,7 @@
 package pl.xsenia.fv.invoices
 
 import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.InvoiceCalculator
 import pl.xsenia.fv.issue.DecimalInput
@@ -83,7 +84,7 @@ object InvoiceListLogic {
             counterpartyNip = form.counterpartyNip,
             netAmount = totals.net,
             grossAmount = totals.gross,
-            currency = InvoiceCalculator.CURRENCY,
+            currency = InvoiceCurrency.DEFAULT.code,
             invoiceType = "Vat",
             unsentId = unsent.id,
             rejected = unsent.rejection != null,

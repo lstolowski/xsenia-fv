@@ -2,7 +2,10 @@ package pl.xsenia.fv.invoice.issue
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
+import pl.xsenia.fv.invoice.issue.TestDrafts.draft
 import pl.xsenia.fv.invoice.issue.TestDrafts.line
+import pl.xsenia.fv.invoice.issue.TestDrafts.rate
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -80,5 +83,37 @@ class InvoiceCalculatorTest {
     @Test
     fun `payment is due 21 days after issue`() {
         assertEquals(LocalDate.parse("2026-10-22"), InvoiceCalculator.paymentDueDate(LocalDate.parse("2026-10-01")))
+    }
+
+    @Test
+    fun `VAT of each rate is converted to PLN, rounded half up`() {
+        val totals = InvoiceCalculator.totals(
+            listOf(
+                line(quantity = "10", price = "100.00"),
+                line(price = "100", rate = VatRate.RATE_8),
+                line(price = "500", rate = VatRate.NOT_TAXABLE),
+                line(price = "50", rate = VatRate.RATE_0),
+            ),
+            rate(),
+        )
+
+        // 230.00 × 4.3775 = 1006.825 → 1006.83; 8.00 × 4.3775 = 35.02
+        assertEquals(listOf(BigDecimal("1006.83"), BigDecimal("35.02"), null, null), totals.byRate.map { it.vatPln })
+        assertEquals(BigDecimal("1041.85"), totals.vatPln)
+        assertEquals(BigDecimal("238.00"), totals.vat)
+    }
+
+    @Test
+    fun `no VAT in PLN without an exchange rate`() {
+        val totals = InvoiceCalculator.totals(listOf(line()))
+
+        assertEquals(null, totals.vatPln)
+        assertEquals(listOf(null), totals.byRate.map { it.vatPln })
+    }
+
+    @Test
+    fun `draft totals use the rate only for a foreign currency`() {
+        assertEquals(null, InvoiceCalculator.totals(draft(exchangeRate = rate())).vatPln)
+        assertEquals(BigDecimal("234.59"), InvoiceCalculator.totals(draft(currency = InvoiceCurrency.EUR, exchangeRate = rate())).vatPln)
     }
 }

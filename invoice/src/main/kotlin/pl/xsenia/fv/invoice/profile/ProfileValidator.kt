@@ -31,7 +31,7 @@ data class BankAccountInput(
     val name: String,
     val number: String,
     val bank: String = "",
-    val currency: String = CompanyProfile.INVOICE_CURRENCY,
+    val currency: String = CompanyProfile.DEFAULT_CURRENCY,
 )
 
 data class CounterpartyInput(
@@ -80,7 +80,7 @@ object ProfileValidator {
                 ?.also { number -> if (others.any { it.number == number }) report(ProfileField.ACCOUNT_NUMBER, FieldIssueType.DUPLICATE) }
                 ?: null.also { report(ProfileField.ACCOUNT_NUMBER, FieldIssueType.INVALID_ACCOUNT_NUMBER) }
         }
-        val currency = input.currency.trim().uppercase().ifEmpty { CompanyProfile.INVOICE_CURRENCY }
+        val currency = input.currency.trim().uppercase().ifEmpty { CompanyProfile.DEFAULT_CURRENCY }
         if (!CURRENCY.matches(currency)) report(ProfileField.CURRENCY, FieldIssueType.INVALID_CURRENCY)
         if (name == null || number == null) null else BankAccount(name, bank, number, currency)
     }

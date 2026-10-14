@@ -30,7 +30,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-024](ZAD-024-ui-kontrahenci.md) | UI: „Kontrahenci” — lista, formularz, pobieranie; „+ Nowy kontrahent” w fakturze | US-010 | Zrobione |
 | [ZAD-025](ZAD-025-pierwsze-uruchomienie-braki.md) | Pierwsze uruchomienie (token → Moja firma) i braki w formularzu faktury | US-010 | Zrobione |
 | [ZAD-026](ZAD-026-serwis-kursow-walut.md) | Serwis kursów walut: klient NBP, pamięć podręczna, reguła daty kursu | US-011 | Zrobione |
-| [ZAD-027](ZAD-027-faktura-w-walucie-model-xml.md) | Faktura w walucie obcej: model, VAT w PLN, XML FA(3) | US-011 | Do zrobienia |
+| [ZAD-027](ZAD-027-faktura-w-walucie-model-xml.md) | Faktura w walucie obcej: model, VAT w PLN, XML FA(3) | US-011 | Zrobione |
 | [ZAD-028](ZAD-028-ui-waluta-formularz.md) | UI: lista „Waluta”, rachunek z ostrzeżeniem, kurs roboczy | US-011 | Do zrobienia |
 | [ZAD-029](ZAD-029-wysylka-kurs-ostateczny.md) | Podgląd i wysyłka faktury w walucie: kurs ostateczny w locie, szczegóły | US-011 | Do zrobienia |
 

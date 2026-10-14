@@ -105,6 +105,8 @@ data class InvoiceLine(
     val deliveryDate: LocalDate?,
     /** `StanPrzed` — line describing the state before a correction. */
     val isStateBefore: Boolean,
+    /** `KursWaluty` — exchange rate used to convert VAT to PLN on a foreign currency invoice. */
+    val exchangeRate: BigDecimal? = null,
 ) {
     /** Gross value: `P_11A` when present, otherwise net value × (1 + rate), rounded to grosze. */
     val displayGrossValue: BigDecimal?

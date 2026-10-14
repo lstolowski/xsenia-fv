@@ -248,6 +248,8 @@
     <string name="issue_number_missing">Wpisz numer faktury.</string>
     <string name="issue_number_too_long">Numer faktury jest za długi (maks. 256 znaków).</string>
     <string name="issue_number_duplicate">Faktura o tym numerze już istnieje w KSeF.</string>
+    <string name="issue_exchange_rate_missing">Brak kursu NBP waluty faktury.</string>
+    <string name="issue_bank_account_currency_mismatch">Uwaga: rachunek bankowy jest w innej walucie niż faktura.</string>
     <string name="issue_number_month_mismatch">Uwaga: miesiąc w numerze nie zgadza się z miesiącem daty dostawy.</string>
     <string name="issue_issue_date_future">Data wystawienia nie może być z przyszłości.</string>
     <string name="issue_no_lines">Dodaj co najmniej jedną pozycję.</string>
@@ -319,7 +321,7 @@
     <string name="field_account_number">Numer rachunku (26 cyfr)</string>
     <string name="field_bank_name">Bank</string>
     <string name="field_currency">Waluta</string>
-    <string name="bank_account_currency_hint">Na fakturze można wybrać tylko rachunek w PLN. Pierwszy rachunek na liście jest domyślny.</string>
+    <string name="bank_account_currency_hint">Pierwszy rachunek na liście jest domyślny na fakturze. Rachunek w innej walucie niż faktura można wybrać — formularz pokaże ostrzeżenie.</string>
     <string name="bank_account_used">Rachunek jest wybrany w szkicu lub w fakturze niewysłanej — po usunięciu lub zmianie numeru trzeba tam wybrać rachunek ponownie.</string>
     <string name="bank_account_delete">Usuń rachunek</string>
     <string name="bank_account_delete_title">Usunąć rachunek?</string>
@@ -364,7 +366,7 @@
     <string name="company_accounts_later">Inne rachunki dodasz później w Ustawieniach → Moja firma.</string>
     <string name="gaps_title">Do wystawienia faktury brakuje:</string>
     <string name="gap_company">danych firmy</string>
-    <string name="gap_bank_account">rachunku bankowego w PLN</string>
+    <string name="gap_bank_account">rachunku bankowego</string>
     <string name="gap_counterparty">kontrahenta</string>
     <string name="action_fill">Uzupełnij</string>
 

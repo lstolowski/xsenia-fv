@@ -5,9 +5,12 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.Address
 import pl.xsenia.fv.invoice.issue.TestDrafts.draft
 import pl.xsenia.fv.invoice.issue.TestDrafts.line
+import pl.xsenia.fv.invoice.issue.TestDrafts.rate
 import pl.xsenia.fv.invoice.model.BankAccountInfo
 import pl.xsenia.fv.invoice.model.DueDate
 import pl.xsenia.fv.invoice.model.VatCategory
@@ -107,6 +110,91 @@ class Fa3XmlWriterTest {
 
         assertFalse(invoice.annotations.reverseCharge)
         assertTrue(invoice.additionalInfo.isEmpty())
+    }
+
+    @Test
+    fun `PLN invoice has no exchange rate, VAT in PLN or rate remark`() {
+        val xml = writeValid(draft(exchangeRate = rate())).toString(Charsets.UTF_8)
+
+        assertTrue(xml.contains("<KodWaluty>PLN</KodWaluty>"))
+        assertFalse(xml.contains("KursWaluty"))
+        assertFalse(xml.contains("P_14_1W"))
+        assertFalse(xml.contains("Kurs waluty"))
+    }
+
+    // Example from docs/przyklady/kursy-nbp.md (section 6).
+    @Test
+    fun `EUR invoice has VAT in PLN, the rate in every line and the rate remark`() {
+        val draft = draft(
+            lines = listOf(line(quantity = "10", unit = "godz.", price = "100.00"), line(price = "500.00", rate = VatRate.NOT_TAXABLE)),
+            account = TestDrafts.euroAccount,
+            currency = InvoiceCurrency.EUR,
+            exchangeRate = rate(),
+        )
+        val xml = writeValid(draft)
+        val text = xml.toString(Charsets.UTF_8)
+        val invoice = InvoiceXmlParser.parse(xml)
+
+        assertEquals("EUR", invoice.currency)
+        assertTrue(text.contains("<P_13_1>1000.00</P_13_1>\n    <P_14_1>230.00</P_14_1>\n    <P_14_1W>1006.83</P_14_1W>\n    <P_13_9>500.00</P_13_9>"))
+        assertEquals(BigDecimal("1006.83"), invoice.vatSummary.first().vatInPln)
+        assertEquals(BigDecimal("1730.00"), invoice.grossTotal)
+        assertTrue(text.contains("<P_12>23</P_12>\n      <KursWaluty>4.3775</KursWaluty>\n    </FaWiersz>"))
+        assertEquals(listOf(BigDecimal("4.3775"), BigDecimal("4.3775")), invoice.lines.map { it.exchangeRate })
+        assertEquals(
+            listOf("Uwagi" to "Reverse charge", "Kurs waluty" to "1 EUR = 4,3775 PLN, tabela NBP 197/A/NBP/2026 z 2026-10-09"),
+            invoice.additionalInfo,
+        )
+        assertEquals(listOf(BankAccountInfo("83216097587877893287921742", "Toyota Bank", null, null)), invoice.payment?.bankAccounts)
+    }
+
+    @Test
+    fun `VAT in PLN for every rate with a VAT amount`() {
+        val draft = draft(
+            lines = listOf(
+                line(price = "100", rate = VatRate.RATE_23),
+                line(price = "100", rate = VatRate.RATE_8),
+                line(price = "100", rate = VatRate.RATE_5),
+                line(price = "100", rate = VatRate.RATE_0),
+                line(price = "100", rate = VatRate.NOT_TAXABLE),
+            ),
+            currency = InvoiceCurrency.USD,
+            exchangeRate = rate(InvoiceCurrency.USD, "3.9022"),
+        )
+
+        val invoice = InvoiceXmlParser.parse(writeValid(draft))
+
+        assertEquals("USD", invoice.currency)
+        // 23.00 × 3.9022 = 89.7506, 8.00 × 3.9022 = 31.2176, 5.00 × 3.9022 = 19.511
+        assertEquals(listOf(BigDecimal("89.75"), BigDecimal("31.22"), BigDecimal("19.51"), null, null), invoice.vatSummary.map { it.vatInPln })
+        assertEquals(List(5) { BigDecimal("3.9022") }, invoice.lines.map { it.exchangeRate })
+    }
+
+    @Test
+    fun `GBP invoice with only not taxable lines has the rate but no VAT in PLN`() {
+        val draft = draft(lines = listOf(line(rate = VatRate.NOT_TAXABLE)), currency = InvoiceCurrency.GBP, exchangeRate = rate(InvoiceCurrency.GBP, "5.1655"))
+        val text = writeValid(draft).toString(Charsets.UTF_8)
+
+        assertTrue(text.contains("<KodWaluty>GBP</KodWaluty>"))
+        assertFalse(text.contains("P_14_"))
+        assertTrue(text.contains("<KursWaluty>5.1655</KursWaluty>"))
+        assertTrue(text.contains("1 GBP = 5,1655 PLN"))
+    }
+
+    @Test
+    fun `rate keeps four decimals`() {
+        val text = writeValid(draft(currency = InvoiceCurrency.EUR, exchangeRate = rate(rate = "4.3800"))).toString(Charsets.UTF_8)
+
+        assertTrue(text.contains("<KursWaluty>4.3800</KursWaluty>"))
+        assertTrue(text.contains("1 EUR = 4,3800 PLN"))
+    }
+
+    @Test
+    fun `foreign currency invoice without a rate of that currency is not written`() {
+        assertThrows<IllegalArgumentException> { Fa3XmlWriter.write(draft(currency = InvoiceCurrency.EUR), createdAt) }
+        assertThrows<IllegalArgumentException> {
+            Fa3XmlWriter.write(draft(currency = InvoiceCurrency.EUR, exchangeRate = rate(InvoiceCurrency.USD)), createdAt)
+        }
     }
 
     @Test

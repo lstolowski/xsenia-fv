@@ -21,6 +21,12 @@ enum class DraftIssueType {
     LINE_PRICE_NEGATIVE,
     LINE_PRICE_TOO_PRECISE,
     TOTAL_NOT_POSITIVE,
+
+    /** Foreign currency invoice without the NBP rate of that currency (ADR 0008). */
+    EXCHANGE_RATE_MISSING,
+
+    /** Warning only: the bank account is in another currency than the invoice (decision Q2). */
+    BANK_ACCOUNT_CURRENCY_MISMATCH,
 }
 
 /** @property lineIndex 0-based line, for line issues. @property blocking false for warnings. */
@@ -66,6 +72,10 @@ object DraftValidator {
         }
         if (draft.lines.isNotEmpty() && InvoiceCalculator.totals(draft.lines).gross <= BigDecimal.ZERO) {
             add(DraftIssue(DraftIssueType.TOTAL_NOT_POSITIVE))
+        }
+        if (draft.currency.isForeign && draft.effectiveExchangeRate == null) add(DraftIssue(DraftIssueType.EXCHANGE_RATE_MISSING))
+        if (draft.bankAccount.currency != draft.currency.code) {
+            add(DraftIssue(DraftIssueType.BANK_ACCOUNT_CURRENCY_MISMATCH, blocking = false))
         }
     }
 }

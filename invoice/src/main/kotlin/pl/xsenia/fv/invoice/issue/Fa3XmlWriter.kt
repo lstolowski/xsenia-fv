@@ -1,5 +1,6 @@
 package pl.xsenia.fv.invoice.issue
 
+import pl.xsenia.fv.invoice.currency.ExchangeRate
 import pl.xsenia.fv.invoice.profile.Address
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -9,8 +10,10 @@ import java.time.temporal.ChronoUnit
 /**
  * Writes a sales invoice as FA(3) XML (`schemat_FA(3)_v1-0E.xsd`).
  *
- * Fixed content (decisions C1–C14, R4–R10): VAT invoice in PLN, Polish buyer with NIP, bank transfer due in 21 days,
+ * Fixed content (decisions C1–C14, R4–R10): VAT invoice, Polish buyer with NIP, bank transfer due in 21 days,
  * no split payment, all annotations "no" except reverse charge for "np" lines. VAT rate per line (ADR 0005).
+ * A foreign currency invoice (ADR 0008) adds VAT in PLN (`P_14_xW`), the NBP rate in every line (`KursWaluty`)
+ * and the remark "Kurs waluty" with the NBP table; a PLN invoice has none of them.
  * The XML is built as text (not via javax.xml.transform) so the bytes — and thus the hash sent to KSeF —
  * are identical on the JVM and on Android.
  */
@@ -28,13 +31,18 @@ object Fa3XmlWriter {
     const val REMARKS_KEY = "Uwagi"
     const val REVERSE_CHARGE_REMARK = "Reverse charge"
 
+    // Remark on foreign currency invoices (ADR 0008, decision Q5).
+    const val EXCHANGE_RATE_KEY = "Kurs waluty"
+
     // FA(3) annotation values: 1 — yes, 2 — no (for the "N" elements: 1 — the case does not apply).
     private const val YES = "1"
     private const val NO = "2"
     private const val NOT_APPLICABLE = "1"
 
     fun write(draft: SalesInvoiceDraft, createdAt: Instant): ByteArray {
-        val totals = InvoiceCalculator.totals(draft.lines)
+        val exchangeRate = draft.effectiveExchangeRate
+        require(!draft.currency.isForeign || exchangeRate != null) { "A ${draft.currency} invoice needs an exchange rate of that currency" }
+        val totals = InvoiceCalculator.totals(draft)
         val xml = XmlBuilder()
         xml.element("Faktura", "xmlns" to NAMESPACE) {
             element("Naglowek") {
@@ -68,7 +76,7 @@ object Fa3XmlWriter {
                 value("GV", NO)
             }
             element("Fa") {
-                value("KodWaluty", InvoiceCalculator.CURRENCY)
+                value("KodWaluty", draft.currency.code)
                 value("P_1", draft.issueDate.toString())
                 value("P_2", draft.invoiceNumber)
                 // P_6 only when the delivery date differs from the issue date.
@@ -87,12 +95,8 @@ object Fa3XmlWriter {
                     element("PMarzy") { value("P_PMarzyN", NOT_APPLICABLE) }
                 }
                 value("RodzajFaktury", "VAT")
-                if (reverseCharge) {
-                    element("DodatkowyOpis") {
-                        value("Klucz", REMARKS_KEY)
-                        value("Wartosc", REVERSE_CHARGE_REMARK)
-                    }
-                }
+                if (reverseCharge) remark(REMARKS_KEY, REVERSE_CHARGE_REMARK)
+                exchangeRate?.let { remark(EXCHANGE_RATE_KEY, exchangeRateRemark(it)) }
                 draft.lines.forEachIndexed { index, line ->
                     element("FaWiersz") {
                         value("NrWierszaFa", (index + 1).toString())
@@ -102,6 +106,7 @@ object Fa3XmlWriter {
                         value("P_9A", decimal(line.unitNetPrice))
                         value("P_11", amount(InvoiceCalculator.lineNet(line)))
                         value("P_12", line.vatRate.code)
+                        exchangeRate?.let { value("KursWaluty", it.rate.toPlainString()) }
                     }
                 }
                 element("Platnosc") {
@@ -131,7 +136,17 @@ object Fa3XmlWriter {
     private fun XmlBuilder.netAndVat(netField: String, vatField: String, totals: RateTotals) {
         value(netField, amount(totals.net))
         value(vatField, amount(totals.vat))
+        totals.vatPln?.let { value(vatField + "W", amount(it)) }
     }
+
+    private fun XmlBuilder.remark(key: String, text: String) = element("DodatkowyOpis") {
+        value("Klucz", key)
+        value("Wartosc", text)
+    }
+
+    /** E.g. "1 EUR = 4,3775 PLN, tabela NBP 197/A/NBP/2026 z 2026-10-09". */
+    fun exchangeRateRemark(rate: ExchangeRate): String =
+        "1 ${rate.currency.code} = ${rate.rate.toPlainString().replace('.', ',')} PLN, tabela NBP ${rate.tableNumber} z ${rate.effectiveDate}"
 
     private fun XmlBuilder.address(address: Address) = element("Adres") {
         value("KodKraju", COUNTRY_CODE)

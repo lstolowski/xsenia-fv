@@ -21,6 +21,9 @@ enum class VatRate(val code: String, val percent: BigDecimal) {
     NOT_TAXABLE("np II", BigDecimal.ZERO),
     ;
 
+    /** The rate has a VAT amount field (`P_14_x`) and, on a foreign currency invoice, its PLN value (`P_14_xW`). */
+    val hasVatAmount: Boolean get() = percent.signum() > 0
+
     companion object {
         val DEFAULT = RATE_23
     }

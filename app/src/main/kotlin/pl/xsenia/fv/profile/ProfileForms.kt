@@ -90,7 +90,7 @@ data class BankAccountFormFields(
     val name: String = "",
     val bank: String = "",
     val number: String = "",
-    val currency: String = CompanyProfile.INVOICE_CURRENCY,
+    val currency: String = CompanyProfile.DEFAULT_CURRENCY,
 ) {
     fun toInput() = BankAccountInput(name, number, bank, currency)
 
@@ -103,7 +103,7 @@ data class BankAccountFormFields(
 
 /** Currencies offered for a bank account; invoices use PLN accounts only (ADR 0006). */
 object BankAccountCurrencies {
-    val ALL = listOf(CompanyProfile.INVOICE_CURRENCY, "EUR", "USD", "GBP")
+    val ALL = listOf(CompanyProfile.DEFAULT_CURRENCY, "EUR", "USD", "GBP")
 
     /** An account saved earlier with another currency keeps it as an extra option until the user changes it. */
     fun options(current: String): List<String> = if (current in ALL) ALL else ALL + current

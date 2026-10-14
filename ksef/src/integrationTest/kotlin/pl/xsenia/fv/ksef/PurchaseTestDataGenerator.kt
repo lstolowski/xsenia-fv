@@ -4,10 +4,10 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
-import pl.xsenia.fv.invoice.config.Address
-import pl.xsenia.fv.invoice.config.BankAccount
-import pl.xsenia.fv.invoice.config.Company
-import pl.xsenia.fv.invoice.config.Counterparty
+import pl.xsenia.fv.invoice.profile.Address
+import pl.xsenia.fv.invoice.profile.BankAccount
+import pl.xsenia.fv.invoice.profile.Company
+import pl.xsenia.fv.invoice.profile.Counterparty
 import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
 import pl.xsenia.fv.invoice.issue.SalesInvoiceDraft

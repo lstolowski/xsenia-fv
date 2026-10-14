@@ -25,7 +25,7 @@ data class BankAccount(
     val name: String,
     val bank: String? = null,
     @SerialName("account") val number: String,
-    val currency: String = CompanyProfile.INVOICE_CURRENCY,
+    val currency: String = CompanyProfile.DEFAULT_CURRENCY,
 )
 
 /** Buyer (Podmiot2); identified by [nip], which does not change once the counterparty is saved. */
@@ -48,9 +48,16 @@ data class CompanyProfile(
     val counterparties: List<Counterparty> = emptyList(),
 ) {
 
-    /** Accounts offered on a new invoice — invoices are issued in PLN only; the first one is the default. */
+    /**
+     * Accounts offered on a new invoice: all of them. An account in another currency than the invoice only gives
+     * a warning (ADR 0008, decision Q2).
+     */
     val invoiceBankAccounts: List<BankAccount>
-        get() = bankAccounts.filter { it.currency == INVOICE_CURRENCY }
+        get() = bankAccounts
+
+    /** Default account of an invoice in [currency]: the first one in that currency, otherwise the first one. */
+    fun defaultBankAccount(currency: String): BankAccount? =
+        bankAccounts.firstOrNull { it.currency == currency } ?: bankAccounts.firstOrNull()
 
     val gaps: List<ProfileGap>
         get() = listOfNotNull(
@@ -63,6 +70,7 @@ data class CompanyProfile(
         get() = gaps.isEmpty()
 
     companion object {
-        const val INVOICE_CURRENCY = "PLN"
+        /** Currency of a new bank account. */
+        const val DEFAULT_CURRENCY = "PLN"
     }
 }

@@ -6,14 +6,21 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
-import pl.xsenia.fv.invoice.config.Address
-import pl.xsenia.fv.invoice.config.BankAccount
-import pl.xsenia.fv.invoice.config.Company
-import pl.xsenia.fv.invoice.config.Counterparty
+import pl.xsenia.fv.invoice.profile.Address
+import pl.xsenia.fv.invoice.profile.BankAccount
+import pl.xsenia.fv.invoice.profile.Company
+import pl.xsenia.fv.invoice.profile.Counterparty
+import pl.xsenia.fv.exchangerates.ExchangeRateResult
+import pl.xsenia.fv.exchangerates.NbpClient
+import pl.xsenia.fv.exchangerates.lastRateBefore
+import pl.xsenia.fv.invoice.currency.ExchangeRateDateRule
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.issue.DraftLine
 import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
+import pl.xsenia.fv.invoice.issue.InvoiceCalculator
 import pl.xsenia.fv.invoice.issue.SalesInvoiceDraft
 import pl.xsenia.fv.invoice.issue.VatRate
+import pl.xsenia.fv.invoice.model.Invoice
 import pl.xsenia.fv.invoice.xml.InvoiceXmlParser
 import pl.xsenia.fv.ksef.auth.KsefAuthenticator
 import pl.xsenia.fv.ksef.auth.KsefPublicKeyProvider
@@ -31,7 +38,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
- * Sends ONE invoice with fictitious data to KSeF TEST (allowed by the user, see AGENTS.md).
+ * Each test sends ONE invoice with fictitious data to KSeF TEST (allowed by the user, see AGENTS.md).
  * The number `IT/...` does not follow the NN/MM/RRRR scheme, so it never affects number suggestions.
  */
 class KsefInvoiceSendIntegrationTest {
@@ -47,26 +54,80 @@ class KsefInvoiceSendIntegrationTest {
     @AfterEach
     fun closeClient() = httpClient.close()
 
+    private val today = LocalDate.now(ZoneId.of("Europe/Warsaw"))
+    private val seller = Company("Jan Testowy Usługi Testowe", config.nip, Address("ul. Testowa 1", "00-001 Testowo", null), null, null)
+    private val buyer = Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6", "00-002 Testowo", null), null)
+
     @Test
     fun `sends a generated FA(3) invoice and receives KSeF number and UPO`(): Unit = runBlocking {
-        val now = Instant.now()
-        val today = LocalDate.now(ZoneId.of("Europe/Warsaw"))
-        val number = "IT/" + DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneOffset.UTC).format(now)
-        val xml = Fa3XmlWriter.write(
+        val number = invoiceNumber("IT/")
+        val invoice = sendAndDownload(
             SalesInvoiceDraft(
                 invoiceNumber = number,
                 issueDate = today,
                 deliveryDate = today,
-                seller = Company("Jan Testowy Usługi Testowe", config.nip, Address("ul. Testowa 1", "00-001 Testowo", null), null, null),
-                buyer = Counterparty("Testowa Sp. z o.o.", "6691034274", Address("ul. Testowa 6", "00-002 Testowo", null), null),
+                seller = seller,
+                buyer = buyer,
                 bankAccount = BankAccount("Konto testowe", "Toyota Bank", "85216097583216850246002152", "PLN"),
                 // One line per supported rate, including "np" (np II, reverse charge with the remark) — ADR 0005.
                 lines = VatRate.entries.map { rate ->
                     DraftLine("Usługa testowa (test integracyjny, ${rate.code})", BigDecimal.ONE, "godz.", BigDecimal("1.00"), rate)
                 },
             ),
-            createdAt = now,
         )
+
+        assertEquals(number, invoice.invoiceNumber)
+        assertEquals("PLN", invoice.currency)
+        assertEquals(VatRate.entries.map { it.code }, invoice.lines.map { it.vatRate })
+        assertTrue(invoice.annotations.reverseCharge)
+        assertEquals(listOf("Uwagi" to "Reverse charge"), invoice.additionalInfo)
+    }
+
+    /** EUR invoice with the real NBP rate chosen by the VAT act rule for sending today (ADR 0008). */
+    @Test
+    fun `sends an EUR invoice with the NBP rate and VAT in PLN`(): Unit = runBlocking {
+        val nbp = NbpClient.createHttpClient()
+        val result = try {
+            NbpClient(nbp).lastRateBefore(InvoiceCurrency.EUR, ExchangeRateDateRule.referenceDate(deliveryDate = today, issueDay = today))
+        } finally {
+            nbp.close()
+        }
+        val rate = (result as? ExchangeRateResult.Found)?.rate ?: error("No NBP rate: $result")
+        val number = invoiceNumber("IT/EUR/")
+        val draft = SalesInvoiceDraft(
+            invoiceNumber = number,
+            issueDate = today,
+            deliveryDate = today,
+            seller = seller,
+            buyer = buyer,
+            bankAccount = BankAccount("Konto testowe EUR", "Toyota Bank", "83216097587877893287921742", "EUR"),
+            lines = listOf(
+                DraftLine("Usługa testowa (test integracyjny, EUR 23%)", BigDecimal(10), "godz.", BigDecimal("100.00"), VatRate.RATE_23),
+                DraftLine("Usługa testowa (test integracyjny, EUR np)", BigDecimal.ONE, "usł.", BigDecimal("500.00"), VatRate.NOT_TAXABLE),
+            ),
+            currency = InvoiceCurrency.EUR,
+            exchangeRate = rate,
+        )
+
+        val invoice = sendAndDownload(draft)
+
+        assertEquals(number, invoice.invoiceNumber)
+        assertEquals("EUR", invoice.currency)
+        assertEquals(List(2) { rate.rate }, invoice.lines.map { it.exchangeRate })
+        assertEquals(InvoiceCalculator.totals(draft).byRate.first().vatPln, invoice.vatSummary.first().vatInPln)
+        assertEquals(BigDecimal("1730.00"), invoice.grossTotal)
+        assertEquals(
+            listOf("Uwagi" to "Reverse charge", Fa3XmlWriter.EXCHANGE_RATE_KEY to Fa3XmlWriter.exchangeRateRemark(rate)),
+            invoice.additionalInfo,
+        )
+    }
+
+    private fun invoiceNumber(prefix: String) =
+        prefix + DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneOffset.UTC).format(Instant.now())
+
+    /** Sends the invoice, checks the KSeF number and UPO, and returns the invoice as stored in KSeF. */
+    private suspend fun sendAndDownload(draft: SalesInvoiceDraft): Invoice {
+        val xml = Fa3XmlWriter.write(draft, createdAt = Instant.now())
 
         val sent = KsefInvoiceSender(httpClient, tokens, publicKeys).send(xml)
 
@@ -77,10 +138,6 @@ class KsefInvoiceSendIntegrationTest {
         // The invoice stored in KSeF is exactly the XML we generated.
         val downloaded = KsefInvoiceClient(httpClient, tokens, publicKeys).downloadInvoiceXml(sent.ksefNumber)
         assertEquals(KsefCrypto.sha256Base64(xml), downloaded.sha256Base64)
-        val invoice = InvoiceXmlParser.parse(downloaded.content)
-        assertEquals(number, invoice.invoiceNumber)
-        assertEquals(VatRate.entries.map { it.code }, invoice.lines.map { it.vatRate })
-        assertTrue(invoice.annotations.reverseCharge)
-        assertEquals(listOf("Uwagi" to "Reverse charge"), invoice.additionalInfo)
+        return InvoiceXmlParser.parse(downloaded.content)
     }
 }

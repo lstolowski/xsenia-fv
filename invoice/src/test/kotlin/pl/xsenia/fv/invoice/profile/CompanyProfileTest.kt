@@ -19,7 +19,8 @@ class CompanyProfileTest {
 
         assertTrue(profile.canIssueInvoices)
         assertEquals(emptyList<ProfileGap>(), profile.gaps)
-        assertEquals(listOf(pln), profile.invoiceBankAccounts)
+        // All accounts are offered, in their order; another currency than the invoice is only a warning (ADR 0008).
+        assertEquals(listOf(eur, pln), profile.invoiceBankAccounts)
     }
 
     @Test
@@ -28,9 +29,20 @@ class CompanyProfileTest {
             listOf(ProfileGap.COMPANY, ProfileGap.BANK_ACCOUNT, ProfileGap.COUNTERPARTY),
             CompanyProfile("1996845518").gaps,
         )
-        // Only PLN accounts can be put on an invoice.
+        // Any account is enough — also one in a foreign currency (ADR 0008).
         val onlyEur = CompanyProfile("1996845518", company, listOf(eur), listOf(counterparty))
-        assertEquals(listOf(ProfileGap.BANK_ACCOUNT), onlyEur.gaps)
-        assertFalse(onlyEur.canIssueInvoices)
+        assertEquals(emptyList<ProfileGap>(), onlyEur.gaps)
+        assertTrue(onlyEur.canIssueInvoices)
+        assertFalse(CompanyProfile("1996845518", company, emptyList(), listOf(counterparty)).canIssueInvoices)
+    }
+
+    @Test
+    fun `default account is the first one in the invoice currency`() {
+        val profile = CompanyProfile("1996845518", company, listOf(eur, pln), listOf(counterparty))
+
+        assertEquals(pln, profile.defaultBankAccount("PLN"))
+        assertEquals(eur, profile.defaultBankAccount("EUR"))
+        assertEquals(eur, profile.defaultBankAccount("GBP"))
+        assertEquals(null, CompanyProfile("1996845518").defaultBankAccount("PLN"))
     }
 }

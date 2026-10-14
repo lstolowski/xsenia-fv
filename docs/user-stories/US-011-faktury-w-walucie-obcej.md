@@ -1,7 +1,7 @@
 # US-011. Faktury w walucie obcej (EUR, USD, GBP) z kursem NBP
 
 - Priorytet: MVP
-- Status: Gotowa
+- Status: W realizacji (ZAD-026, ZAD-027 zrobione)
 - Zgłoszone: 2026-10-13
 
 ## Historyjka
@@ -14,9 +14,9 @@ Uzupełnia stawkę „np” (reverse charge, [US-009](US-009-stawki-vat-jednostk
 
 ### Serwis kursów walut
 
-- [ ] Jeden serwis w kodzie zwraca kurs średni NBP z tabeli A (`mid`) waluty EUR, USD lub GBP w PLN z danego dnia — `https://api.nbp.pl/api/exchangerates/rates/a/{code}/{date}/?format=json`, np. „EUR z 2026-10-12” → `4.3889` — oraz kurs z ostatniego dnia roboczego przed danym dniem. Kurs z 4 miejscami po przecinku, z numerem i datą tabeli.
-- [ ] Dzień bez tabeli (weekend, święto) — „kurs z dnia” zwraca brak tabeli, „kurs przed dniem” pomija takie dni.
-- [ ] Brak sieci, błąd serwera — czytelne komunikaty po polsku; kursy z przeszłości nie są pobierane drugi raz.
+- [x] Jeden serwis w kodzie zwraca kurs średni NBP z tabeli A (`mid`) waluty EUR, USD lub GBP w PLN z danego dnia — `https://api.nbp.pl/api/exchangerates/rates/a/{code}/{date}/?format=json`, np. „EUR z 2026-10-12” → `4.3889` — oraz kurs z ostatniego dnia roboczego przed danym dniem. Kurs z 4 miejscami po przecinku, z numerem i datą tabeli.
+- [x] Dzień bez tabeli (weekend, święto) — „kurs z dnia” zwraca brak tabeli, „kurs przed dniem” pomija takie dni.
+- [x] Brak sieci, błąd serwera — czytelne komunikaty po polsku; kursy z przeszłości nie są pobierane drugi raz.
 
 ### Formularz „Nowa faktura”
 
@@ -28,7 +28,7 @@ Uzupełnia stawkę „np” (reverse charge, [US-009](US-009-stawki-vat-jednostk
 
 ### Reguła kursu
 
-- [ ] Dzień odniesienia = wcześniejsza z dat: data dostawy, dzień wystawienia. Kurs = tabela A NBP z ostatniego dnia roboczego **przed** dniem odniesienia.
+- [x] Dzień odniesienia = wcześniejsza z dat: data dostawy, dzień wystawienia. Kurs = tabela A NBP z ostatniego dnia roboczego **przed** dniem odniesienia.
 - [ ] Przy zapisie bez wysyłki dzień wystawienia = data wystawienia z formularza (kurs roboczy).
 - [ ] Przy wysyłce do KSeF dzień wystawienia = dzień wysyłki; kurs ostateczny pobierany ponownie i aktualizowany w locie.
 
@@ -40,18 +40,18 @@ Uzupełnia stawkę „np” (reverse charge, [US-009](US-009-stawki-vat-jednostk
 
 ### Faktura w KSeF (FA(3))
 
-- [ ] `KodWaluty` = waluta faktury; netto, VAT i brutto w walucie faktury.
-- [ ] Waluta obca: `KursWaluty` (4 miejsca) w każdej pozycji; `P_14_1W`/`P_14_2W`/`P_14_3W` = VAT stawki × kurs, zaokrąglony do grosza.
-- [ ] Waluta obca: uwaga `DodatkowyOpis` „Kurs waluty” — „1 EUR = 4,3775 PLN, tabela NBP 197/A/NBP/2026 z 2026-10-09”.
-- [ ] Faktura w PLN — XML bez zmian.
-- [ ] Faktura w EUR (23% oraz „np”) jest przyjmowana przez KSeF TEST (dane zmyślone).
+- [x] `KodWaluty` = waluta faktury; netto, VAT i brutto w walucie faktury.
+- [x] Waluta obca: `KursWaluty` (4 miejsca) w każdej pozycji; `P_14_1W`/`P_14_2W`/`P_14_3W` = VAT stawki × kurs, zaokrąglony do grosza.
+- [x] Waluta obca: uwaga `DodatkowyOpis` „Kurs waluty” — „1 EUR = 4,3775 PLN, tabela NBP 197/A/NBP/2026 z 2026-10-09”.
+- [x] Faktura w PLN — XML bez zmian.
+- [x] Faktura w EUR (23% oraz „np”) jest przyjmowana przez KSeF TEST (dane zmyślone).
 
 ### Pozostałe
 
 - [ ] Szczegóły wysłanej faktury w walucie obcej — kurs i VAT w PLN.
 - [ ] Listy: faktura niewysłana pokazuje kwotę w swojej walucie; sumy miesiąca liczone osobno per waluta (już działa dla faktur z KSeF).
-- [ ] Formularz rachunku w „Moja firma” ma listę walut PLN, EUR, USD, GBP.
-- [ ] Do wystawienia faktury wystarczy dowolny rachunek (dotąd wymagany rachunek PLN — US-010).
+- [x] Formularz rachunku w „Moja firma” ma listę walut PLN, EUR, USD, GBP.
+- [x] Do wystawienia faktury wystarczy dowolny rachunek (dotąd wymagany rachunek PLN — US-010).
 
 ## Uwagi / pytania
 

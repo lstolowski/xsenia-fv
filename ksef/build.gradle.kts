@@ -49,6 +49,7 @@ testing {
                 implementation(project())
                 implementation(testFixtures(project()))
                 implementation(project(":invoice"))
+                implementation(project(":exchangerates"))
                 implementation(libs.kotlinx.coroutines.test)
             }
             targets.all {

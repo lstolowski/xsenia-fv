@@ -134,6 +134,7 @@ object InvoiceXmlParser {
         vatRate = line.text("P_12"),
         deliveryDate = line.date("P_6A"),
         isStateBefore = line.text("StanPrzed") == "1",
+        exchangeRate = line.decimal("KursWaluty"),
     )
 
     private fun parseAnnotations(element: Element?) = Annotations(

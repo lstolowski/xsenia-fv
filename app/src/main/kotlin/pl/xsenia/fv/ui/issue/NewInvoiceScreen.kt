@@ -766,6 +766,8 @@ private fun draftIssueText(issue: DraftIssue): String = stringResource(
         DraftIssueType.LINE_PRICE_NEGATIVE -> R.string.issue_line_price_negative
         DraftIssueType.LINE_PRICE_TOO_PRECISE -> R.string.issue_line_price_too_precise
         DraftIssueType.TOTAL_NOT_POSITIVE -> R.string.issue_total_not_positive
+        DraftIssueType.EXCHANGE_RATE_MISSING -> R.string.issue_exchange_rate_missing
+        DraftIssueType.BANK_ACCOUNT_CURRENCY_MISMATCH -> R.string.issue_bank_account_currency_mismatch
     },
 )
 

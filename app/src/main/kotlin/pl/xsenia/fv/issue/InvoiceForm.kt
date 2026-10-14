@@ -2,6 +2,7 @@ package pl.xsenia.fv.issue
 
 import kotlinx.serialization.Serializable
 import pl.xsenia.fv.invoice.profile.CompanyProfile
+import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.issue.DefaultDates
 import pl.xsenia.fv.invoice.issue.DraftIssue
 import pl.xsenia.fv.invoice.issue.DraftLine
@@ -50,7 +51,7 @@ object InvoiceFormDefaults {
         val deliveryDate = DefaultDates.deliveryDate(today)
         return InvoiceForm(
             counterpartyNip = profile?.counterparties?.singleOrNull()?.nip,
-            bankAccountNumber = profile?.invoiceBankAccounts?.firstOrNull()?.number,
+            bankAccountNumber = profile?.defaultBankAccount(InvoiceCurrency.DEFAULT.code)?.number,
             issueDate = today,
             deliveryDate = deliveryDate,
             invoiceNumber = InvoiceNumbering.suggest(deliveryDate, existingNumbers),
@@ -58,12 +59,12 @@ object InvoiceFormDefaults {
     }
 
     /**
-     * Defaults that were not available when the form was opened (no account or counterparty yet): the first PLN account
-     * and the only counterparty. Choices already made are kept.
+     * Defaults that were not available when the form was opened (no account or counterparty yet): the default account
+     * of a PLN invoice and the only counterparty. Choices already made are kept.
      */
     fun fillMissing(form: InvoiceForm, profile: CompanyProfile): InvoiceForm = form.copy(
         counterpartyNip = form.counterpartyNip ?: profile.counterparties.singleOrNull()?.nip,
-        bankAccountNumber = form.bankAccountNumber ?: profile.invoiceBankAccounts.firstOrNull()?.number,
+        bankAccountNumber = form.bankAccountNumber ?: profile.defaultBankAccount(InvoiceCurrency.DEFAULT.code)?.number,
     )
 
     /**
