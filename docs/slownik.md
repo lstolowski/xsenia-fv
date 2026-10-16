@@ -62,6 +62,8 @@ Zasada: nomenklatura KSeF, chyba że użytkownik zdecyduje inaczej (kolumna „U
 | Eksport paczki | `exportInvoices` / `InvoiceExport` | Asynchroniczne pobranie wielu faktur (XML + `_metadata.json`) w zaszyfrowanej paczce ZIP | |
 | Rola podmiotu | `InvoiceSubjectType` (`SELLER` = Podmiot1, `BUYER` = Podmiot2) | Sprzedażowe = `SELLER`, zakupowe = `BUYER` | |
 | Szkic faktury | `InvoiceForm` (`issue/draft.json`) | Automatycznie zapisywany formularz nowej faktury | |
+| Podpowiedź dat i numeru | `InvoiceFormDefaults` (`withDefaults`, `withDefaultDates`, `withSuggestedNumber`, `suggestedNumber`, `changeDeliveryDate`) | Jedyne miejsce, które ustawia w formularzu datę wystawienia (dziś), datę dostawy (`DefaultDates`, R3) i sugerowany numer (`InvoiceNumbering`, C6) — nowa faktura, otwarty szkic, „Wystaw podobną” | ADR 0011 |
+| Wystaw podobną | `SimilarInvoice` (`of`, `canCopy`, `newCounterparty`), `InvoiceDetailsViewModel.issueSimilar` | Nowa faktura z kopią kontrahenta, pozycji, rachunku i waluty faktury sprzedażowej VAT; daty i numer jak dla nowej; brakujący nabywca dopisywany do Kontrahentów; kopia zastępuje szkic | US-015, ADR 0011 |
 | Brak kursu przy wysyłce | `SendState.RateUnavailable` | Kurs NBP na dzień wysyłki nie został pobrany — faktura nie trafia do KSeF, zostaje szkicem lub niewysłaną | ADR 0008, Q3 |
 | Faktura niewysłana | `UnsentInvoice` | Faktura sprzedażowa zapisana na telefonie bez wysyłki do KSeF, edytowalna (US-007) | Oznaczenie: żółty trójkąt z wykrzyknikiem |
 | PDF faktury | `InvoicePdfLayout` (`PdfPage`, `PdfElement`), `InvoicePdfLabels` | PDF faktury sprzedażowej do udostępnienia: A4, etykiety PL albo PL / EN (nabywca zagraniczny), numer KSeF albo „Faktura nie wysłana do KSeF”; bez kodu QR | ADR 0010 |

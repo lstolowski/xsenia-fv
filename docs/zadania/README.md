@@ -40,6 +40,8 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-034](ZAD-034-pdf-uklad.md) | PDF faktury: układ, strony, etykiety PL / PL+EN | US-013 | Zrobione |
 | [ZAD-035](ZAD-035-pdf-rysowanie-udostepnianie.md) | PDF faktury: rysowanie, udostępnianie, ikony w aplikacji | US-013 | Zrobione |
 | [ZAD-036](ZAD-036-bic-swift-rachunku.md) | BIC (SWIFT) rachunku: model, formularz, XML FA(3), PDF, ostrzeżenie | US-014 | Zrobione |
+| [ZAD-037](ZAD-037-wspolna-podpowiedz-kopia-faktury.md) | Wspólna podpowiedź dat i numeru, kopiowanie faktury do formularza | US-015 | Zrobione |
+| [ZAD-038](ZAD-038-ui-wystaw-podobna.md) | UI: przycisk „Wystaw podobną”, szkic i kontrahent, przejście do formularza | US-015 | Zrobione |
 
 Weryfikacja na urządzeniu fizycznym (2026-10-13): użytkownik sprawdził zadania 001–020 (poza 002 — infrastruktura testów integracyjnych) na swoim telefonie z KSeF TEST — aplikacja działa i wygląda poprawnie.
 
@@ -54,3 +56,5 @@ US-012: 030 → 031 → 032 → 033.
 US-013: 034 → 035.
 
 US-014: 036.
+
+US-015: 037 → 038.

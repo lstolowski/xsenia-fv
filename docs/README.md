@@ -20,6 +20,7 @@
 4. [04-faktury-w-walucie-obcej.md](analiza/04-faktury-w-walucie-obcej.md) — faktury w EUR/USD/GBP: pola FA(3), reguła kursu, API NBP
 5. [05-nabywca-zagraniczny.md](analiza/05-nabywca-zagraniczny.md) — nabywca bez polskiego NIP-u: Podmiot2 w FA(3), np I / np II, VIES
 6. [06-pdf-kod-qr.md](analiza/06-pdf-kod-qr.md) — PDF faktury sprzedażowej i udostępnianie (kod QR KSeF odłożony)
+7. [07-wystaw-podobna.md](analiza/07-wystaw-podobna.md) — „Wystaw podobną”: kopia faktury sprzedażowej do formularza, wspólna podpowiedź dat i numeru
 
 ## Środowisko
 

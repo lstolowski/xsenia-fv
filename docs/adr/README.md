@@ -15,3 +15,4 @@ Statusy: `Proponowany` → `Zaakceptowany` | `Odrzucony`; później ewentualnie 
 | [0008](0008-kursy-walut-nbp.md) | Faktury w walucie obcej i kursy walut z API NBP | Zaakceptowany |
 | [0009](0009-nabywca-zagraniczny.md) | Nabywca zagraniczny: kraj i identyfikator kontrahenta, „np I” / „np II” | Zaakceptowany |
 | [0010](0010-pdf-faktury.md) | PDF faktury sprzedażowej generowany w aplikacji i udostępniany przez Androida | Zaakceptowany |
+| [0011](0011-wystaw-podobna.md) | „Wystaw podobną” — kopia faktury jako szkic nowej faktury, wspólna podpowiedź dat i numeru | Zaakceptowany |
