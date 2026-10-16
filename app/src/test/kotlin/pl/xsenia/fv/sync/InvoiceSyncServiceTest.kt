@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import pl.xsenia.fv.ksef.KsefFailure
 import pl.xsenia.fv.ksef.invoices.InvoiceExport
 import pl.xsenia.fv.ksef.invoices.InvoiceMetadataResult
 import pl.xsenia.fv.ksef.invoices.InvoiceSubjectType
@@ -46,6 +47,23 @@ class InvoiceSyncServiceTest {
         override suspend fun exportStored(subjectType: InvoiceSubjectType, from: Instant, to: Instant?): InvoiceExport {
             started.complete(Unit)
             never.await()
+        }
+    }
+
+    /** KSeF source that fails with [error] (not a KSeF error: e.g. damaged local data). */
+    private class BrokenSource(var error: Exception? = IllegalStateException("boom")) : InvoiceSource {
+        private val hanging = HangingSource()
+
+        override suspend fun queryStoredSince(subjectType: InvoiceSubjectType, from: Instant, to: Instant): InvoiceMetadataResult {
+            error?.let { throw it }
+            return hanging.queryStoredSince(subjectType, from, to)
+        }
+
+        override suspend fun downloadXml(ksefNumber: String): ByteArray = hanging.downloadXml(ksefNumber)
+
+        override suspend fun exportStored(subjectType: InvoiceSubjectType, from: Instant, to: Instant?): InvoiceExport {
+            error?.let { throw it }
+            return hanging.exportStored(subjectType, from, to)
         }
     }
 
@@ -107,5 +125,41 @@ class InvoiceSyncServiceTest {
 
         assertFalse(mirrorDir.exists())
         assertFalse(service.state.value.running)
+    }
+
+    @Test
+    fun `an unexpected error ends the synchronization with a generic failure and the next one can start`() = runBlocking {
+        val source = BrokenSource()
+        val service = service(source, InvoiceMirror(File(dir, "invoices")))
+
+        service.syncNow()
+        val failed = withTimeout(10_000) { service.state.first { !it.running && it.error != null } }
+
+        assertEquals(KsefFailure.Unexpected, failed.error)
+
+        // Not stuck: another attempt starts (and now runs into the hanging source).
+        source.error = null
+        service.syncNow()
+        assertTrue(service.state.value.running)
+        withTimeout(10_000) { service.clearMirror() }
+        assertFalse(service.state.value.running)
+    }
+
+    @Test
+    fun `a corrupted mirror index does not crash the service and the mirror is downloaded again`() = runBlocking {
+        val mirrorDir = File(dir, "invoices")
+        File(mirrorDir, "sales").mkdirs()
+        File(mirrorDir, "sales/index.json").writeText("[{ broken")
+        val source = HangingSource()
+        val service = service(source, InvoiceMirror(mirrorDir))
+
+        // The initial refresh read the damaged index: counts are zero, no exception.
+        withTimeout(10_000) { service.state.first { it.mirrorVersion > 0 } }
+        assertEquals(0, service.state.value.invoiceCounts[pl.xsenia.fv.mirror.InvoiceCategory.SALES])
+
+        service.syncNow()
+        withTimeout(10_000) { source.started.await() }
+        assertTrue(service.state.value.running)
+        withTimeout(10_000) { service.clearMirror() }
     }
 }

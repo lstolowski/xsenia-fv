@@ -91,14 +91,15 @@ class InvoiceSyncService(
         syncJob = scope.launch(start = CoroutineStart.ATOMIC) {
             var error: KsefFailure? = null
             try {
-                // TODO CODE REVIEWED: Unmapped exceptions are rethrown before running is reset; e.g. a corrupted mirror index can leave this service permanently marked running and disable future sync attempts. Reset state in a finally path and surface a generic failure.
                 error = try {
                     mirrorLock.withLock { synchronize() }
                     null
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    e.toKsefFailure() ?: throw e
+                    // An error that is not a KSeF problem (damaged local data, a bug) must not leave the service
+                    // "running" for ever, nor crash the app: it is shown as a generic failure.
+                    e.toKsefFailure() ?: KsefFailure.Unexpected
                 }
                 refreshFromMirror()
             } finally {
@@ -124,13 +125,22 @@ class InvoiceSyncService(
         if (readToken() == null) throw KsefFailureException(KsefFailure.MissingToken)
 
         withContext(Dispatchers.IO) {
+            // Reading the indexes first drops a corrupted one (with its checkpoint) before the synchronizer relies on it.
+            InvoiceCategory.entries.forEach { mirror.entries(it) }
             synchronizer.value.sync { progress -> _state.update { it.copy(progress = progress) } }
         }
     }
 
+    /** Updates the counts and the last synchronization from the mirror; a mirror that cannot be read is left as it was. */
     private suspend fun refreshFromMirror() {
-        val (counts, lastSync) = withContext(Dispatchers.IO) {
-            InvoiceCategory.entries.associateWith { mirror.entries(it).size } to mirror.syncState().lastSyncAt
+        val (counts, lastSync) = try {
+            withContext(Dispatchers.IO) {
+                InvoiceCategory.entries.associateWith { mirror.entries(it).size } to mirror.syncState().lastSyncAt
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return
         }
         _state.update { it.copy(invoiceCounts = counts, lastSyncAt = lastSync, mirrorVersion = it.mirrorVersion + 1) }
     }

@@ -26,12 +26,12 @@
 | [x]      | [REV-09](#rev-09) | `KsefTokenStore.kt:41`             | Nieczytelny szyfrogram tokena | Zasadna | Średni |
 | [x]      | [REV-10](#rev-10) | `KsefTokenManager.kt:63`           | Pełne uwierzytelnienie po każdym błędzie odświeżenia | Zasadna | Niski |
 | [x]      | [REV-11](#rev-11) | `KsefPublicKeyProvider.kt:38`      | Certyfikaty MF w pamięci na cały czas życia procesu | Zasadna | Niski |
-| []       | [REV-12](#rev-12) | `InvoiceSyncService.kt:70`         | Nieobsłużony wyjątek synchronizacji | Zasadna | Wysoki |
+| [x]      | [REV-12](#rev-12) | `InvoiceSyncService.kt:70`         | Nieobsłużony wyjątek synchronizacji | Zasadna | Wysoki |
 | [x]      | [REV-13](#rev-13) | `MainViewModel.kt:48`              | Czyszczenie cache na wątku UI i wyścig z synchronizacją | Zasadna | Średni |
 | [x]      | [REV-14](#rev-14) | `KsefInvoiceClient.kt:103`         | Cała paczka eksportu w pamięci | Zasadna | Niski |
 | [x]      | [REV-15](#rev-15) | `KsefInvoiceClient.kt:175`         | Rozszerzenie `.XML` usuwane z rozróżnianiem wielkości liter | Zasadna | Niski |
 | []       | [REV-16](#rev-16) | `InvoiceMirror.kt:78`              | Lustro faktur nieszyfrowane na dysku | Zasadna (ryzyko) | Średni — decyzja |
-| []       | [REV-18](#rev-18) | `InvoiceNumbering.kt:45`           | `toInt()` na długim numerze — crash formularza | Zasadna | Wysoki |
+| [x]      | [REV-18](#rev-18) | `InvoiceNumbering.kt:45`           | `toInt()` na długim numerze — crash formularza | Zasadna | Wysoki |
 | [x]      | [REV-19](#rev-19) | `InvoiceNumbering.kt:24`           | Przepełnienie `Int` w sugerowanym numerze | Zasadna | Niski |
 | [x]      | [REV-20](#rev-20) | `DraftValidator.kt:73`             | Brak limitów liczby cyfr FA(3) | Zasadna | Niski |
 | [x]      | [REV-21](#rev-21) | `NipValidator.kt:16`               | `isDigit` przepuszcza cyfry spoza ASCII (NIP) | Zasadna | Niski |
@@ -189,7 +189,7 @@ Bilans: 22 zasadne, 6 częściowo zasadnych, 3 niezasadne (w tym 2 z sensowną p
 - **Propozycja:**
   - `syncNow()`: `try { … } catch (CancellationException) { throw } catch (e: Exception) { e.toKsefFailure() ?: KsefFailure.Ksef(e.message) } finally { _state.update { it.copy(running = false, progress = null) } }`. Ewentualnie osobny wariant `KsefFailure.Unexpected` z komunikatem „Nieoczekiwany błąd synchronizacji”.
   - `refreshFromMirror()` odporne na błąd odczytu: uszkodzony indeks traktować jak brak lustra (lustro wolno skasować i pobrać ponownie — ADR 0003), czyli w `InvoiceMirror` przy błędzie dekodowania usunąć indeks i `sync-state.json`, żeby następna synchronizacja pobrała dane od początku.
-  - Rozważyć `CoroutineExceptionHandler` w `applicationScope` jako ostatnią linię obrony (bez logowania danych faktur).
+  - Rozważyć `CoroutineExceptionHandler` w `applicationScope` jako ostatnią linię obrony (bez logowania danych faktur). *(Świadomie pominięto: handler ukryłby błędy i mógłby zostawić inne stany „na zawsze w toku”, np. wysyłkę faktury; błędy synchronizacji są teraz obsłużone lokalnie.)*
 - **Testy:** `InvoiceSyncServiceTest` — synchronizator rzucający `IllegalStateException` → `running = false`, `error != null`, kolejne `syncNow()` działa; `InvoiceMirrorTest` — uszkodzony `index.json` → pusta lista i wyczyszczony stan synchronizacji.
 
 <a id="rev-13"></a>

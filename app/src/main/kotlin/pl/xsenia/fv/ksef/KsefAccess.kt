@@ -43,6 +43,9 @@ sealed interface KsefFailure {
     data class AuthenticationFailed(val statusCode: Int, val description: String) : KsefFailure
     data class Network(val message: String?) : KsefFailure
     data class Ksef(val message: String?) : KsefFailure
+
+    /** A problem that is none of the above (a bug or damaged local data); the details are not shown. */
+    data object Unexpected : KsefFailure
 }
 
 /** Carries a [KsefFailure] that is known before calling KSeF (missing token). */

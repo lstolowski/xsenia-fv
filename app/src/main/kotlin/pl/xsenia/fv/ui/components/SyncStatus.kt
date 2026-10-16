@@ -56,4 +56,5 @@ fun ksefFailureText(error: KsefFailure): String = when (error) {
     is KsefFailure.AuthenticationFailed -> stringResource(R.string.sync_error_auth, error.statusCode, error.description)
     is KsefFailure.Network -> stringResource(R.string.sync_error_network, error.message.orEmpty())
     is KsefFailure.Ksef -> stringResource(R.string.sync_error_ksef, error.message.orEmpty())
+    KsefFailure.Unexpected -> stringResource(R.string.sync_error_unexpected)
 }

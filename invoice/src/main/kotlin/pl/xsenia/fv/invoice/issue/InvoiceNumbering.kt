@@ -9,7 +9,8 @@ import java.time.YearMonth
  */
 object InvoiceNumbering {
 
-    private val NUMBER = Regex("^(\\d+)/(\\d{2})/(\\d{4})$")
+    /** The sequence has 1–9 digits (fits an [Int]); a longer one is not a number of this format and is ignored. */
+    private val NUMBER = Regex("^(\\d{1,9})/(\\d{2})/(\\d{4})$")
 
     /**
      * Next number for the month of [deliveryDate]: highest NN among [existingNumbers] ending with `/MM/RRRR`, plus one.
@@ -21,7 +22,7 @@ object InvoiceNumbering {
         val highest = existingNumbers.mapNotNull { parse(it) }
             .filter { (_, numberMonth) -> numberMonth == month }
             .maxOfOrNull { (sequence, _) -> sequence } ?: 0
-        // Long: the largest parsed sequence can be Int.MAX_VALUE, and +1 must not wrap to a negative number.
+        // At most 9 digits are parsed, so +1 cannot overflow; Long keeps that obvious.
         return format(highest.toLong() + 1, month)
     }
 
@@ -42,7 +43,6 @@ object InvoiceNumbering {
         val (sequence, month, year) = match.destructured
         val monthValue = month.toInt()
         if (monthValue !in 1..12) return null
-        // TODO CODE REVIEWED: Existing invoice numbers may contain an arbitrarily long sequence; toInt() then throws and breaks numbering/filter validation for the whole form. Parse with a checked wider type or reject out-of-range values.
-        return sequence.toInt() to YearMonth.of(year.toInt(), monthValue)
+        return (sequence.toIntOrNull() ?: return null) to YearMonth.of(year.toInt(), monthValue)
     }
 }

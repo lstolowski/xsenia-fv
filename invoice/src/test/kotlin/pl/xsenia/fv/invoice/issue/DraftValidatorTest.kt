@@ -132,4 +132,13 @@ class DraftValidatorTest {
 
         assertTrue(result.contains(DraftIssueType.AMOUNT_TOO_LARGE to null))
     }
+
+    @Test
+    fun `a very long sequence in the invoice number does not break validation`() {
+        val longNumber = "12345678901234567890/09/2026"
+
+        // No exception; the number is just not recognized as NN/MM/RRRR, so no month mismatch warning either.
+        assertEquals(emptyList<DraftIssue>(), issues(draft(number = longNumber), existing = listOf(longNumber.replace("5", "6"))))
+        assertEquals(listOf(DraftIssue(DraftIssueType.NUMBER_DUPLICATE)), issues(draft(number = longNumber), existing = listOf(longNumber)))
+    }
 }
