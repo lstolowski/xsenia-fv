@@ -183,7 +183,7 @@ object InvoiceXmlParser {
         try {
             setFeature(feature, value)
         } catch (_: ParserConfigurationException) {
-            // Not supported by this parser implementation (e.g. on Android) — the DOCTYPE check in parse() covers it.
+            // TODO CODE REVIEWED: If disallow-doctype is unsupported, the post-parse DOCTYPE check is too late to prevent an external entity from being resolved during parsing. Disable external general/parameter entities and external DTD/schema access explicitly, or fail closed.
         }
     }
 

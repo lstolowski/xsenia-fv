@@ -1,5 +1,6 @@
 package pl.xsenia.fv.invoice.validation
 
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -41,5 +42,18 @@ class NipValidatorTest {
     @ValueSource(strings = ["PL6691034275", "abc"])
     fun `normalize returns null for invalid NIP`(raw: String) {
         assertNull(NipValidator.normalize(raw))
+    }
+
+    @Test
+    fun `rejects digits outside ASCII even when the checksum is right`() {
+        val valid = "6691034274"
+        // The same digits written as Arabic-Indic (U+0660..) and as full-width (U+FF10..) characters.
+        val arabicIndic = valid.map { '\u0660' + (it - '0') }.joinToString("")
+        val fullWidth = valid.map { '\uFF10' + (it - '0') }.joinToString("")
+
+        assertTrue(NipValidator.isValid(valid))
+        assertFalse(NipValidator.isValid(arabicIndic))
+        assertFalse(NipValidator.isValid(fullWidth))
+        assertNull(NipValidator.normalize(arabicIndic))
     }
 }

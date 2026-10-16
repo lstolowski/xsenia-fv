@@ -79,6 +79,8 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
         session.syncService.syncIfStale()
         // An invoice sent before the app was closed: finish checking its status.
         session.sendService.resumeIfPending()
+        // UPOs that KSeF had not provided right after accepting an invoice.
+        session.sendService.fetchMissingUpos()
     }
 
     Scaffold(

@@ -46,6 +46,12 @@ data class InvoiceForm(
         get() = exchangeRate
             ?.takeIf { currency.isForeign && it.currency == currency && it.referenceDate == rateReferenceDate }
             ?.toExchangeRate()
+
+    /**
+     * True when [other] differs at most in the saved working rate. The rate is stored automatically after it is fetched,
+     * so it is not an edit of the invoice by the user.
+     */
+    fun sameInvoiceAs(other: InvoiceForm): Boolean = copy(exchangeRate = null) == other.copy(exchangeRate = null)
 }
 
 /** [ExchangeRate] as saved with the form, with the [referenceDate] it was chosen for. */

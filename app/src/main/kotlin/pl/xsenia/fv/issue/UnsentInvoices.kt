@@ -65,9 +65,8 @@ class UnsentInvoiceStore(filesDir: File) {
         Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
     }
 
-    fun delete(id: String) {
-        file(id).delete()
-    }
+    /** @throws java.io.IOException when the invoice exists and cannot be deleted — it would come back after a restart */
+    fun delete(id: String) = file(id).deleteOrThrow()
 
     private fun file(id: String): File {
         require(ID.matches(id)) { "Unexpected unsent invoice id" }

@@ -80,6 +80,7 @@ private fun ConnectionStatus(connection: ConnectionUiState) {
     val text = when (result) {
         ConnectionCheckResult.Success -> stringResource(R.string.connection_success)
         ConnectionCheckResult.MissingToken -> stringResource(R.string.connection_missing_token)
+        ConnectionCheckResult.TokenUnreadable -> stringResource(R.string.token_unreadable)
         ConnectionCheckResult.MissingNip -> stringResource(R.string.connection_missing_nip)
         is ConnectionCheckResult.AuthenticationFailed ->
             stringResource(R.string.connection_auth_failed, result.statusCode, result.description)
@@ -90,6 +91,7 @@ private fun ConnectionStatus(connection: ConnectionUiState) {
     }
     val color = if (result == ConnectionCheckResult.Success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
     Text(text, color = color)
+    if (connection.tokenNotSaved) Text(stringResource(R.string.connection_token_not_saved), color = MaterialTheme.colorScheme.error)
 }
 
 @Composable

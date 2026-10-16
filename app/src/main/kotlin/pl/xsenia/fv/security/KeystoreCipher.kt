@@ -8,20 +8,28 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
+/** Encrypts small secrets at rest — an interface so the token store can be tested without Android Keystore. */
+interface TokenCipher {
+    fun encrypt(plain: ByteArray): ByteArray
+
+    /** @throws java.security.GeneralSecurityException (or another exception) when [data] cannot be decrypted */
+    fun decrypt(data: ByteArray): ByteArray
+}
+
 /**
  * AES-256-GCM encryption with a key kept in Android Keystore (never leaves secure hardware).
  *
  * The key does not require user authentication: access to the app is gated by biometrics (AppLock),
  * while the token must stay decryptable for re-authentication in KSeF during a session.
  */
-class KeystoreCipher(private val keyAlias: String) {
+class KeystoreCipher(private val keyAlias: String) : TokenCipher {
 
-    fun encrypt(plain: ByteArray): ByteArray {
+    override fun encrypt(plain: ByteArray): ByteArray {
         val cipher = Cipher.getInstance(TRANSFORMATION).apply { init(Cipher.ENCRYPT_MODE, key()) }
         return cipher.iv + cipher.doFinal(plain)
     }
 
-    fun decrypt(data: ByteArray): ByteArray {
+    override fun decrypt(data: ByteArray): ByteArray {
         val iv = data.copyOfRange(0, IV_SIZE)
         val cipher = Cipher.getInstance(TRANSFORMATION).apply {
             init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(TAG_BITS, iv))

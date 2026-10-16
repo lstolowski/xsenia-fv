@@ -65,6 +65,13 @@ class InvoiceSendServiceTest {
         }
 
         override suspend fun awaitResult(nip: String, submitted: SubmittedInvoice) = outcome()
+
+        /** Answers of [fetchUpo], in order (the last one repeats). */
+        var upoAnswers: List<() -> ByteArray?> = listOf { null }
+        var upoCalls = 0
+
+        override suspend fun fetchUpo(nip: String, submitted: SubmittedInvoice): ByteArray? =
+            upoAnswers[minOf(upoCalls++, upoAnswers.size - 1)]()
     }
 
     private val accepted = { SentInvoice(submitted, "9945082500-20261001-0000000000AA-00", null, "<UPO/>".toByteArray()) }
@@ -80,11 +87,12 @@ class InvoiceSendServiceTest {
     )
 
     /** Fake final rates: [result] for every invoice; [asked] — the days of sending asked for. */
-    private class FakeRates(var result: ExchangeRateResult) : FinalRateSource {
+    private class FakeRates(var result: ExchangeRateResult, var failure: Exception? = null) : FinalRateSource {
         val asked = mutableListOf<LocalDate>()
 
         override suspend fun rateFor(draft: SalesInvoiceDraft, sendDay: LocalDate): ExchangeRateResult {
             asked += sendDay
+            failure?.let { throw it }
             return result
         }
     }
@@ -231,5 +239,109 @@ class InvoiceSendServiceTest {
 
         fixture.service.acknowledge()
         assertEquals(SendState.Idle, fixture.service.state.value)
+    }
+
+    @Test
+    fun `an exception of the rate source does not block sending`() {
+        val backend = FakeBackend(outcome = accepted)
+        val rates = FakeRates(ExchangeRateResult.Found(finalRate), failure = IllegalStateException("rate source broke"))
+        val fixture = run(backend, rates) {
+            storage.saveDraft(form)
+            service.send(euroDraft, form, unsentId = null)
+        }
+
+        val problem = ExchangeRateResult.Failure(ExchangeRateResult.Failure.Reason.NETWORK)
+        assertEquals(SendState.RateUnavailable("04/09/2026", problem, unsentId = null), fixture.service.state.value)
+        assertTrue(backend.sentXml.isEmpty())
+        assertEquals(form, fixture.storage.loadDraft())
+
+        // Not stuck in Sending: the user can acknowledge the result and try again.
+        fixture.service.acknowledge()
+        assertEquals(SendState.Idle, fixture.service.state.value)
+    }
+
+    @Test
+    fun `a failure while removing the source keeps the pending marker, so the accepted invoice is not offered again`() {
+        // An id of the wrong format makes removing the unsent invoice throw — like a crash after acceptance.
+        val backend = FakeBackend(outcome = accepted)
+        val fixture = run(backend) { service.send(draft, form, unsentId = "not-an-id") }
+
+        val state = fixture.service.state.value as SendState.Failed
+        assertTrue(state.pendingInKsef)
+        assertNotNull(fixture.storage.loadPending())
+        assertTrue(fixture.unsent.invoices.value.isEmpty())
+        assertEquals(0, fixture.synced)
+    }
+
+    @Test
+    fun `a pending send whose source is already gone finishes as accepted`() {
+        val backend = FakeBackend(outcome = accepted)
+        val missingId = "0f0f0f0f-0000-4000-8000-000000000001"
+        val fixture = run(backend) {
+            storage.savePending(PendingSend(SubmittedInvoice("session-1", "invoice-1"), draft.invoiceNumber, draft.seller.nip, form, missingId))
+            service.resumeIfPending()
+        }
+
+        assertEquals(SendState.Accepted(draft.invoiceNumber, "9945082500-20261001-0000000000AA-00", upoSaved = true), fixture.service.state.value)
+        assertNull(fixture.storage.loadPending())
+        assertEquals(1, fixture.synced)
+    }
+
+    private val withoutUpo = { SentInvoice(submitted, "9945082500-20261001-0000000000AA-00", null, null) }
+
+    @Test
+    fun `accepted invoice without UPO is remembered and its UPO is fetched later`() {
+        val backend = FakeBackend(outcome = withoutUpo)
+        backend.upoAnswers = listOf({ null }, { "<UPO>late</UPO>".toByteArray() })
+        val fixture = run(backend) { service.send(draft, form, unsentId = null) }
+
+        assertEquals(SendState.Accepted("04/09/2026", "9945082500-20261001-0000000000AA-00", upoSaved = false), fixture.service.state.value)
+        assertEquals(listOf("9945082500-20261001-0000000000AA-00"), fixture.storage.loadMissingUpos().map { it.ksefNumber })
+        assertFalse(File(dir, "upo/9945082500-20261001-0000000000AA-00.xml").exists())
+
+        // Still not there at the first retry: the attempt is counted and the entry stays.
+        run(backend) { service.fetchMissingUpos() }
+        assertEquals(1, fixture.storage.loadMissingUpos().single().attempts)
+
+        // Then KSeF provides it: saved, the entry removed.
+        run(backend) { service.fetchMissingUpos() }
+        assertTrue(File(dir, "upo/9945082500-20261001-0000000000AA-00.xml").isFile)
+        assertTrue(fixture.storage.loadMissingUpos().isEmpty())
+    }
+
+    @Test
+    fun `a communication error while fetching a missing UPO keeps the entry without counting an attempt`() {
+        val backend = FakeBackend(outcome = withoutUpo)
+        backend.upoAnswers = listOf({ throw IOException("no network") })
+        val fixture = run(backend) { service.send(draft, form, unsentId = null) }
+
+        run(backend) { service.fetchMissingUpos() }
+
+        assertEquals(0, fixture.storage.loadMissingUpos().single().attempts)
+    }
+
+    @Test
+    fun `a missing UPO is given up after the maximum number of attempts`() {
+        val backend = FakeBackend(outcome = withoutUpo)
+        val fixture = run(backend) { service.send(draft, form, unsentId = null) }
+
+        repeat(10) { run(backend) { service.fetchMissingUpos() } }
+
+        assertTrue(fixture.storage.loadMissingUpos().isEmpty())
+        assertEquals(10, backend.upoCalls)
+    }
+
+    @Test
+    fun `a protocol error after submitting keeps the invoice pending and does not offer it for resending`() {
+        val backend = FakeBackend(outcome = { throw pl.xsenia.fv.ksef.KsefProtocolException("accepted without a KSeF number") })
+        val fixture = run(backend) {
+            storage.saveDraft(form)
+            service.send(draft, form, unsentId = null)
+        }
+
+        val state = fixture.service.state.value as SendState.Failed
+        assertTrue(state.pendingInKsef)
+        assertNotNull(fixture.storage.loadPending())
+        assertTrue(fixture.unsent.invoices.value.isEmpty())
     }
 }

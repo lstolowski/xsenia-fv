@@ -75,6 +75,7 @@ class InvoiceMirror(private val root: File) {
     private fun stateFile() = File(root, "sync-state.json")
 
     private fun writeAtomically(target: File, content: ByteArray) {
+        // TODO CODE REVIEWED: Invoice XML and metadata are written as plaintext in app-private files. Android sandboxing blocks ordinary apps, but extraction from a rooted/unlocked device exposes customer and financial data; assess encryption-at-rest and backup exclusion against the threat model.
         target.parentFile.mkdirs()
         val temporary = File(target.parentFile, target.name + ".tmp")
         temporary.writeBytes(content)

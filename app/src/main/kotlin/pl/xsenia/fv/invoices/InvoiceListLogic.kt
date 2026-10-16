@@ -1,5 +1,6 @@
 package pl.xsenia.fv.invoices
 
+import pl.xsenia.fv.invoice.validation.isAsciiDigits
 import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.profile.Counterparty
 import pl.xsenia.fv.invoice.profile.TaxIdType
@@ -10,7 +11,9 @@ import pl.xsenia.fv.issue.UnsentInvoice
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.mirror.MirrorEntry
 import java.math.BigDecimal
+import java.time.Clock
 import java.time.YearMonth
+import java.time.ZoneId
 
 /** One row of an invoice list; the counterparty is the buyer on sales and the seller on purchase invoices. */
 data class InvoiceRow(
@@ -29,6 +32,8 @@ data class InvoiceRow(
     val unsentId: String? = null,
     /** Unsent invoice that KSeF rejected the last time it was sent. */
     val rejected: Boolean = false,
+    /** Unsent invoice with a line that has no readable quantity or price: the amounts do not include it (REV-29). */
+    val amountsIncomplete: Boolean = false,
 ) {
     val isUnsent: Boolean get() = unsentId != null
 
@@ -43,7 +48,8 @@ data class InvoiceRow(
 data class CounterpartyTaxId(val type: TaxIdType, val value: String)
 
 /** Unsent invoices of the month — shown below the totals, not included in them (decision Q2). */
-data class UnsentSummary(val count: Int, val gross: BigDecimal)
+/** @property incomplete some of the unsent invoices have lines without a readable quantity or price, so [gross] is a lower bound */
+data class UnsentSummary(val count: Int, val gross: BigDecimal, val incomplete: Boolean = false)
 
 /** Monthly totals in one currency. */
 data class CurrencyTotals(val currency: String, val count: Int, val net: BigDecimal, val vat: BigDecimal, val gross: BigDecimal)
@@ -83,9 +89,16 @@ object InvoiceListLogic {
     /** Row of an unsent invoice: buyer from the company profile, amounts calculated from the form lines. */
     fun toRow(unsent: UnsentInvoice, profile: CompanyProfile?): InvoiceRow {
         val form = unsent.form
+        // An unsent invoice may be incomplete (it is not validated when saved): a line without a readable quantity or
+        // price is left out of the amounts, and the row says so. A line with nothing typed yet is just an empty line.
+        var incomplete = false
         val lines = form.lines.mapNotNull { line ->
-            val quantity = DecimalInput.parse(line.quantity) ?: return@mapNotNull null
-            val price = DecimalInput.parse(line.unitNetPrice) ?: return@mapNotNull null
+            val quantity = DecimalInput.parse(line.quantity)
+            val price = DecimalInput.parse(line.unitNetPrice)
+            if (quantity == null || price == null) {
+                if (!line.isBlank) incomplete = true
+                return@mapNotNull null
+            }
             DraftLine(line.name, quantity, line.unit, price, line.vatRate)
         }
         val totals = InvoiceCalculator.totals(lines)
@@ -98,20 +111,21 @@ object InvoiceListLogic {
             counterpartyName = buyer?.name,
             // Without the counterparty in the profile only a NIP-like id can still be shown.
             counterpartyTaxId = buyer?.let(::taxIdOf)
-                ?: form.counterpartyId?.takeIf { id -> id.length == NIP_LENGTH && id.all(Char::isDigit) }?.let { CounterpartyTaxId(TaxIdType.NIP, it) },
+                ?: form.counterpartyId?.takeIf { id -> id.length == NIP_LENGTH && id.isAsciiDigits() }?.let { CounterpartyTaxId(TaxIdType.NIP, it) },
             netAmount = totals.net,
             grossAmount = totals.gross,
             currency = form.currency.code,
             invoiceType = "Vat",
             unsentId = unsent.id,
             rejected = unsent.rejection != null,
+            amountsIncomplete = incomplete,
         )
     }
 
     fun unsentSummary(rows: List<InvoiceRow>): UnsentSummary? {
         val unsent = rows.filter { it.isUnsent }
         if (unsent.isEmpty()) return null
-        return UnsentSummary(unsent.size, unsent.fold(BigDecimal.ZERO) { sum, it -> sum + it.grossAmount })
+        return UnsentSummary(unsent.size, unsent.fold(BigDecimal.ZERO) { sum, it -> sum + it.grossAmount }, unsent.any { it.amountsIncomplete })
     }
 
     /** Invoices delivered in [month] matching [query], newest first. */
@@ -148,6 +162,12 @@ object InvoiceListLogic {
                 CurrencyTotals(currency, invoices.size, net, gross - net, gross)
             }
             .sortedWith(compareBy<CurrencyTotals> { it.currency != "PLN" }.thenBy { it.currency })
+
+    /**
+     * The current month in [zone] (the app uses Europe/Warsaw, like invoice dates), not in the time zone of the device:
+     * on the last day of a month abroad the device month could differ from the month of the invoices.
+     */
+    fun currentMonth(clock: Clock, zone: ZoneId): YearMonth = YearMonth.now(clock.withZone(zone))
 
     /**
      * Months offered in the month picker, newest first: every month from [firstMonth] to [currentMonth]

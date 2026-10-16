@@ -29,7 +29,7 @@ class WhiteListClient(private val httpClient: HttpClient) {
      * Never throws for HTTP or network problems — they are reported as [WhiteListResult.Failed].
      */
     suspend fun findByNip(nip: String, date: LocalDate): WhiteListResult {
-        require(nip.length == 10 && nip.all(Char::isDigit)) { "NIP must be 10 digits" }
+        require(nip.length == 10 && nip.all { it in '0'..'9' }) { "NIP must be 10 digits" }
         val response = try {
             httpClient.get("api/search/nip/$nip") { parameter("date", date.toString()) }
         } catch (e: IOException) {

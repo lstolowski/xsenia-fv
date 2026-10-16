@@ -1,6 +1,5 @@
 package pl.xsenia.fv.security
 
-import android.util.Base64
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -8,11 +7,12 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.util.Base64
 
 /** Keeps the KSeF token encrypted with a Keystore key; only the context NIP is stored in plain text. */
 class KsefTokenStore(
     private val dataStore: DataStore<Preferences>,
-    private val cipher: KeystoreCipher,
+    private val cipher: TokenCipher,
 ) {
 
     val isSet: Flow<Boolean> = dataStore.data.map { it[ENCRYPTED_TOKEN] != null }
@@ -29,16 +29,26 @@ class KsefTokenStore(
     suspend fun save(ksefToken: String) {
         val token = ksefToken.trim()
         val nip = requireNotNull(nipOf(token)) { "KSeF token has no company NIP" }
-        val encrypted = Base64.encodeToString(cipher.encrypt(token.toByteArray(Charsets.UTF_8)), Base64.NO_WRAP)
+        val encrypted = Base64.getEncoder().encodeToString(cipher.encrypt(token.toByteArray(Charsets.UTF_8)))
         dataStore.edit {
             it[ENCRYPTED_TOKEN] = encrypted
             it[TOKEN_NIP] = nip
         }
     }
 
+    /**
+     * The decrypted token, or null when none is stored.
+     *
+     * @throws TokenUnreadableException when the stored token cannot be decrypted (corrupted data, or the Keystore key
+     *   is gone) — the user has to enter the token again; the stored data is left as it is
+     */
     suspend fun read(): String? {
         val encrypted = dataStore.data.first()[ENCRYPTED_TOKEN] ?: return null
-        return String(cipher.decrypt(Base64.decode(encrypted, Base64.NO_WRAP)), Charsets.UTF_8)
+        return try {
+            String(cipher.decrypt(Base64.getDecoder().decode(encrypted)), Charsets.UTF_8)
+        } catch (e: Exception) {
+            throw TokenUnreadableException(e)
+        }
     }
 
     suspend fun clear() {
@@ -56,3 +66,6 @@ class KsefTokenStore(
         fun nipOf(ksefToken: String): String? = NIP_IN_TOKEN.find(ksefToken)?.groupValues?.get(1)
     }
 }
+
+/** The stored KSeF token cannot be decrypted (corrupted data or lost Keystore key). */
+class TokenUnreadableException(cause: Throwable) : Exception("Stored KSeF token cannot be read", cause)

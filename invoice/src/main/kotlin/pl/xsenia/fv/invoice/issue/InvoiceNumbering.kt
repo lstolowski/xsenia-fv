@@ -21,10 +21,11 @@ object InvoiceNumbering {
         val highest = existingNumbers.mapNotNull { parse(it) }
             .filter { (_, numberMonth) -> numberMonth == month }
             .maxOfOrNull { (sequence, _) -> sequence } ?: 0
-        return format(highest + 1, month)
+        // Long: the largest parsed sequence can be Int.MAX_VALUE, and +1 must not wrap to a negative number.
+        return format(highest.toLong() + 1, month)
     }
 
-    fun format(sequence: Int, month: YearMonth): String =
+    fun format(sequence: Long, month: YearMonth): String =
         "%02d/%02d/%04d".format(sequence, month.monthValue, month.year)
 
     fun isDuplicate(number: String, existingNumbers: Collection<String>): Boolean =
@@ -41,6 +42,7 @@ object InvoiceNumbering {
         val (sequence, month, year) = match.destructured
         val monthValue = month.toInt()
         if (monthValue !in 1..12) return null
+        // TODO CODE REVIEWED: Existing invoice numbers may contain an arbitrarily long sequence; toInt() then throws and breaks numbering/filter validation for the whole form. Parse with a checked wider type or reject out-of-range values.
         return sequence.toInt() to YearMonth.of(year.toInt(), monthValue)
     }
 }

@@ -251,6 +251,9 @@ private fun InvoiceTile(invoice: InvoiceRow, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (invoice.amountsIncomplete) {
+                    Text(stringResource(R.string.list_amounts_incomplete), style = MaterialTheme.typography.labelSmall, color = WarningText)
+                }
             }
         }
     }
@@ -273,7 +276,11 @@ private fun UnsentSummaryRow(unsent: UnsentSummary) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Icon(Icons.Filled.Warning, contentDescription = null, tint = WarningAmber, modifier = Modifier.size(16.dp))
         Text(
-            stringResource(R.string.list_unsent_summary, invoiceCount(unsent.count), Formats.money(unsent.gross, "PLN")),
+            stringResource(
+                if (unsent.incomplete) R.string.list_unsent_summary_incomplete else R.string.list_unsent_summary,
+                invoiceCount(unsent.count),
+                Formats.money(unsent.gross, "PLN"),
+            ),
             style = MaterialTheme.typography.labelMedium,
             color = WarningText,
         )

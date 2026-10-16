@@ -3,6 +3,7 @@ package pl.xsenia.fv.ui.issue
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
@@ -137,6 +138,14 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewC
     val sending = sendState is SendState.Sending
     val closed by viewModel.closed.collectAsStateWithLifecycle()
     LaunchedEffect(closed) { if (closed) onClose() }
+    val deleteFailed by viewModel.deleteFailed.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(deleteFailed) {
+        if (deleteFailed) {
+            Toast.makeText(context, R.string.unsent_delete_failed, Toast.LENGTH_LONG).show()
+            viewModel.deleteFailureShown()
+        }
+    }
     var confirmDelete by remember { mutableStateOf(false) }
 
     BackHandler(enabled = step == IssueStep.PREVIEW) { viewModel.backToForm() }
@@ -369,7 +378,7 @@ private fun LineCard(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val quantityError = formIssues.messageFor(FormIssueType.LINE_QUANTITY_INVALID)
-                    ?: draftIssues.messageFor(DraftIssueType.LINE_QUANTITY_NOT_POSITIVE, DraftIssueType.LINE_QUANTITY_TOO_PRECISE)
+                    ?: draftIssues.messageFor(DraftIssueType.LINE_QUANTITY_NOT_POSITIVE, DraftIssueType.LINE_QUANTITY_TOO_PRECISE, DraftIssueType.LINE_QUANTITY_TOO_LARGE)
                 OutlinedTextField(
                     value = line.quantity,
                     onValueChange = { onChange(line.copy(quantity = it)) },
@@ -394,7 +403,12 @@ private fun LineCard(
                 )
             }
             val priceError = formIssues.messageFor(FormIssueType.LINE_PRICE_INVALID)
-                ?: draftIssues.messageFor(DraftIssueType.LINE_PRICE_NEGATIVE, DraftIssueType.LINE_PRICE_TOO_PRECISE)
+                ?: draftIssues.messageFor(
+                    DraftIssueType.LINE_PRICE_NEGATIVE,
+                    DraftIssueType.LINE_PRICE_TOO_PRECISE,
+                    DraftIssueType.LINE_PRICE_TOO_LARGE,
+                    DraftIssueType.LINE_AMOUNT_TOO_LARGE,
+                )
             // Price 3/5, currency 2/5 — wide enough for the code next to the arrow, also with a larger font (US-011).
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
@@ -899,6 +913,10 @@ private fun draftIssueText(issue: DraftIssue): String = stringResource(
         DraftIssueType.LINE_PRICE_NEGATIVE -> R.string.issue_line_price_negative
         DraftIssueType.LINE_PRICE_TOO_PRECISE -> R.string.issue_line_price_too_precise
         DraftIssueType.TOTAL_NOT_POSITIVE -> R.string.issue_total_not_positive
+        DraftIssueType.LINE_QUANTITY_TOO_LARGE -> R.string.issue_line_quantity_too_large
+        DraftIssueType.LINE_PRICE_TOO_LARGE -> R.string.issue_line_price_too_large
+        DraftIssueType.LINE_AMOUNT_TOO_LARGE -> R.string.issue_line_amount_too_large
+        DraftIssueType.AMOUNT_TOO_LARGE -> R.string.issue_amount_too_large
         DraftIssueType.EXCHANGE_RATE_MISSING -> R.string.issue_exchange_rate_missing
         DraftIssueType.BANK_ACCOUNT_CURRENCY_MISMATCH -> R.string.issue_bank_account_currency_mismatch
     },

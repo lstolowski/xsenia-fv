@@ -15,7 +15,7 @@ object BankAccountNumberValidator {
     }
 
     fun isValid(number: String): Boolean {
-        if (number.length != 26 || !number.all(Char::isDigit)) return false
+        if (number.length != 26 || !number.isAsciiDigits()) return false
         val rearranged = number.substring(2) + COUNTRY_DIGITS + number.substring(0, 2)
         return rearranged.fold(0) { remainder, digit -> (remainder * 10 + digit.digitToInt()) % 97 } == 1
     }

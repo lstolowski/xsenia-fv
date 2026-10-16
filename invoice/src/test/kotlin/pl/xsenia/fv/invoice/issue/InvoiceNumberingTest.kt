@@ -46,4 +46,9 @@ class InvoiceNumberingTest {
         assertFalse(InvoiceNumbering.monthMismatch("01/09/2026", date("2026-09-30")))
         assertFalse(InvoiceNumbering.monthMismatch("FV-TEST", date("2026-09-30")))
     }
+
+    @Test
+    fun `the largest possible sequence is followed by a larger number, not a negative one`() {
+        assertEquals("2147483648/09/2026", InvoiceNumbering.suggest(date("2026-09-15"), listOf("2147483647/09/2026")))
+    }
 }

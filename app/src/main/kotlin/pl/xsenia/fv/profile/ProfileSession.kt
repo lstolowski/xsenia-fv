@@ -52,11 +52,8 @@ class ProfileSession(
         finalRates = FinalRateSource { draft, sendDay -> exchangeRates.rateFor(draft.currency, draft.deliveryDate, sendDay) },
     )
 
-    /** Removes the downloaded invoices; they are downloaded again by the next synchronization. */
-    fun clearMirror() {
-        mirror.clear()
-        syncService.onMirrorCleared()
-    }
+    /** Removes the downloaded invoices (cancelling a running synchronization); they are downloaded again by the next one. */
+    suspend fun clearMirror() = syncService.clearMirror()
 
     companion object {
         const val MIRROR_DIRECTORY = "invoices"

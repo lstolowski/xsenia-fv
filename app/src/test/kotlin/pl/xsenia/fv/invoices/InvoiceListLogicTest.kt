@@ -88,6 +88,17 @@ class InvoiceListLogicTest {
     }
 
     @Test
+    fun `current month is taken in the invoice time zone, not in the device one`() {
+        // 2026-10-31 23:30 UTC is already 1 November in Poland (CET, UTC+1), but still October in UTC.
+        val clock = java.time.Clock.fixed(Instant.parse("2026-10-31T23:30:00Z"), java.time.ZoneOffset.UTC)
+
+        assertEquals(YearMonth.of(2026, 11), InvoiceListLogic.currentMonth(clock, java.time.ZoneId.of("Europe/Warsaw")))
+        assertEquals(YearMonth.of(2026, 10), InvoiceListLogic.currentMonth(clock, java.time.ZoneOffset.UTC))
+        // The device could be anywhere, e.g. in New York: still October there.
+        assertEquals(YearMonth.of(2026, 11), InvoiceListLogic.currentMonth(clock.withZone(java.time.ZoneId.of("America/New_York")), java.time.ZoneId.of("Europe/Warsaw")))
+    }
+
+    @Test
     fun `months cover the range up to now plus months with invoices, newest first`() {
         val rows = listOf(row("A", "2026-03-31"), row("B", "2026-09-30"), row("C", "2026-09-01"))
 
@@ -195,7 +206,9 @@ class InvoiceListLogicTest {
         assertEquals(BigDecimal("2000.00"), unsentRow.netAmount)
         assertEquals(BigDecimal("2460.00"), unsentRow.grossAmount)
         assertEquals(listOf(CurrencyTotals("PLN", 1, BigDecimal("100.00"), BigDecimal("23.00"), BigDecimal("123.00"))), InvoiceListLogic.totals(september))
-        assertEquals(UnsentSummary(1, BigDecimal("2460.00")), InvoiceListLogic.unsentSummary(september))
+        // The "Błędna" line has no readable quantity, so the amounts are a lower bound (REV-29).
+        assertTrue(unsentRow.amountsIncomplete)
+        assertEquals(UnsentSummary(1, BigDecimal("2460.00"), incomplete = true), InvoiceListLogic.unsentSummary(september))
         assertEquals(null, InvoiceListLogic.unsentSummary(listOf(row("01/09/2026", "2026-09-15"))))
     }
 
@@ -215,5 +228,45 @@ class InvoiceListLogicTest {
 
         assertEquals("EUR", row.currency)
         assertEquals(BigDecimal("1230.00"), row.grossAmount)
+    }
+
+    private fun unsentWithLines(vararg lines: pl.xsenia.fv.issue.LineForm) = pl.xsenia.fv.issue.UnsentInvoice.create(
+        pl.xsenia.fv.issue.InvoiceForm(
+            issueDate = LocalDate.parse("2026-10-14"),
+            deliveryDate = LocalDate.parse("2026-10-14"),
+            lines = lines.toList(),
+        ),
+        Instant.EPOCH,
+    )
+
+    @Test
+    fun `unsent invoice with a line without a readable price is marked as incomplete`() {
+        val complete = pl.xsenia.fv.issue.LineForm("Usługa A", "1", "szt.", "100")
+        val noPrice = pl.xsenia.fv.issue.LineForm("Usługa B", "1", "szt.", "")
+        val badQuantity = pl.xsenia.fv.issue.LineForm("Usługa C", "abc", "szt.", "50")
+
+        val row = InvoiceListLogic.toRow(unsentWithLines(complete, noPrice, badQuantity), profile = null)
+
+        assertTrue(row.amountsIncomplete)
+        // Only the readable line is counted.
+        assertEquals(BigDecimal("100.00"), row.netAmount)
+    }
+
+    @Test
+    fun `an empty line of an unsent invoice is not a reason to call the amounts incomplete`() {
+        val complete = pl.xsenia.fv.issue.LineForm("Usługa A", "1", "szt.", "100")
+
+        val row = InvoiceListLogic.toRow(unsentWithLines(complete, pl.xsenia.fv.issue.LineForm()), profile = null)
+
+        assertFalse(row.amountsIncomplete)
+    }
+
+    @Test
+    fun `the unsent summary is a lower bound when any invoice is incomplete`() {
+        val complete = InvoiceListLogic.toRow(unsentWithLines(pl.xsenia.fv.issue.LineForm("Usługa A", "1", "szt.", "100")), profile = null)
+        val incomplete = InvoiceListLogic.toRow(unsentWithLines(pl.xsenia.fv.issue.LineForm("Usługa B", "1", "szt.", "")), profile = null)
+
+        assertFalse(InvoiceListLogic.unsentSummary(listOf(complete))!!.incomplete)
+        assertTrue(InvoiceListLogic.unsentSummary(listOf(complete, incomplete))!!.incomplete)
     }
 }

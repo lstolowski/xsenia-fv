@@ -41,6 +41,7 @@ import pl.xsenia.fv.issue.TakenNumbers
 import pl.xsenia.fv.issue.UnsentInvoice
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.profile.ProfileSession
+import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
 
@@ -121,6 +122,14 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
     private val _closed = MutableStateFlow(false)
     val closed: StateFlow<Boolean> = _closed.asStateFlow()
 
+    /** Emits true when the unsent invoice could not be deleted; [deleteFailureShown] resets it. */
+    private val _deleteFailed = MutableStateFlow(false)
+    val deleteFailed: StateFlow<Boolean> = _deleteFailed.asStateFlow()
+
+    fun deleteFailureShown() {
+        _deleteFailed.value = false
+    }
+
     val sendState: StateFlow<SendState> = session.sendService.state
     val environment = container.environment
 
@@ -137,6 +146,7 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
             form = form,
             profile = profile,
             check = profile?.let { InvoiceFormCheck.check(form, it, taken, today()) },
+            // TODO CODE REVIEWED: This combine runs in viewModelScope on Main and reparses the full KSeF/unsent number history on every form edit; large histories can stall typing. Precompute the month sequence or move derived work off Main.
             suggestedNumber = InvoiceNumbering.suggest(form.deliveryDate, taken),
             showErrors = showErrors,
             unsentId = unsentId,
@@ -225,10 +235,11 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
             previewLoading.value = true
             val result = exchangeRates.rateFor(current.currency, current.deliveryDate, today())
             previewLoading.value = false
-            // The form may have changed while the rate was fetched.
-            if (form.value != current) return@launch
+            // The form may have changed while the rate was fetched. Saving the working rate meanwhile is not a change.
+            val latest = form.value
+            if (latest == null || !latest.sameInvoiceAs(current)) return@launch
             when (result) {
-                is ExchangeRateResult.Found -> showPreview(current, result.rate)
+                is ExchangeRateResult.Found -> showPreview(latest, result.rate)
                 else -> previewRateProblem.value = result
             }
         }
@@ -301,7 +312,8 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
                 session.unsentInvoices.save(
                     existing?.copy(form = current, updatedAt = Instant.now()) ?: UnsentInvoice.create(current, Instant.now()),
                 )
-                if (id == null) session.issueStorage.clearDraft()
+                // The invoice is safe as unsent already; a draft that could not be deleted is only a leftover.
+                if (id == null) runCatching { session.issueStorage.clearDraft() }
             }
             _closed.value = true
         }
@@ -310,8 +322,13 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
     fun deleteUnsent() {
         val id = unsentId.value ?: return
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { session.unsentInvoices.delete(id) }
-            _closed.value = true
+            try {
+                withContext(Dispatchers.IO) { session.unsentInvoices.delete(id) }
+                _closed.value = true
+            } catch (e: IOException) {
+                // Stays on the screen: closing would suggest the invoice is gone, but it would come back after a restart.
+                _deleteFailed.value = true
+            }
         }
     }
 

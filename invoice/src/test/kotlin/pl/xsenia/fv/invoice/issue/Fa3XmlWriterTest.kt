@@ -246,6 +246,35 @@ class Fa3XmlWriterTest {
     }
 
     @Test
+    fun `characters illegal in XML are dropped, so pasted text cannot break the invoice`() {
+        // Control characters, U+FFFE and a lone surrogate, e.g. from text pasted from a PDF; a valid pair (emoji) stays.
+        val dirty = "Usługa\u0001 \u0000testowa\u000B\u001F \uD800A\uFFFE\uFFFF \uD83D\uDE00"
+        val buyer = TestDrafts.buyer.copy(name = "Test\u0002 Syn", address = Address("ul. Łąkowa\u0008 1", null, null), email = null)
+        val seller = TestDrafts.seller.copy(email = null, phone = null)
+
+        val bytes = writeValid(draft(buyer = buyer, seller = seller, lines = listOf(line(name = dirty))))
+        val invoice = InvoiceXmlParser.parse(bytes)
+
+        // \u000B is whitespace — collapsed to a space, the rest is removed.
+        assertEquals("Usługa testowa A \uD83D\uDE00", invoice.lines.single().name)
+        assertEquals("Test Syn", invoice.buyer.name)
+        assertEquals(listOf("ul. Łąkowa 1"), invoice.buyer.addressLines)
+    }
+
+    @Test
+    fun `values at the limits accepted by DraftValidator are valid FA(3)`() {
+        val draft = draft(
+            lines = listOf(
+                line(name = "Cena na granicy", quantity = "1", price = "99999999999999", rate = VatRate.RATE_0),
+                line(name = "Ilość na granicy", quantity = "9999999999999999", price = "0.5", rate = VatRate.RATE_0),
+            ),
+        )
+
+        assertEquals(emptyList<DraftIssue>(), DraftValidator.validate(draft, emptyList(), LocalDate.parse("2026-10-01")))
+        writeValid(draft)
+    }
+
+    @Test
     fun `output is deterministic`() {
         assertEquals(
             Fa3XmlWriter.write(draft(), createdAt).toString(Charsets.UTF_8),
