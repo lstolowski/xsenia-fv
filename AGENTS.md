@@ -53,6 +53,7 @@ JDK: wbudowane w Android Studio (`JAVA_HOME="/Applications/Android Studio.app/Co
   - PIN blokady ekranu emulatora: `1111` (wyłącznie emulator testowy, nie dotyczy prawdziwego telefonu)
   - Odcisk palca zarejestrowany jako *Finger 1* (Extended controls → Fingerprint); z terminala: `adb -e emu finger touch 1` a potem `adb -e emu finger remove 1`. **Bywa zawodne** (odrzucenia) — po 1–2 nieudanych próbach przestań (ryzyko blokady czytnika) i poproś użytkownika o odblokowanie przez Extended controls → Touch Sensor. Po restarcie emulatora pierwsze odblokowanie ekranu wymaga PIN-u — poproś użytkownika
   - Dane testowe na emulatorze: „Moja firma”, rachunki i kontrahenci w profilu aplikacji `files/profiles/{nip z tokena}/` (`company.json`, `bank-accounts.json`, `counterparties.json`; wartości z [docs/przyklady/](docs/przyklady/README.md)). Wpisywane w aplikacji (Ustawienia → Moja firma / Kontrahenci) albo, szybciej, wgrywane przez `adb push` + `run-as pl.xsenia.fv.test cp …` (tylko wersja debug; potem `am force-stop`, bo profil jest wczytywany przy starcie). Pobierając dane z Białej listy na prawdziwym NIP-ie, **przed zapisem** nadpisz je zmyślonymi. Wpisywanie przez `adb input text` psuje Gboard (autokorekta, wielkie litery po kropce) — wpisuj powoli, sprawdzaj `uiautomator dump`. Stary folder `/sdcard/Documents/xsenia-test/` nie jest już używany
+- Aplikacja jest przygotowana tylko pod system Android - nie sprawdzaj ani nie próbuj uruchamiać na iOS ani używać Xcode.
 
 ## Konwencje językowe
 
