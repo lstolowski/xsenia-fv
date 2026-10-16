@@ -13,7 +13,7 @@ object NipValidator {
     }
 
     fun isValid(nip: String): Boolean {
-        if (nip.length != 10 || !nip.all(Char::isDigit)) return false
+        if (nip.length != 10 || !nip.isAsciiDigits()) return false
         val checksum = WEIGHTS.indices.sumOf { WEIGHTS[it] * nip[it].digitToInt() } % 11
         return checksum != 10 && checksum == nip[9].digitToInt()
     }

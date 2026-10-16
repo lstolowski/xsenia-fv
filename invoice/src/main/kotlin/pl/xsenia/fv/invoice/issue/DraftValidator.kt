@@ -20,6 +20,16 @@ enum class DraftIssueType {
     LINE_QUANTITY_TOO_PRECISE,
     LINE_PRICE_NEGATIVE,
     LINE_PRICE_TOO_PRECISE,
+
+    /** More integer digits than FA(3) allows: `TIlosci` — 16, `TKwotowy2` — 14, `TKwotowy` — 16. */
+    LINE_QUANTITY_TOO_LARGE,
+    LINE_PRICE_TOO_LARGE,
+
+    /** The net value of a line (`P_11`) does not fit `TKwotowy`. */
+    LINE_AMOUNT_TOO_LARGE,
+
+    /** A total of the invoice (`P_13_x`, `P_14_x`, `P_14_xW`, `P_15`) does not fit `TKwotowy`. */
+    AMOUNT_TOO_LARGE,
     TOTAL_NOT_POSITIVE,
 
     /** Foreign currency invoice without the NBP rate of that currency (ADR 0008). */
@@ -41,6 +51,11 @@ object DraftValidator {
     private const val MAX_UNIT = 256
     private const val QUANTITY_SCALE = 6
     private const val PRICE_SCALE = 8
+
+    // Integer digits (the schema patterns): TIlosci [1-9]\d{0,15}, TKwotowy2 [1-9]\d{0,13}, TKwotowy [1-9]\d{0,15}.
+    private const val MAX_QUANTITY_DIGITS = 16
+    private const val MAX_PRICE_DIGITS = 14
+    private const val MAX_AMOUNT_DIGITS = 16
 
     fun validate(draft: SalesInvoiceDraft, existingNumbers: Collection<String>, today: LocalDate): List<DraftIssue> = buildList {
         val number = draft.invoiceNumber.trim()
@@ -69,13 +84,25 @@ object DraftValidator {
             if (line.quantity.stripTrailingZeros().scale() > QUANTITY_SCALE) issue(DraftIssueType.LINE_QUANTITY_TOO_PRECISE)
             if (line.unitNetPrice.signum() < 0) issue(DraftIssueType.LINE_PRICE_NEGATIVE)
             if (line.unitNetPrice.stripTrailingZeros().scale() > PRICE_SCALE) issue(DraftIssueType.LINE_PRICE_TOO_PRECISE)
+            if (integerDigits(line.quantity) > MAX_QUANTITY_DIGITS) issue(DraftIssueType.LINE_QUANTITY_TOO_LARGE)
+            if (integerDigits(line.unitNetPrice) > MAX_PRICE_DIGITS) issue(DraftIssueType.LINE_PRICE_TOO_LARGE)
+            if (integerDigits(InvoiceCalculator.lineNet(line)) > MAX_AMOUNT_DIGITS) issue(DraftIssueType.LINE_AMOUNT_TOO_LARGE)
         }
-        if (draft.lines.isNotEmpty() && InvoiceCalculator.totals(draft.lines).gross <= BigDecimal.ZERO) {
-            add(DraftIssue(DraftIssueType.TOTAL_NOT_POSITIVE))
+        if (draft.lines.isNotEmpty()) {
+            val totals = InvoiceCalculator.totals(draft)
+            if (totals.gross <= BigDecimal.ZERO) add(DraftIssue(DraftIssueType.TOTAL_NOT_POSITIVE))
+            if (amounts(totals).any { integerDigits(it) > MAX_AMOUNT_DIGITS }) add(DraftIssue(DraftIssueType.AMOUNT_TOO_LARGE))
         }
         if (draft.currency.isForeign && draft.effectiveExchangeRate == null) add(DraftIssue(DraftIssueType.EXCHANGE_RATE_MISSING))
         if (draft.bankAccount.currency != draft.currency.code) {
             add(DraftIssue(DraftIssueType.BANK_ACCOUNT_CURRENCY_MISMATCH, blocking = false))
         }
     }
+
+    /** Every amount of the invoice that is written as `TKwotowy` (net, VAT, gross, VAT in PLN — in total and per rate). */
+    private fun amounts(totals: InvoiceTotals): List<BigDecimal> =
+        listOfNotNull(totals.net, totals.vat, totals.gross, totals.vatPln) +
+            totals.byRate.flatMap { listOfNotNull(it.net, it.vat, it.vatPln) }
+
+    private fun integerDigits(value: BigDecimal): Int = value.abs().toBigInteger().toString().length
 }

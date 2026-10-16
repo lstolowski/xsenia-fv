@@ -6,6 +6,9 @@ import java.io.IOException
 sealed interface ConnectionCheckResult {
     data object Success : ConnectionCheckResult
     data object MissingToken : ConnectionCheckResult
+
+    /** The stored token cannot be decrypted — the user has to enter it again. */
+    data object TokenUnreadable : ConnectionCheckResult
     /** The token has no NIP, so the KSeF context is unknown. */
     data object MissingNip : ConnectionCheckResult
     data class AuthenticationFailed(val statusCode: Int, val description: String) : ConnectionCheckResult

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.exchangerates.ExchangeRateResult
@@ -56,6 +57,9 @@ interface InvoiceSendBackend {
     suspend fun send(nip: String, invoiceXml: ByteArray, onSubmitted: suspend (SubmittedInvoice) -> Unit): SentInvoice
 
     suspend fun awaitResult(nip: String, submitted: SubmittedInvoice): SentInvoice
+
+    /** UPO of an accepted invoice, null when KSeF does not provide it (yet). */
+    suspend fun fetchUpo(nip: String, submitted: SubmittedInvoice): ByteArray?
 }
 
 class KsefSendBackend(private val ksef: KsefAccess) : InvoiceSendBackend {
@@ -63,13 +67,15 @@ class KsefSendBackend(private val ksef: KsefAccess) : InvoiceSendBackend {
         ksef.invoiceSender(nip).send(invoiceXml, onSubmitted = onSubmitted)
 
     override suspend fun awaitResult(nip: String, submitted: SubmittedInvoice) = ksef.invoiceSender(nip).awaitResult(submitted)
+
+    override suspend fun fetchUpo(nip: String, submitted: SubmittedInvoice) = ksef.invoiceSender(nip).downloadUpo(submitted)
 }
 
 /**
  * Sends sales invoices to KSeF in the application scope (US-006, US-007); one at a time.
  *
  * Outcome handling:
- * - accepted — UPO saved; the source (new-invoice draft or unsent invoice) removed; [onAccepted] (sync) called,
+ * - accepted — UPO saved; the source (new-invoice draft or unsent invoice) removed, then the pending marker; [onAccepted] (sync) called,
  * - rejected by KSeF, or failed before reaching KSeF — kept as an unsent invoice (with the rejection reason),
  * - failed after reaching KSeF — kept as pending; the status is checked again on retry / next app start.
  *
@@ -91,6 +97,8 @@ class InvoiceSendService(
     private val _state = MutableStateFlow<SendState>(SendState.Idle)
     val state: StateFlow<SendState> = _state.asStateFlow()
 
+    private val upoMutex = Mutex()
+
     private val busy get() = _state.value is SendState.Sending
 
     /**
@@ -103,7 +111,7 @@ class InvoiceSendService(
         _state.value = SendState.Sending(draft.invoiceNumber, submitted = false, unsentId = unsentId)
         scope.launch {
             val toSend = if (draft.currency.isForeign) {
-                when (val result = finalRates.rateFor(draft, LocalDate.ofInstant(clock.instant(), AppContainer.POLAND))) {
+                when (val result = fetchFinalRate(draft)) {
                     is ExchangeRateResult.Found -> draft.copy(exchangeRate = result.rate)
                     else -> {
                         _state.value = SendState.RateUnavailable(draft.invoiceNumber, result, unsentId)
@@ -113,7 +121,7 @@ class InvoiceSendService(
             } else {
                 draft
             }
-            run(draft.invoiceNumber, form, unsentId) {
+            run(draft.invoiceNumber, draft.seller.nip, form, unsentId) {
                 val xml = Fa3XmlWriter.write(toSend, clock.instant())
                 backend.send(draft.seller.nip, xml) { submitted ->
                     storage.savePending(PendingSend(submitted, draft.invoiceNumber, draft.seller.nip, form, unsentId))
@@ -123,13 +131,56 @@ class InvoiceSendService(
         }
     }
 
+    /** An unexpected exception of the rate source is a failure too — otherwise the state would stay [SendState.Sending]. */
+    private suspend fun fetchFinalRate(draft: SalesInvoiceDraft): ExchangeRateResult =
+        try {
+            finalRates.rateFor(draft, LocalDate.ofInstant(clock.instant(), AppContainer.POLAND))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            ExchangeRateResult.Failure(ExchangeRateResult.Failure.Reason.NETWORK)
+        }
+
     /** Finishes an invoice sent before the app was closed (or after a communication error). */
     fun resumeIfPending() {
         if (busy) return
         val pending = storage.loadPending() ?: return
         _state.value = SendState.Sending(pending.invoiceNumber, submitted = true, unsentId = pending.unsentId)
         scope.launch {
-            run(pending.invoiceNumber, pending.form, pending.unsentId) { backend.awaitResult(pending.nip, pending.submitted) }
+            run(pending.invoiceNumber, pending.nip, pending.form, pending.unsentId) { backend.awaitResult(pending.nip, pending.submitted) }
+        }
+    }
+
+    /**
+     * Fetches the UPOs that KSeF had not provided right after accepting an invoice. Best effort: communication
+     * problems keep the entry for the next start, an invoice still without UPO is given up after [MAX_UPO_ATTEMPTS].
+     */
+    fun fetchMissingUpos() {
+        scope.launch {
+            if (!upoMutex.tryLock()) return@launch
+            try {
+                withContext(ioDispatcher) { storage.loadMissingUpos().forEach { fetchMissingUpo(it) } }
+            } finally {
+                upoMutex.unlock()
+            }
+        }
+    }
+
+    private suspend fun fetchMissingUpo(missing: MissingUpo) {
+        val upo = try {
+            backend.fetchUpo(missing.nip, missing.submitted)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return
+        }
+        when {
+            upo != null -> {
+                storage.saveUpo(missing.ksefNumber, upo)
+                storage.removeMissingUpo(missing.ksefNumber)
+            }
+            missing.attempts + 1 >= MAX_UPO_ATTEMPTS -> storage.removeMissingUpo(missing.ksefNumber)
+            else -> storage.saveMissingUpo(missing.copy(attempts = missing.attempts + 1))
         }
     }
 
@@ -138,13 +189,17 @@ class InvoiceSendService(
         if (!busy) _state.value = SendState.Idle
     }
 
-    private suspend fun run(invoiceNumber: String, form: InvoiceForm?, unsentId: String?, block: suspend () -> SentInvoice) {
+    private suspend fun run(invoiceNumber: String, nip: String, form: InvoiceForm?, unsentId: String?, block: suspend () -> SentInvoice) {
         _state.value = try {
             val sent = withContext(ioDispatcher) { block() }
             withContext(ioDispatcher) {
-                sent.upo?.let { storage.saveUpo(sent.ksefNumber, it) }
-                storage.clearPending()
+                // Without the UPO the invoice is accepted all the same; the UPO is fetched again later (REV-07).
+                val upo = sent.upo
+                if (upo != null) storage.saveUpo(sent.ksefNumber, upo) else storage.saveMissingUpo(MissingUpo(sent.ksefNumber, nip, sent.submitted))
+                // The source goes first, the pending marker last: if the process dies in between, the next start
+                // resumes the pending send, repeats the (idempotent) cleanup and shows the accepted result.
                 if (unsentId != null) unsent.delete(unsentId) else storage.clearDraft()
+                storage.clearPending()
             }
             onAccepted()
             SendState.Accepted(invoiceNumber, sent.ksefNumber, upoSaved = sent.upo != null)
@@ -175,7 +230,12 @@ class InvoiceSendService(
             else -> UnsentInvoice.create(requireNotNull(form) { "form needed to keep the invoice as unsent" }, now, rejection)
         }
         unsent.save(invoice)
-        if (unsentId == null) storage.clearDraft()
+        // The invoice is safe as unsent already; a draft that could not be deleted is only a leftover.
+        if (unsentId == null) runCatching { storage.clearDraft() }
         invoice.id
+    }
+
+    private companion object {
+        const val MAX_UPO_ATTEMPTS = 10
     }
 }

@@ -59,9 +59,10 @@ fun InvoiceDetailsContent(invoice: Invoice, ksefNumber: String?) {
         SectionCard(stringResource(R.string.details_summary)) {
             invoice.vatSummary.forEach { entry ->
                 val label = vatCategoryLabel(entry.category)
+                val vat = entry.vat
                 Text(
-                    if (entry.vat != null) {
-                        stringResource(R.string.details_summary_rate, label, money(entry.net), money(entry.vat!!))
+                    if (vat != null) {
+                        stringResource(R.string.details_summary_rate, label, money(entry.net), money(vat))
                     } else {
                         stringResource(R.string.details_summary_rate_no_vat, label, money(entry.net))
                     },
@@ -167,11 +168,13 @@ private fun LineItem(line: InvoiceLine, money: (BigDecimal) -> String) {
         }
         Text(listOfNotNull(line.number?.let { "$it." }, line.name).joinToString(" "), fontWeight = FontWeight.SemiBold)
         val quantity = line.quantity?.let(Formats::quantity)
+        val unitNetPrice = line.unitNetPrice
+        val unitGrossPrice = line.unitGrossPrice
         when {
-            quantity != null && line.unitNetPrice != null ->
-                Text(stringResource(R.string.details_line_quantity, quantity, line.unit.orEmpty(), money(line.unitNetPrice!!)))
-            quantity != null && line.unitGrossPrice != null ->
-                Text(stringResource(R.string.details_line_quantity_gross, quantity, line.unit.orEmpty(), money(line.unitGrossPrice!!)))
+            quantity != null && unitNetPrice != null ->
+                Text(stringResource(R.string.details_line_quantity, quantity, line.unit.orEmpty(), money(unitNetPrice)))
+            quantity != null && unitGrossPrice != null ->
+                Text(stringResource(R.string.details_line_quantity_gross, quantity, line.unit.orEmpty(), money(unitGrossPrice)))
         }
         val net = line.netValue
         val gross = line.displayGrossValue

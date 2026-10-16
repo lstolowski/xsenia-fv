@@ -9,6 +9,8 @@
 | [srodowisko/](srodowisko/) | Przygotowanie środowiska deweloperskiego |
 | [przyklady/](przyklady/README.md) | Zmyślone dane do developmentu: NIP-y, firma, kontrahenci, rachunki, odpowiedzi Białej listy i NBP |
 | [slownik.md](slownik.md) | Słownik pojęć i mapowanie na nazwy w kodzie |
+| [audyt-security.md](audyt-security.md) | Code review i statyczny audyt bezpieczeństwa aplikacji |
+| [code-review-1.md](code-review-1.md) | Code review 1: ocena uwag `TODO CODE REVIEWED` i plan poprawek REV-01..31 |
 
 ## Analiza
 

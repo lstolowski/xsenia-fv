@@ -7,6 +7,7 @@ import pl.xsenia.fv.ksef.auth.KsefTokenManager
 import pl.xsenia.fv.ksef.invoices.KsefInvoiceClient
 import pl.xsenia.fv.ksef.sending.KsefInvoiceSender
 import pl.xsenia.fv.security.KsefTokenStore
+import pl.xsenia.fv.security.TokenUnreadableException
 import java.io.IOException
 
 /**
@@ -35,10 +36,16 @@ class KsefAccess(
 /** Problems talking to KSeF, shown to the user in Polish. */
 sealed interface KsefFailure {
     data object MissingToken : KsefFailure
+
+    /** The stored token cannot be decrypted — it has to be entered again. */
+    data object TokenUnreadable : KsefFailure
     data class RateLimited(val retryAfterSeconds: Long?) : KsefFailure
     data class AuthenticationFailed(val statusCode: Int, val description: String) : KsefFailure
     data class Network(val message: String?) : KsefFailure
     data class Ksef(val message: String?) : KsefFailure
+
+    /** A problem that is none of the above (a bug or damaged local data); the details are not shown. */
+    data object Unexpected : KsefFailure
 }
 
 /** Carries a [KsefFailure] that is known before calling KSeF (missing token). */
@@ -47,6 +54,7 @@ class KsefFailureException(val failure: KsefFailure) : Exception()
 /** Maps errors of KSeF calls to [KsefFailure]; returns null for unrelated exceptions. */
 fun Throwable.toKsefFailure(): KsefFailure? = when (this) {
     is KsefFailureException -> failure
+    is TokenUnreadableException -> KsefFailure.TokenUnreadable
     is KsefRateLimitException -> KsefFailure.RateLimited(retryAfter?.inWholeSeconds)
     is KsefAuthenticationException -> KsefFailure.AuthenticationFailed(statusCode, description)
     is KsefException -> KsefFailure.Ksef(message)

@@ -51,8 +51,10 @@ private fun progressText(progress: SyncProgress?): String {
 @Composable
 fun ksefFailureText(error: KsefFailure): String = when (error) {
     KsefFailure.MissingToken -> stringResource(R.string.sync_error_missing_token)
+    KsefFailure.TokenUnreadable -> stringResource(R.string.token_unreadable)
     is KsefFailure.RateLimited -> stringResource(R.string.sync_error_rate_limited, error.retryAfterSeconds?.toString() ?: "?")
     is KsefFailure.AuthenticationFailed -> stringResource(R.string.sync_error_auth, error.statusCode, error.description)
     is KsefFailure.Network -> stringResource(R.string.sync_error_network, error.message.orEmpty())
     is KsefFailure.Ksef -> stringResource(R.string.sync_error_ksef, error.message.orEmpty())
+    KsefFailure.Unexpected -> stringResource(R.string.sync_error_unexpected)
 }

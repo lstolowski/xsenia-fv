@@ -1,5 +1,7 @@
 package pl.xsenia.fv.invoice.validation
 
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -35,5 +37,17 @@ class BankAccountNumberValidatorTest {
     fun `rejects invalid account numbers`(raw: String) {
         assertNull(BankAccountNumberValidator.normalize(raw))
         assertFalse(BankAccountNumberValidator.isValid(raw))
+    }
+
+    @Test
+    fun `rejects digits outside ASCII even when the checksum is right`() {
+        val valid = "85216097583216850246002152"
+        val arabicIndic = valid.map { '\u0660' + (it - '0') }.joinToString("")
+        val fullWidth = valid.map { '\uFF10' + (it - '0') }.joinToString("")
+
+        assertTrue(BankAccountNumberValidator.isValid(valid))
+        assertFalse(BankAccountNumberValidator.isValid(arabicIndic))
+        assertFalse(BankAccountNumberValidator.isValid(fullWidth))
+        assertNull(BankAccountNumberValidator.normalize(fullWidth))
     }
 }

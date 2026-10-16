@@ -6,6 +6,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import pl.xsenia.fv.ksef.KsefApiException
 import pl.xsenia.fv.ksef.KsefException
 import pl.xsenia.fv.ksef.KsefInvoiceRejectedException
+import pl.xsenia.fv.ksef.KsefProtocolException
 import pl.xsenia.fv.ksef.KsefTimeoutException
 import pl.xsenia.fv.ksef.auth.KsefPublicKeyProvider
 import pl.xsenia.fv.ksef.auth.KsefTokenManager
@@ -28,6 +29,8 @@ class KsefInvoiceSender internal constructor(
     private val publicKeys: KsefPublicKeyProvider,
     private val pollInterval: Duration = 2.seconds,
     private val timeout: Duration = 3.minutes,
+    private val upoAttempts: Int = 3,
+    private val upoRetryDelay: Duration = 2.seconds,
 ) {
 
     constructor(client: HttpClient, tokens: KsefTokenManager, publicKeys: KsefPublicKeyProvider) :
@@ -69,6 +72,7 @@ class KsefInvoiceSender internal constructor(
                 encryptedInvoiceSize = encrypted.size.toLong(),
                 encryptedInvoiceContent = encoder.encodeToString(encrypted),
             )
+            // TODO CODE REVIEWED: If KSeF accepts this POST but the response is lost, no SubmittedInvoice is persisted and a retry can submit the same invoice again. Reconcile uncertain submissions before treating this as a safe resend.
             val invoiceReference = tokens.withAccessToken { api.sendInvoice(it, session.referenceNumber, request) }.referenceNumber
             val submitted = SubmittedInvoice(session.referenceNumber, invoiceReference)
             onSubmitted(submitted)
@@ -93,8 +97,7 @@ class KsefInvoiceSender internal constructor(
             }
         }
         val final = status ?: throw KsefTimeoutException("KSeF did not process invoice ${submitted.invoiceReferenceNumber} within $timeout")
-        val ksefNumber = final.ksefNumber
-        if (final.status.code != SUCCESS || ksefNumber == null) {
+        if (final.status.code != SUCCESS) {
             throw KsefInvoiceRejectedException(
                 final.status.code,
                 final.status.description,
@@ -102,16 +105,28 @@ class KsefInvoiceSender internal constructor(
                 final.status.extensions.orEmpty(),
             )
         }
+        // Not a rejection: KSeF says "accepted", so the invoice may well be in KSeF — it must not be offered for resending.
+        val ksefNumber = final.ksefNumber
+            ?: throw KsefProtocolException("KSeF accepted invoice ${submitted.invoiceReferenceNumber} but returned no KSeF number")
         return SentInvoice(submitted, ksefNumber, final.acquisitionDate, downloadUpo(submitted))
     }
 
-    /** UPO of an accepted invoice; null when KSeF has not produced it yet (it can be fetched later). */
-    suspend fun downloadUpo(submitted: SubmittedInvoice): ByteArray? =
-        try {
-            tokens.withAccessToken { api.invoiceUpo(it, submitted.sessionReferenceNumber, submitted.invoiceReferenceNumber) }
-        } catch (e: KsefApiException) {
-            null
+    /**
+     * UPO of an accepted invoice; null when KSeF has not produced it (yet) — it can be fetched later.
+     * A missing UPO (404) and temporary server errors (5xx) are retried [upoAttempts] times; other errors mean "no UPO".
+     */
+    suspend fun downloadUpo(submitted: SubmittedInvoice): ByteArray? {
+        repeat(upoAttempts) { attempt ->
+            try {
+                return tokens.withAccessToken { api.invoiceUpo(it, submitted.sessionReferenceNumber, submitted.invoiceReferenceNumber) }
+            } catch (e: KsefApiException) {
+                val retryable = e.httpStatus == HTTP_NOT_FOUND || e.httpStatus >= HTTP_SERVER_ERROR
+                if (!retryable) return null
+                if (attempt < upoAttempts - 1) delay(upoRetryDelay)
+            }
         }
+        return null
+    }
 
     private suspend fun closeQuietly(sessionReference: String) {
         try {
@@ -126,5 +141,7 @@ class KsefInvoiceSender internal constructor(
         const val ACCEPTED = 100
         const val PROCESSING = 150
         const val SUCCESS = 200
+        const val HTTP_NOT_FOUND = 404
+        const val HTTP_SERVER_ERROR = 500
     }
 }

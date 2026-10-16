@@ -216,10 +216,10 @@ private class XmlBuilder {
         repeat(depth) { out.append("  ") }
     }
 
-    private fun normalize(value: String) = value.trim().replace(WHITESPACE, " ")
+    private fun normalize(value: String) = withoutInvalidXmlChars(value).trim().replace(WHITESPACE, " ")
 
     private fun escape(value: String) = buildString {
-        value.forEach {
+        withoutInvalidXmlChars(value).forEach {
             when (it) {
                 '&' -> append("&amp;")
                 '<' -> append("&lt;")
@@ -230,6 +230,21 @@ private class XmlBuilder {
             }
         }
     }
+
+    /**
+     * Drops what XML 1.0 does not allow in text: control characters other than tab, line feed and carriage return,
+     * U+FFFE / U+FFFF and unpaired surrogates (e.g. pasted from a PDF) — escaping cannot make them legal. Whole code
+     * points are checked, so a valid surrogate pair (emoji) stays.
+     */
+    private fun withoutInvalidXmlChars(value: String): String {
+        if (value.codePoints().allMatch(::isXmlChar)) return value
+        val kept = StringBuilder(value.length)
+        value.codePoints().filter(::isXmlChar).forEach { kept.appendCodePoint(it) }
+        return kept.toString()
+    }
+
+    private fun isXmlChar(codePoint: Int) = codePoint == 0x9 || codePoint == 0xA || codePoint == 0xD ||
+        codePoint in 0x20..0xD7FF || codePoint in 0xE000..0xFFFD || codePoint in 0x10000..0x10FFFF
 
     private companion object {
         val WHITESPACE = Regex("\\s+")

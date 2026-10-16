@@ -1,5 +1,6 @@
 package pl.xsenia.fv.profile
 
+import pl.xsenia.fv.invoice.validation.isAsciiDigits
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -54,7 +55,7 @@ class ProfileManager(
 
     companion object {
         fun profileDirectory(filesDir: File, nip: String): File {
-            require(nip.length == 10 && nip.all(Char::isDigit)) { "NIP must be 10 digits" }
+            require(nip.length == 10 && nip.isAsciiDigits()) { "NIP must be 10 digits" }
             return File(File(filesDir, "profiles"), nip)
         }
     }

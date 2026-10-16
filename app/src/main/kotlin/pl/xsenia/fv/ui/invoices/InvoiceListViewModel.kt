@@ -19,11 +19,15 @@ import pl.xsenia.fv.invoices.InvoiceRow
 import pl.xsenia.fv.invoices.UnsentSummary
 import pl.xsenia.fv.profile.ProfileSession
 import pl.xsenia.fv.mirror.InvoiceCategory
+import java.time.Clock
 import java.time.YearMonth
+
+/** The current month in the time zone of the invoices (Europe/Warsaw), not of the device. */
+private fun currentMonth(): YearMonth = InvoiceListLogic.currentMonth(Clock.systemUTC(), AppContainer.POLAND)
 
 data class InvoiceListUiState(
     val loading: Boolean = true,
-    val month: YearMonth = YearMonth.now(),
+    val month: YearMonth = currentMonth(),
     val query: String = "",
     val invoices: List<InvoiceRow> = emptyList(),
     val totals: List<CurrencyTotals> = emptyList(),
@@ -38,7 +42,7 @@ data class InvoiceListUiState(
 class InvoiceListViewModel(private val category: InvoiceCategory, private val session: ProfileSession) : ViewModel() {
 
     private val rows = MutableStateFlow<List<InvoiceRow>?>(null)
-    private val month = MutableStateFlow(YearMonth.now())
+    private val month = MutableStateFlow(currentMonth())
     private val query = MutableStateFlow("")
 
     /** Unsent invoices (US-007) — only on the sales list. */
@@ -50,6 +54,7 @@ class InvoiceListViewModel(private val category: InvoiceCategory, private val se
     val state: StateFlow<InvoiceListUiState> = combine(rows, unsentRows, month, query) { ksefRows, unsentRows, month, query ->
         if (ksefRows == null) return@combine InvoiceListUiState(month = month, query = query)
         val rows = ksefRows + unsentRows
+        // TODO CODE REVIEWED: Filtering, sorting, totals and month counts all scan the mirror on the view-model (normally Main) dispatcher after each query/month change; a large mirror can cause visible jank. Move derived work off Main or cache by inputs.
         val visible = InvoiceListLogic.filter(rows, month, query)
         InvoiceListUiState(
             loading = false,
@@ -58,7 +63,7 @@ class InvoiceListViewModel(private val category: InvoiceCategory, private val se
             invoices = visible,
             totals = InvoiceListLogic.totals(visible),
             unsentSummary = InvoiceListLogic.unsentSummary(visible),
-            months = InvoiceListLogic.months(rows, YearMonth.from(AppContainer.MIRROR_START_DATE), YearMonth.now()),
+            months = InvoiceListLogic.months(rows, YearMonth.from(AppContainer.MIRROR_START_DATE), currentMonth()),
             mirrorEmpty = ksefRows.isEmpty() && unsentRows.isEmpty(),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InvoiceListUiState())

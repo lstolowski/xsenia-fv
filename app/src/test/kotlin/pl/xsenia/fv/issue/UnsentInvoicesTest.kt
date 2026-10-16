@@ -1,5 +1,6 @@
 package pl.xsenia.fv.issue
 
+import kotlinx.coroutines.flow.first
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -66,5 +67,28 @@ class UnsentInvoicesTest {
             TakenNumbers.of(listOf("01/09/2026"), listOf(edited, other, blank), excludeUnsentId = edited.id),
         )
         assertEquals(listOf("01/09/2026", "04/09/2026", "05/09/2026"), TakenNumbers.of(listOf("01/09/2026"), listOf(edited, other), null))
+    }
+
+    @Test
+    fun `deleting an invoice that does not exist is fine`() {
+        UnsentInvoiceStore(dir).delete("0f0f0f0f-0000-4000-8000-000000000001")
+    }
+
+    @Test
+    fun `an invoice that cannot be deleted is reported and stays in the repository`() = kotlinx.coroutines.runBlocking {
+        val store = UnsentInvoiceStore(dir)
+        val invoice = UnsentInvoice.create(form("04/09/2026"), Instant.parse("2026-10-01T10:00:00Z"))
+        store.save(invoice)
+        val repository = UnsentInvoiceRepository(store, this)
+        // The repository loads the invoices in the background.
+        kotlinx.coroutines.withTimeout(10_000) { repository.invoices.first { it.isNotEmpty() } }
+        // Replace the file with a non-empty directory of the same name: File.delete() returns false.
+        val file = File(dir, "unsent/${invoice.id}.json")
+        file.delete()
+        File(file, "stuck").apply { parentFile.mkdirs(); writeText("x") }
+
+        org.junit.jupiter.api.assertThrows<java.io.IOException> { repository.delete(invoice.id) }
+
+        assertEquals(listOf(invoice.id), repository.invoices.value.map { it.id })
     }
 }

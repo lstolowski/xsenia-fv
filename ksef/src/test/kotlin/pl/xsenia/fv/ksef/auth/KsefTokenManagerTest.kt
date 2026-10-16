@@ -4,6 +4,8 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import pl.xsenia.fv.ksef.KsefApiException
 import pl.xsenia.fv.ksef.testing.MockKsef
 import pl.xsenia.fv.ksef.testing.json
 import pl.xsenia.fv.ksef.testing.rsaKeyPair
@@ -84,6 +86,34 @@ class KsefTokenManagerTest {
 
         assertEquals("access-1", manager.accessToken())
         assertEquals(2, ksef.requestsTo("auth/ksef-token").size)
+    }
+
+    @Test
+    fun `authenticates again when the refresh token is forbidden or invalid`(): Unit = runBlocking {
+        manager.accessToken()
+        clock.now = Instant.parse("2026-10-11T15:25:00Z")
+        refreshStatus = HttpStatusCode.Forbidden
+
+        assertEquals("access-1", manager.accessToken())
+        assertEquals(2, ksef.requestsTo("auth/ksef-token").size)
+    }
+
+    @Test
+    fun `a temporary server error while refreshing does not start a new authentication`(): Unit = runBlocking {
+        manager.accessToken()
+        clock.now = Instant.parse("2026-10-11T15:25:00Z")
+        refreshStatus = HttpStatusCode.ServiceUnavailable
+
+        val error = assertThrows<KsefApiException> { manager.accessToken() }
+
+        assertEquals(503, error.httpStatus)
+        assertEquals(1, ksef.requestsTo("auth/ksef-token").size)
+        assertEquals(1, ksefTokenReads)
+
+        // Once KSeF recovers the same refresh token works, without authenticating again.
+        refreshStatus = HttpStatusCode.OK
+        assertEquals("access-refreshed", manager.accessToken())
+        assertEquals(1, ksef.requestsTo("auth/ksef-token").size)
     }
 
     @Test

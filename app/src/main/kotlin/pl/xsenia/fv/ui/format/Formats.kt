@@ -1,5 +1,6 @@
 package pl.xsenia.fv.ui.format
 
+import pl.xsenia.fv.invoice.validation.isAsciiDigits
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.time.Instant
@@ -47,7 +48,7 @@ object Formats {
 
     /** 26-digit NRB grouped as on Polish invoices: `85 2160 9758 3216 8502 4600 2152`; other numbers unchanged. */
     fun bankAccount(number: String): String {
-        if (number.length != 26 || !number.all(Char::isDigit)) return number
+        if (number.length != 26 || !number.isAsciiDigits()) return number
         return number.take(2) + " " + number.drop(2).chunked(4).joinToString(" ")
     }
 

@@ -26,6 +26,7 @@ import pl.xsenia.fv.ksef.testing.publicKeysOf
 import pl.xsenia.fv.ksef.testing.rsaKeyPair
 import pl.xsenia.fv.ksef.testing.tokenManager
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.math.BigDecimal
 import java.security.spec.MGF1ParameterSpec
 import java.time.Instant
@@ -42,12 +43,49 @@ class KsefInvoiceClientTest {
 
     private val keyPair = rsaKeyPair()
 
-    private fun client(ksef: MockKsef) = KsefInvoiceClient(
+    private fun client(ksef: MockKsef, limits: KsefInvoiceClient.ExportLimits = KsefInvoiceClient.ExportLimits()) = KsefInvoiceClient(
         KsefInvoicesApi(ksef.client),
         tokenManager(ksef, keyPair),
         publicKeysOf(keyPair),
         exportPollInterval = 1.milliseconds,
+        limits = limits,
     )
+
+    /** A ZIP package made of [entries] (name → content). */
+    private fun zipOf(entries: List<Pair<String, ByteArray>>): ByteArray = ByteArrayOutputStream().also { out ->
+        ZipOutputStream(out).use { zip -> entries.forEach { (name, content) -> zip.putNextEntry(ZipEntry(name)); zip.write(content); zip.closeEntry() } }
+    }.toByteArray()
+
+    /** Exports [zip] as a single encrypted part through a mock KSeF. */
+    private fun exportOf(zip: ByteArray, limits: KsefInvoiceClient.ExportLimits = KsefInvoiceClient.ExportLimits()): InvoiceExport = runBlocking {
+        var encrypted = ByteArray(0)
+        val ksef = MockKsef { request ->
+            authResponse(request) ?: when (request.url.encodedPath) {
+                "/v2/invoices/exports" -> {
+                    val encryption = request.bodyJson()["encryption"]!!.jsonObject
+                    val key = SymmetricKey(
+                        decryptRsa(Base64.getDecoder().decode(encryption["encryptedSymmetricKey"]!!.jsonPrimitive.content)),
+                        Base64.getDecoder().decode(encryption["initializationVector"]!!.jsonPrimitive.content),
+                    )
+                    encrypted = KsefCrypto.encryptAes256Cbc(zip, key)
+                    json("""{"referenceNumber":"EX-1"}""", HttpStatusCode.Created)
+                }
+                "/v2/invoices/exports/EX-1" -> json(
+                    """{"status":{"code":200,"description":"ok"},"package":{"invoiceCount":1,"size":${zip.size},
+                       "parts":[{"ordinalNumber":1,"partName":"p","method":"GET","url":"https://storage.example.com/part0",
+                       "partSize":${zip.size},"partHash":"${KsefCrypto.sha256Base64(zip)}",
+                       "encryptedPartSize":${encrypted.size},"encryptedPartHash":"${KsefCrypto.sha256Base64(encrypted)}",
+                       "expirationDate":"2099-01-01T00:00:00+00:00"}],"isTruncated":false,
+                       "lastPermanentStorageDate":"2026-10-11T17:57:30+00:00","compressionType":"Zip"}}""",
+                )
+                "/part0" -> respond(encrypted)
+                else -> error("Unexpected request ${request.url}")
+            }
+        }
+        client(ksef, limits).exportInvoices(InvoiceSubjectType.SELLER, InvoiceDateType.PERMANENT_STORAGE, Instant.parse("2026-10-01T00:00:00Z"))
+    }
+
+    private fun exportTempFiles() = File(System.getProperty("java.io.tmpdir")).listFiles { f -> f.name.startsWith("ksef-export-") }.orEmpty().toSet()
 
     private fun HttpRequestData.bodyJson() =
         Json.parseToJsonElement(String((body as OutgoingContent.ByteArrayContent).bytes(), Charsets.UTF_8)).jsonObject
@@ -242,6 +280,42 @@ class KsefInvoiceClientTest {
         assertTrue(exportRequest.bodyJson()["filters"]!!.jsonObject["dateRange"]!!.jsonObject["restrictToPermanentStorageHwmDate"]!!.jsonPrimitive.content.toBoolean())
         // Pre-signed part URLs must not receive the access token.
         assertTrue(ksef.requests.filter { it.url.host == "storage.example.com" }.none { it.headers["Authorization"] != null })
+    }
+
+    @Test
+    fun `XML entries are found regardless of the case of the extension, and the temporary file is removed`() {
+        val before = exportTempFiles()
+        val export = exportOf(
+            zipOf(
+                listOf(
+                    "KSEF-A.XML" to "<Faktura>A</Faktura>".toByteArray(),
+                    "dir/KSEF-B.xml" to "<Faktura>B</Faktura>".toByteArray(),
+                    "_metadata.json" to """{"invoices":[${metadataJson("KSEF-A")}]}""".toByteArray(),
+                ),
+            ),
+        )
+
+        assertEquals(setOf("KSEF-A", "KSEF-B"), export.xmlByKsefNumber.keys)
+        assertEquals(before, exportTempFiles())
+    }
+
+    @Test
+    fun `a package that unpacks to more than the limits is rejected and the temporary file is removed`() {
+        val before = exportTempFiles()
+        val big = ByteArray(2000) { 'x'.code.toByte() }
+        val limits = KsefInvoiceClient.ExportLimits(maxEntries = 3, maxEntryBytes = 1000, maxTotalBytes = 2500)
+
+        // One entry above the per-entry limit.
+        assertThrows<KsefProtocolException> { exportOf(zipOf(listOf("KSEF-A.xml" to big)), limits) }
+        // Too many entries.
+        assertThrows<KsefProtocolException> {
+            exportOf(zipOf((1..4).map { "KSEF-$it.xml" to "<a/>".toByteArray() }), limits)
+        }
+        // Each entry is fine, together they exceed the total limit.
+        assertThrows<KsefProtocolException> {
+            exportOf(zipOf((1..3).map { "KSEF-$it.xml" to ByteArray(900) { 'y'.code.toByte() } }), limits)
+        }
+        assertEquals(before, exportTempFiles())
     }
 
     @Test

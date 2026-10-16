@@ -67,4 +67,34 @@ class InvoiceMirrorTest {
             InvoiceMirror(dir).add(InvoiceCategory.SALES, listOf(entry("../evil", "2026-10-01T00:00:00Z") to ByteArray(0)))
         }
     }
+
+    @Test
+    fun `a corrupted index is dropped with the checkpoint of its category, so that category is downloaded again`() {
+        val mirror = InvoiceMirror(dir)
+        mirror.add(InvoiceCategory.SALES, listOf(entry("A", "2026-10-01T00:00:00Z") to "<a/>".toByteArray()))
+        mirror.add(InvoiceCategory.PURCHASE, listOf(entry("P", "2026-10-01T00:00:00Z") to "<p/>".toByteArray()))
+        val synced = CategorySyncState(checkpoint = Instant.parse("2026-10-12T10:00:00Z"), lastSyncAt = Instant.parse("2026-10-12T10:05:00Z"))
+        mirror.saveSyncState(SyncState(sales = synced, purchase = synced))
+        File(dir, "sales/index.json").writeText("{ this is not json")
+
+        assertTrue(mirror.entries(InvoiceCategory.SALES).isEmpty())
+
+        // Sales start from scratch, purchase invoices are untouched.
+        assertEquals(CategorySyncState(), mirror.syncState().sales)
+        assertEquals(synced, mirror.syncState().purchase)
+        assertEquals(listOf("P"), mirror.entries(InvoiceCategory.PURCHASE).map { it.metadata.ksefNumber })
+        // The mirror works again: new invoices can be added.
+        mirror.add(InvoiceCategory.SALES, listOf(entry("B", "2026-10-02T00:00:00Z") to "<b/>".toByteArray()))
+        assertEquals(listOf("B"), mirror.entries(InvoiceCategory.SALES).map { it.metadata.ksefNumber })
+    }
+
+    @Test
+    fun `a corrupted sync state is dropped, so everything is downloaded again`() {
+        val mirror = InvoiceMirror(dir)
+        mirror.saveSyncState(SyncState(sales = CategorySyncState(checkpoint = Instant.parse("2026-10-12T10:00:00Z"))))
+        File(dir, "sync-state.json").writeText("\u0000\u0000 broken")
+
+        assertEquals(SyncState(), mirror.syncState())
+        assertEquals(false, File(dir, "sync-state.json").exists())
+    }
 }

@@ -11,8 +11,8 @@ import pl.xsenia.fv.ksef.auth.KsefTokenManager
 import pl.xsenia.fv.ksef.auth.PublicKeyUsage
 import pl.xsenia.fv.ksef.crypto.KsefCrypto
 import pl.xsenia.fv.ksef.http.KsefJson
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
@@ -28,6 +28,7 @@ class KsefInvoiceClient internal constructor(
     private val publicKeys: KsefPublicKeyProvider,
     private val exportPollInterval: kotlin.time.Duration = 2.seconds,
     private val exportTimeout: kotlin.time.Duration = 5.minutes,
+    private val limits: ExportLimits = ExportLimits(),
 ) {
 
     constructor(client: HttpClient, tokens: KsefTokenManager, publicKeys: KsefPublicKeyProvider) :
@@ -100,19 +101,26 @@ class KsefInvoiceClient internal constructor(
         val referenceNumber = tokens.withAccessToken { api.startExport(it, request) }.referenceNumber
         val invoicePackage = awaitExport(referenceNumber)
 
-        val archive = ByteArrayOutputStream()
-        invoicePackage.parts.sortedBy { it.ordinalNumber }.forEach { part ->
-            val encrypted = api.downloadPart(part)
-            if (KsefCrypto.sha256Base64(encrypted) != part.encryptedPartHash) {
-                throw KsefProtocolException("Export $referenceNumber part ${part.ordinalNumber}: encrypted hash mismatch")
+        // The decrypted package goes to a temporary file (the cache directory on Android), not to memory.
+        val archive = File.createTempFile("ksef-export-", ".zip")
+        try {
+            archive.outputStream().buffered().use { out ->
+                invoicePackage.parts.sortedBy { it.ordinalNumber }.forEach { part ->
+                    val encrypted = api.downloadPart(part)
+                    if (KsefCrypto.sha256Base64(encrypted) != part.encryptedPartHash) {
+                        throw KsefProtocolException("Export $referenceNumber part ${part.ordinalNumber}: encrypted hash mismatch")
+                    }
+                    val decrypted = KsefCrypto.decryptAes256Cbc(encrypted, symmetricKey)
+                    if (KsefCrypto.sha256Base64(decrypted) != part.partHash) {
+                        throw KsefProtocolException("Export $referenceNumber part ${part.ordinalNumber}: hash mismatch")
+                    }
+                    out.write(decrypted)
+                }
             }
-            val decrypted = KsefCrypto.decryptAes256Cbc(encrypted, symmetricKey)
-            if (KsefCrypto.sha256Base64(decrypted) != part.partHash) {
-                throw KsefProtocolException("Export $referenceNumber part ${part.ordinalNumber}: hash mismatch")
-            }
-            archive.write(decrypted)
+            return unpack(archive, invoicePackage)
+        } finally {
+            archive.delete()
         }
-        return unpack(archive.toByteArray(), invoicePackage)
     }
 
     private suspend fun queryWindow(
@@ -159,19 +167,23 @@ class KsefInvoiceClient internal constructor(
         return invoicePackage ?: throw KsefTimeoutException("KSeF export $referenceNumber did not finish within $exportTimeout")
     }
 
-    private fun unpack(archive: ByteArray, invoicePackage: InvoicePackageDto): InvoiceExport {
+    private fun unpack(archive: File, invoicePackage: InvoicePackageDto): InvoiceExport {
         if (!invoicePackage.compressionType.equals("Zip", ignoreCase = true)) {
             throw KsefProtocolException("Unsupported export compression: ${invoicePackage.compressionType}")
         }
         var metadata: List<InvoiceMetadata> = emptyList()
         val xmlFiles = mutableMapOf<String, ByteArray>()
-        ZipInputStream(ByteArrayInputStream(archive)).use { zip ->
+        var entries = 0
+        var totalBytes = 0L
+        ZipInputStream(archive.inputStream().buffered()).use { zip ->
             generateSequence { zip.nextEntry }.filterNot { it.isDirectory }.forEach { entry ->
+                if (++entries > limits.maxEntries) throw KsefProtocolException("Export package has more than ${limits.maxEntries} entries")
                 val name = entry.name.substringAfterLast('/')
-                val bytes = zip.readBytes()
+                val bytes = zip.readLimited(minOf(limits.maxEntryBytes, limits.maxTotalBytes - totalBytes), name)
+                totalBytes += bytes.size
                 when {
                     name == METADATA_FILE -> metadata = KsefJson.decodeFromString<PackageMetadataDto>(bytes.toString(Charsets.UTF_8)).invoices
-                    name.endsWith(".xml", ignoreCase = true) -> xmlFiles[name.removeSuffix(".xml")] = bytes
+                    name.endsWith(XML_SUFFIX, ignoreCase = true) -> xmlFiles[name.dropLast(XML_SUFFIX.length)] = bytes
                 }
             }
         }
@@ -184,6 +196,17 @@ class KsefInvoiceClient internal constructor(
         )
     }
 
+    /** Reads the current entry, failing as soon as it exceeds [limit] bytes (a ZIP can be tiny and expand enormously). */
+    private fun ZipInputStream.readLimited(limit: Long, name: String): ByteArray {
+        val out = ByteArrayOutputStream()
+        val buffer = ByteArray(BUFFER_SIZE)
+        while (true) {
+            val read = read(buffer)
+            if (read < 0) return out.toByteArray()
+            if (out.size() + read > limit) throw KsefProtocolException("Export package entry $name exceeds the size limits")
+            out.write(buffer, 0, read)
+        }
+    }
 
     private fun InvoiceMetadata.dateOf(dateType: InvoiceDateType): Instant = when (dateType) {
         InvoiceDateType.ISSUE -> issueDate.atStartOfDay().toInstant(ZoneOffset.UTC)
@@ -191,7 +214,16 @@ class KsefInvoiceClient internal constructor(
         InvoiceDateType.PERMANENT_STORAGE -> permanentStorageDate
     }
 
+    /** Bounds for what an export package may unpack to; KSeF invoices are far smaller. */
+    class ExportLimits(
+        val maxEntries: Int = 50_000,
+        val maxEntryBytes: Long = 10L * 1024 * 1024,
+        val maxTotalBytes: Long = 100L * 1024 * 1024,
+    )
+
     private companion object {
+        const val XML_SUFFIX = ".xml"
+        const val BUFFER_SIZE = 8192
         // KSeF accepts at most 100 days per query; keep a margin for time zone handling.
         val MAX_WINDOW: Duration = Duration.ofDays(90)
         const val PAGE_SIZE = 250

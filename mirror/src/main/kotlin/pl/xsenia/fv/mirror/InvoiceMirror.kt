@@ -27,10 +27,22 @@ class InvoiceMirror(private val root: File) {
     }
     private val entriesSerializer = ListSerializer(MirrorEntry.serializer())
 
+    /**
+     * The index of [category]. A corrupted index (not readable as JSON) is dropped together with the synchronization
+     * checkpoint of that category, so the next synchronization downloads its invoices again — the mirror is only a copy
+     * of KSeF (ADR 0003) and one bad file must not make the app unusable.
+     */
     fun entries(category: InvoiceCategory): List<MirrorEntry> {
         val file = indexFile(category)
         if (!file.isFile) return emptyList()
-        return json.decodeFromString(entriesSerializer, file.readText(Charsets.UTF_8))
+        return try {
+            json.decodeFromString(entriesSerializer, file.readText(Charsets.UTF_8))
+        } catch (e: IllegalArgumentException) {
+            // SerializationException is an IllegalArgumentException.
+            file.delete()
+            saveSyncState(syncState().with(category, CategorySyncState()))
+            emptyList()
+        }
     }
 
     fun ksefNumbers(category: InvoiceCategory): Set<String> = entries(category).mapTo(mutableSetOf()) { it.metadata.ksefNumber }
@@ -49,10 +61,16 @@ class InvoiceMirror(private val root: File) {
         writeAtomically(indexFile(category), json.encodeToString(entriesSerializer, sorted).toByteArray(Charsets.UTF_8))
     }
 
+    /** The synchronization state; a corrupted file is dropped, so everything is downloaded again. */
     fun syncState(): SyncState {
         val file = stateFile()
         if (!file.isFile) return SyncState()
-        return json.decodeFromString(SyncState.serializer(), file.readText(Charsets.UTF_8))
+        return try {
+            json.decodeFromString(SyncState.serializer(), file.readText(Charsets.UTF_8))
+        } catch (e: IllegalArgumentException) {
+            file.delete()
+            SyncState()
+        }
     }
 
     fun saveSyncState(state: SyncState) =
@@ -75,6 +93,7 @@ class InvoiceMirror(private val root: File) {
     private fun stateFile() = File(root, "sync-state.json")
 
     private fun writeAtomically(target: File, content: ByteArray) {
+        // TODO CODE REVIEWED: Invoice XML and metadata are written as plaintext in app-private files. Android sandboxing blocks ordinary apps, but extraction from a rooted/unlocked device exposes customer and financial data; assess encryption-at-rest and backup exclusion against the threat model.
         target.parentFile.mkdirs()
         val temporary = File(target.parentFile, target.name + ".tmp")
         temporary.writeBytes(content)

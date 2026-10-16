@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import pl.xsenia.fv.ksef.KsefInvoiceRejectedException
+import pl.xsenia.fv.ksef.KsefProtocolException
 import pl.xsenia.fv.ksef.KsefTimeoutException
 import pl.xsenia.fv.ksef.crypto.KsefCrypto
 import pl.xsenia.fv.ksef.crypto.SymmetricKey
@@ -40,15 +41,23 @@ class KsefInvoiceSenderTest {
     private fun HttpRequestData.bodyJson() =
         Json.parseToJsonElement(String((body as OutgoingContent.ByteArrayContent).bytes(), Charsets.UTF_8)).jsonObject
 
-    private fun ksef(statuses: List<String>, upoStatus: HttpStatusCode = HttpStatusCode.OK): MockKsef {
+    /** [upoStatuses] — answers of the UPO endpoint in order (the last one repeats); [upoStatus] — one answer. */
+    private fun ksef(
+        statuses: List<String>,
+        upoStatus: HttpStatusCode = HttpStatusCode.OK,
+        upoStatuses: List<HttpStatusCode> = listOf(upoStatus),
+    ): MockKsef {
         val queue = ArrayDeque(statuses)
+        val upoQueue = ArrayDeque(upoStatuses)
         return MockKsef { request ->
             authResponse(request) ?: when (request.url.encodedPath) {
                 "/v2/sessions/online" -> json("""{"referenceNumber":"SO-1","validUntil":"2099-01-01T00:00:00+00:00"}""", HttpStatusCode.Created)
                 "/v2/sessions/online/SO-1/invoices" -> json("""{"referenceNumber":"INV-1"}""", HttpStatusCode.Accepted)
                 "/v2/sessions/SO-1/invoices/INV-1" -> json(queue.removeFirstOrNull() ?: status(150))
                 "/v2/sessions/SO-1/invoices/INV-1/upo" ->
-                    if (upoStatus == HttpStatusCode.OK) respond("<UPO>test</UPO>") else json("", upoStatus)
+                    (if (upoQueue.size > 1) upoQueue.removeFirst() else upoQueue.first()).let {
+                        if (it == HttpStatusCode.OK) respond("<UPO>test</UPO>") else json("", it)
+                    }
                 "/v2/sessions/online/SO-1/close" -> respond("", HttpStatusCode.NoContent)
                 else -> error("Unexpected request ${request.url}")
             }
@@ -66,6 +75,8 @@ class KsefInvoiceSenderTest {
         publicKeysOf(keyPair),
         pollInterval = 1.milliseconds,
         timeout = 500.milliseconds,
+        upoAttempts = 3,
+        upoRetryDelay = 1.milliseconds,
     )
 
     @Test
@@ -134,6 +145,17 @@ class KsefInvoiceSenderTest {
     }
 
     @Test
+    fun `success status without a KSeF number is a protocol error, not a rejection`(): Unit = runBlocking {
+        val ksef = ksef(listOf(status(200)))
+        var submitted: SubmittedInvoice? = null
+
+        assertThrows<KsefProtocolException> { sender(ksef).send(invoiceXml) { submitted = it } }
+
+        // The invoice was submitted, so the caller keeps it pending and only checks the status again.
+        assertEquals(SubmittedInvoice("SO-1", "INV-1"), submitted)
+    }
+
+    @Test
     fun `missing UPO does not fail the accepted invoice`(): Unit = runBlocking {
         val ksef = ksef(listOf(status(200, ksefNumber = "9945082500-20261012-0000000000DD-00")), upoStatus = HttpStatusCode.NotFound)
 
@@ -141,6 +163,30 @@ class KsefInvoiceSenderTest {
 
         assertEquals("9945082500-20261012-0000000000DD-00", sent.ksefNumber)
         assertNull(sent.upo)
+    }
+
+    @Test
+    fun `UPO is retried after 404 and server errors until KSeF provides it`(): Unit = runBlocking {
+        val ksef = ksef(
+            listOf(status(200, ksefNumber = "9945082500-20261012-0000000000EE-00")),
+            upoStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.ServiceUnavailable, HttpStatusCode.OK),
+        )
+
+        val sent = sender(ksef).send(invoiceXml)
+
+        assertArrayEquals("<UPO>test</UPO>".toByteArray(), sent.upo)
+        assertEquals(3, ksef.requestsTo("sessions/SO-1/invoices/INV-1/upo").size)
+    }
+
+    @Test
+    fun `UPO is not retried after a client error and gives up after the last attempt`(): Unit = runBlocking {
+        val forbidden = ksef(listOf(status(200, ksefNumber = "9945082500-20261012-0000000000FF-00")), upoStatus = HttpStatusCode.Forbidden)
+        assertNull(sender(forbidden).send(invoiceXml).upo)
+        assertEquals(1, forbidden.requestsTo("sessions/SO-1/invoices/INV-1/upo").size)
+
+        val unavailable = ksef(listOf(status(200, ksefNumber = "9945082500-20261012-0000000000GG-00")), upoStatus = HttpStatusCode.ServiceUnavailable)
+        assertNull(sender(unavailable).send(invoiceXml).upo)
+        assertEquals(3, unavailable.requestsTo("sessions/SO-1/invoices/INV-1/upo").size)
     }
 
     private fun unwrap(base64: String): ByteArray {

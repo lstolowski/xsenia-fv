@@ -46,4 +46,19 @@ class InvoiceNumberingTest {
         assertFalse(InvoiceNumbering.monthMismatch("01/09/2026", date("2026-09-30")))
         assertFalse(InvoiceNumbering.monthMismatch("FV-TEST", date("2026-09-30")))
     }
+
+    @Test
+    fun `a sequence of up to 9 digits is a number, the next one has 10`() {
+        assertEquals("1000000000/09/2026", InvoiceNumbering.suggest(date("2026-09-15"), listOf("999999999/09/2026")))
+    }
+
+    @Test
+    fun `a sequence longer than 9 digits is not a number of this format and does not break anything`() {
+        // 11 digits (does not fit an Int) and 10 digits: ignored, no exception.
+        val tooLong = listOf("12345678901/10/2026", "2147483648/10/2026", "1000000000/10/2026")
+
+        assertFalse(InvoiceNumbering.monthMismatch("12345678901/10/2026", date("2026-09-30")))
+        assertEquals("01/10/2026", InvoiceNumbering.suggest(date("2026-10-15"), tooLong))
+        assertEquals("02/10/2026", InvoiceNumbering.suggest(date("2026-10-15"), tooLong + "01/10/2026"))
+    }
 }

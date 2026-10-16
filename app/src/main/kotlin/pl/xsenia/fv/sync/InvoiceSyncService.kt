@@ -2,12 +2,17 @@ package pl.xsenia.fv.sync
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import pl.xsenia.fv.ksef.KsefAccess
 import pl.xsenia.fv.ksef.KsefFailure
@@ -40,19 +45,35 @@ data class SyncUiState(
  */
 class InvoiceSyncService(
     private val scope: CoroutineScope,
-    private val ksef: KsefAccess,
-    private val tokenStore: KsefTokenStore,
-    private val nip: String,
     val mirror: InvoiceMirror,
-    private val initialDate: Instant,
+    private val readToken: suspend () -> String?,
+    private val synchronizer: Lazy<InvoiceSynchronizer>,
     private val clock: Clock = Clock.systemUTC(),
     private val autoSyncInterval: Duration = Duration.ofMinutes(15),
 ) {
 
+    constructor(
+        scope: CoroutineScope,
+        ksef: KsefAccess,
+        tokenStore: KsefTokenStore,
+        nip: String,
+        mirror: InvoiceMirror,
+        initialDate: Instant,
+    ) : this(
+        scope,
+        mirror,
+        readToken = tokenStore::read,
+        synchronizer = lazy { InvoiceSynchronizer(KsefInvoiceSource(ksef.invoiceClient(nip)), mirror, initialDate, Clock.systemUTC()) },
+    )
+
     private val _state = MutableStateFlow(SyncUiState())
     val state: StateFlow<SyncUiState> = _state.asStateFlow()
 
-    private val synchronizer by lazy { InvoiceSynchronizer(KsefInvoiceSource(ksef.invoiceClient(nip)), mirror, initialDate, clock) }
+    /** The running synchronization; [clearMirror] cancels it. */
+    private var syncJob: Job? = null
+
+    /** Held while synchronizing and while the mirror is deleted, so the two never overlap. */
+    private val mirrorLock = Mutex()
 
     init {
         scope.launch { refreshFromMirror() }
@@ -66,36 +87,60 @@ class InvoiceSyncService(
     fun syncNow() {
         if (_state.value.running) return
         _state.update { it.copy(running = true, error = null, progress = null) }
-        scope.launch {
-            val error = try {
-                synchronize()
-                null
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                e.toKsefFailure() ?: throw e
+        // ATOMIC: a job cancelled by clearMirror() before it started must still reach the `finally` that resets `running`.
+        syncJob = scope.launch(start = CoroutineStart.ATOMIC) {
+            var error: KsefFailure? = null
+            try {
+                error = try {
+                    mirrorLock.withLock { synchronize() }
+                    null
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // An error that is not a KSeF problem (damaged local data, a bug) must not leave the service
+                    // "running" for ever, nor crash the app: it is shown as a generic failure.
+                    e.toKsefFailure() ?: KsefFailure.Unexpected
+                }
+                refreshFromMirror()
+            } finally {
+                // Also after a cancellation by clearMirror().
+                _state.update { it.copy(running = false, progress = null, error = error) }
             }
-            refreshFromMirror()
-            _state.update { it.copy(running = false, progress = null, error = error) }
         }
     }
 
-    /** Call after the local cache (mirror) was deleted. */
-    fun onMirrorCleared() {
-        scope.launch { refreshFromMirror() }
+    /**
+     * Deletes the local copy of the invoices. A running synchronization is cancelled first, so it cannot write to the
+     * emptied mirror (it would leave the mirror incomplete but marked as synchronized); the next one downloads everything.
+     */
+    suspend fun clearMirror() {
+        syncJob?.cancelAndJoin()
+        mirrorLock.withLock {
+            withContext(Dispatchers.IO) { mirror.clear() }
+            refreshFromMirror()
+        }
     }
 
     private suspend fun synchronize() {
-        if (tokenStore.read() == null) throw KsefFailureException(KsefFailure.MissingToken)
+        if (readToken() == null) throw KsefFailureException(KsefFailure.MissingToken)
 
         withContext(Dispatchers.IO) {
-            synchronizer.sync { progress -> _state.update { it.copy(progress = progress) } }
+            // Reading the indexes first drops a corrupted one (with its checkpoint) before the synchronizer relies on it.
+            InvoiceCategory.entries.forEach { mirror.entries(it) }
+            synchronizer.value.sync { progress -> _state.update { it.copy(progress = progress) } }
         }
     }
 
+    /** Updates the counts and the last synchronization from the mirror; a mirror that cannot be read is left as it was. */
     private suspend fun refreshFromMirror() {
-        val (counts, lastSync) = withContext(Dispatchers.IO) {
-            InvoiceCategory.entries.associateWith { mirror.entries(it).size } to mirror.syncState().lastSyncAt
+        val (counts, lastSync) = try {
+            withContext(Dispatchers.IO) {
+                InvoiceCategory.entries.associateWith { mirror.entries(it).size } to mirror.syncState().lastSyncAt
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return
         }
         _state.update { it.copy(invoiceCounts = counts, lastSyncAt = lastSync, mirrorVersion = it.mirrorVersion + 1) }
     }

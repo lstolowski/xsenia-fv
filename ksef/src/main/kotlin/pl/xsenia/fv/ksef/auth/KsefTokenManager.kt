@@ -54,13 +54,18 @@ class KsefTokenManager(
 
     private companion object {
         const val HTTP_UNAUTHORIZED = 401
+
+        /** 400 invalid request, 401 unauthorized, 403 forbidden — the refresh token itself is not accepted. */
+        val REFRESH_TOKEN_REFUSED = setOf(400, HTTP_UNAUTHORIZED, 403)
     }
 
     private suspend fun refreshOrAuthenticate(current: KsefAuthTokens): KsefAuthTokens =
         try {
             KsefAuthTokens(authenticator.refresh(current.refreshToken), current.refreshToken)
         } catch (e: KsefApiException) {
-            // Refresh token revoked or rejected — start a new authentication.
+            // Only a refresh token KSeF refuses (revoked, invalid) calls for a new authentication; a temporary
+            // failure (5xx) would only fail again and spend the KSeF token and the rate limit.
+            if (e.httpStatus !in REFRESH_TOKEN_REFUSED) throw e
             authenticate()
         }
 

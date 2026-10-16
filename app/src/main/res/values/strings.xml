@@ -48,6 +48,8 @@
     <string name="connection_auth_failed">KSeF odrzucił uwierzytelnienie: %1$d %2$s</string>
     <string name="connection_rate_limited">Przekroczono limit zapytań KSeF. Spróbuj ponownie za %1$s s.</string>
     <string name="connection_network_error">Brak połączenia z KSeF: %1$s</string>
+    <string name="token_unreadable">Nie można odczytać zapisanego tokena — wpisz go ponownie w Ustawieniach (Zmień token).</string>
+    <string name="connection_token_not_saved">Nowy token nie został zapisany — dotychczasowa konfiguracja bez zmian.</string>
     <string name="connection_api_error">Błąd KSeF: %1$s</string>
 
     <!-- Settings -->
@@ -75,6 +77,7 @@
     <string name="sync_error_auth">KSeF odrzucił uwierzytelnienie: %1$d %2$s</string>
     <string name="sync_error_network">Brak połączenia z KSeF. (%1$s)</string>
     <string name="sync_offline_hint">Pokazuję faktury zapisane na telefonie.</string>
+    <string name="sync_error_unexpected">Nieoczekiwany błąd synchronizacji. Spróbuj ponownie, a jeśli się powtórzy — wyczyść cache w Ustawieniach.</string>
     <string name="sync_error_ksef">Błąd KSeF: %1$s</string>
 
     <!-- Navigation -->
@@ -104,6 +107,8 @@
     <string name="list_net">netto %1$s</string>
     <string name="list_unsent">Niewysłana do KSeF</string>
     <string name="list_unsent_rejected">Odrzucona przez KSeF — do poprawy</string>
+    <string name="list_amounts_incomplete">kwota niepełna — brak ilości lub ceny</string>
+    <string name="list_unsent_summary_incomplete">Niewysłane: %1$s (brutto co najmniej %2$s) — nie wliczone</string>
     <string name="list_unsent_summary">Niewysłane: %1$s (brutto %2$s) — nie wliczone</string>
     <string name="totals_line">netto %1$s · VAT %2$s · brutto %3$s</string>
     <!-- Polish plural forms are chosen in code (PolishPlural), independent of the device language. -->
@@ -211,6 +216,7 @@
     <string name="unsent_delete">Usuń fakturę</string>
     <string name="unsent_delete_confirm_title">Usunąć fakturę niewysłaną?</string>
     <string name="unsent_delete_confirm_text">Faktura %1$s zostanie usunięta z telefonu. Nie była wysłana do KSeF.</string>
+    <string name="unsent_delete_failed">Nie udało się usunąć faktury z telefonu. Spróbuj ponownie.</string>
     <string name="unsent_rejection">KSeF odrzucił tę fakturę: %1$d %2$s</string>
     <string name="unsent_rejection_duplicate">Duplikat faktury o numerze KSeF %1$s.</string>
     <string name="preview_save_unsent">Zapisz bez wysyłki do KSeF</string>
@@ -267,6 +273,10 @@
     <string name="issue_line_quantity_too_precise">Ilość może mieć najwyżej 6 miejsc po przecinku.</string>
     <string name="issue_line_price_negative">Cena nie może być ujemna.</string>
     <string name="issue_line_price_too_precise">Cena może mieć najwyżej 8 miejsc po przecinku.</string>
+    <string name="issue_line_quantity_too_large">Ilość jest za duża — najwyżej 16 cyfr przed przecinkiem.</string>
+    <string name="issue_line_price_too_large">Cena jest za duża — najwyżej 14 cyfr przed przecinkiem.</string>
+    <string name="issue_line_amount_too_large">Wartość pozycji jest za duża — najwyżej 16 cyfr przed przecinkiem.</string>
+    <string name="issue_amount_too_large">Kwoty faktury są za duże — KSeF przyjmuje najwyżej 16 cyfr przed przecinkiem.</string>
     <string name="issue_total_not_positive">Kwota faktury musi być większa od zera.</string>
 
     <string name="preview_environment_test">Środowisko KSeF TEST — faktura testowa, bez skutków prawnych.</string>
@@ -282,7 +292,7 @@
     <string name="status_field_ksef">Numer KSeF</string>
     <string name="status_field_upo">UPO</string>
     <string name="status_upo_saved">zapisane na telefonie</string>
-    <string name="status_upo_missing">jeszcze niedostępne</string>
+    <string name="status_upo_missing">jeszcze niedostępne — zostanie pobrane przy następnym uruchomieniu</string>
     <string name="status_rejected">KSeF odrzucił fakturę %1$s: %2$d %3$s</string>
     <string name="status_duplicate">Faktura jest duplikatem faktury o numerze KSeF %1$s.</string>
     <string name="status_failed">Nie udało się wysłać faktury %1$s.</string>
