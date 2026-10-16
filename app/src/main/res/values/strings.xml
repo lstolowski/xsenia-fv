@@ -161,6 +161,9 @@
     <string name="details_payment_paid_no_date">Zapłacono</string>
     <string name="details_bank_account">Rachunek: %1$s</string>
     <string name="details_bank_swift">BIC (SWIFT): %1$s</string>
+    <string name="details_issue_similar">Wystaw podobną</string>
+    <string name="details_issue_similar_sending">Poczekaj na wynik wysyłki nowej faktury do KSeF.</string>
+    <string name="details_issue_similar_failed">Nie udało się przygotować podobnej faktury. Spróbuj ponownie.</string>
     <string name="details_annotations">Adnotacje</string>
     <string name="details_split_payment">Mechanizm podzielonej płatności</string>
     <string name="details_reverse_charge">Odwrotne obciążenie</string>

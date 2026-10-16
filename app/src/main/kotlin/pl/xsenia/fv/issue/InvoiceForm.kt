@@ -91,19 +91,51 @@ object LineUnits {
     const val DEFAULT = "godz."
 }
 
-/** Default values of a new form and refreshing of a saved draft. */
+/**
+ * Default values of a new form and refreshing of a saved draft.
+ *
+ * The suggested dates and number are decided only by [withDefaultDates] and [withSuggestedNumber] (with [suggestedNumber]),
+ * used by a new invoice, a reopened draft, the form and "Wystaw podobną" alike (ADR 0011).
+ */
 object InvoiceFormDefaults {
 
     fun newForm(profile: CompanyProfile?, today: LocalDate, existingNumbers: Collection<String>): InvoiceForm {
-        val deliveryDate = DefaultDates.deliveryDate(today)
-        val form = InvoiceForm(
-            bankAccountNumber = profile?.defaultBankAccount(InvoiceCurrency.DEFAULT.code)?.number,
-            issueDate = today,
-            deliveryDate = deliveryDate,
-            invoiceNumber = InvoiceNumbering.suggest(deliveryDate, existingNumbers),
+        val form = withDefaults(
+            InvoiceForm(
+                bankAccountNumber = profile?.defaultBankAccount(InvoiceCurrency.DEFAULT.code)?.number,
+                issueDate = today,
+                deliveryDate = today,
+            ),
+            today,
+            existingNumbers,
         )
         val only = profile?.counterparties?.singleOrNull() ?: return form
         return selectCounterparty(form, only, profile)
+    }
+
+    /** Dates and number of a new invoice: [withDefaultDates], then [withSuggestedNumber]. */
+    fun withDefaults(form: InvoiceForm, today: LocalDate, existingNumbers: Collection<String>): InvoiceForm =
+        withSuggestedNumber(withDefaultDates(form, today), existingNumbers)
+
+    /**
+     * Issue date today; delivery date by [DefaultDates] — the last day of the previous month on day 1–5, otherwise today
+     * (decision R3). The dates count as not chosen by the user.
+     */
+    fun withDefaultDates(form: InvoiceForm, today: LocalDate): InvoiceForm =
+        form.copy(issueDate = today, deliveryDate = DefaultDates.deliveryDate(today), datesEdited = false)
+
+    /** The next number of the delivery month (decision C6); it counts as not typed by the user. */
+    fun withSuggestedNumber(form: InvoiceForm, existingNumbers: Collection<String>): InvoiceForm =
+        form.copy(invoiceNumber = suggestedNumber(form, existingNumbers), numberEdited = false)
+
+    /** Number suggested for the delivery date of [form]. */
+    fun suggestedNumber(form: InvoiceForm, existingNumbers: Collection<String>): String =
+        InvoiceNumbering.suggest(form.deliveryDate, existingNumbers)
+
+    /** A new delivery date: the suggested number follows it unless the user typed their own. */
+    fun changeDeliveryDate(form: InvoiceForm, date: LocalDate, existingNumbers: Collection<String>): InvoiceForm {
+        val dated = form.copy(deliveryDate = date, datesEdited = true)
+        return if (dated.numberEdited) dated else withSuggestedNumber(dated, existingNumbers)
     }
 
     /**
@@ -153,8 +185,8 @@ object InvoiceFormDefaults {
      * unedited number is suggested again (other invoices may have been issued meanwhile).
      */
     fun refresh(draft: InvoiceForm, today: LocalDate, existingNumbers: Collection<String>): InvoiceForm {
-        val dated = if (draft.datesEdited) draft else draft.copy(issueDate = today, deliveryDate = DefaultDates.deliveryDate(today))
-        return if (dated.numberEdited) dated else dated.copy(invoiceNumber = InvoiceNumbering.suggest(dated.deliveryDate, existingNumbers))
+        val dated = if (draft.datesEdited) draft else withDefaultDates(draft, today)
+        return if (dated.numberEdited) dated else withSuggestedNumber(dated, existingNumbers)
     }
 }
 

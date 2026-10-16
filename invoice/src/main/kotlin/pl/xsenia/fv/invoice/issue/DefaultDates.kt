@@ -6,10 +6,10 @@ import java.time.YearMonth
 /** Default dates of a new invoice (decision R3). */
 object DefaultDates {
 
-    private const val LAST_DAY_FOR_PREVIOUS_MONTH = 15
+    private const val LAST_DAY_FOR_PREVIOUS_MONTH = 5
 
     /**
-     * Last day of the previous month when issuing on day 1–15 (invoicing last month's work),
+     * Last day of the previous month when issuing on day 1–5 (invoicing last month's work),
      * otherwise the issue date.
      */
     fun deliveryDate(issueDate: LocalDate): LocalDate =

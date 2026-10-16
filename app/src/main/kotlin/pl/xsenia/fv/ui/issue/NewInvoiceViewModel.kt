@@ -25,7 +25,6 @@ import pl.xsenia.fv.invoice.currency.ExchangeRate
 import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.CompanyProfile
 import pl.xsenia.fv.invoice.issue.Fa3XmlWriter
-import pl.xsenia.fv.invoice.issue.InvoiceNumbering
 import pl.xsenia.fv.invoice.issue.SalesInvoiceDraft
 import pl.xsenia.fv.invoice.model.Invoice
 import pl.xsenia.fv.invoice.xml.InvoiceXmlParser
@@ -147,7 +146,7 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
             profile = profile,
             check = profile?.let { InvoiceFormCheck.check(form, it, taken, today()) },
             // TODO CODE REVIEWED: This combine runs in viewModelScope on Main and reparses the full KSeF/unsent number history on every form edit; large histories can stall typing. Precompute the month sequence or move derived work off Main.
-            suggestedNumber = InvoiceNumbering.suggest(form.deliveryDate, taken),
+            suggestedNumber = InvoiceFormDefaults.suggestedNumber(form, taken),
             showErrors = showErrors,
             unsentId = unsentId,
             rejection = unsent.firstOrNull { it.id == unsentId }?.rejection,
@@ -204,14 +203,11 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
     fun setIssueDate(date: LocalDate) = update { it.copy(issueDate = date, datesEdited = true) }
 
     /** Changing the delivery date updates the suggested number unless the user typed their own. */
-    fun setDeliveryDate(date: LocalDate) = update {
-        val number = if (it.numberEdited) it.invoiceNumber else InvoiceNumbering.suggest(date, taken())
-        it.copy(deliveryDate = date, invoiceNumber = number, datesEdited = true)
-    }
+    fun setDeliveryDate(date: LocalDate) = update { InvoiceFormDefaults.changeDeliveryDate(it, date, taken()) }
 
     fun setInvoiceNumber(number: String) = update { it.copy(invoiceNumber = number, numberEdited = true) }
 
-    fun useSuggestedNumber() = update { it.copy(invoiceNumber = InvoiceNumbering.suggest(it.deliveryDate, taken()), numberEdited = false) }
+    fun useSuggestedNumber() = update { InvoiceFormDefaults.withSuggestedNumber(it, taken()) }
 
     fun updateLine(index: Int, line: LineForm) = update { form ->
         form.copy(lines = form.lines.mapIndexed { i, existing -> if (i == index) line else existing })

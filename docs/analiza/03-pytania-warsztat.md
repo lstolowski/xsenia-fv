@@ -58,7 +58,7 @@ Status: **rundy 1 i 2 zakończone (2026-10-11); otwarte: R13**
 |---|---|
 | R1 | Filtr po dacie dostawy dotyczy **obu** list (sprzedażowej i zakupowej). |
 | R2 | Skala: zwykle 7–10 faktur zakupowych i 1 sprzedażowa miesięcznie (może wzrosnąć). Historia **od 01.04.2026**. |
-| R3 | Jedna data dostawy (`P_6`), bez okresów od–do. Domyślnie: ostatni dzień poprzedniego miesiąca, jeśli dziś jest 1.–15. dzień miesiąca; później dzisiejsza data. Edytowalna. |
+| R3 | Jedna data dostawy (`P_6`), bez okresów od–do. Domyślnie: ostatni dzień poprzedniego miesiąca, jeśli dziś jest 1.–15. dzień miesiąca; później dzisiejsza data. Edytowalna. **Zmiana 2026-10-16 (decyzja użytkownika): próg 5. dnia — 1.–5. dzień → poprzedni miesiąc, od 6. dnia → dziś** (`DefaultDates.LAST_DAY_FOR_PREVIOUS_MONTH`). |
 | R4 | Pozycja: nazwa, ilość, jednostka, cena jednostkowa netto, wartość netto (ilość × cena), wartość brutto. 1..n pozycji. |
 | R5 | Płatność zawsze przelewem, termin zawsze **21 dni**. Rachunki bankowe w pliku JSON; w formularzu lista rozwijana z wyborem konta. |
 | R6 | Dane mojej firmy w pliku JSON (format podobny do kontrahentów), wczytywane zawsze przy starcie. |

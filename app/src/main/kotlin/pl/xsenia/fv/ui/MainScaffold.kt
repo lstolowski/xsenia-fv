@@ -1,6 +1,7 @@
 package pl.xsenia.fv.ui
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -18,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +47,7 @@ import pl.xsenia.fv.ui.counterparties.CounterpartyFormScreen
 import pl.xsenia.fv.ui.counterparties.CounterpartyFormViewModel
 import pl.xsenia.fv.ui.counterparties.CounterpartyListScreen
 import pl.xsenia.fv.ui.details.InvoiceDetailsScreen
+import pl.xsenia.fv.ui.details.IssueSimilarAction
 import pl.xsenia.fv.ui.details.InvoiceDetailsViewModel
 import pl.xsenia.fv.ui.invoices.InvoiceListScreen
 import pl.xsenia.fv.ui.issue.NewInvoiceScreen
@@ -204,7 +207,30 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
                     factory = viewModelFactory { initializer { InvoiceDetailsViewModel(category, ksefNumber, session) } },
                 )
                 val state by detailsViewModel.state.collectAsStateWithLifecycle()
-                InvoiceDetailsScreen(state = state, canShare = category == InvoiceCategory.SALES, onBack = { navController.popIfOn(DETAILS_ROUTE) })
+                val sendingNewInvoice by detailsViewModel.sendingNewInvoice.collectAsStateWithLifecycle()
+                val similarReady by detailsViewModel.similarReady.collectAsStateWithLifecycle()
+                val similarFailed by detailsViewModel.similarFailed.collectAsStateWithLifecycle()
+                val context = LocalContext.current
+                // "Wystaw podobną" (US-015): the copy is already the new-invoice draft — the form opens it as usual.
+                LaunchedEffect(similarReady) {
+                    if (similarReady) {
+                        detailsViewModel.similarOpened()
+                        navController.navigate(NEW_INVOICE_ROUTE)
+                    }
+                }
+                LaunchedEffect(similarFailed) {
+                    if (similarFailed) {
+                        Toast.makeText(context, R.string.details_issue_similar_failed, Toast.LENGTH_LONG).show()
+                        detailsViewModel.similarFailureShown()
+                    }
+                }
+                val sales = category == InvoiceCategory.SALES
+                InvoiceDetailsScreen(
+                    state = state,
+                    canShare = sales,
+                    issueSimilar = if (sales) IssueSimilarAction(detailsViewModel::issueSimilar, similarBlocked = sendingNewInvoice) else null,
+                    onBack = { navController.popIfOn(DETAILS_ROUTE) },
+                )
             }
         }
     }

@@ -16,11 +16,16 @@ class InvoiceFormDefaultsTest {
 
     @Test
     fun `new form uses today and the suggested number`() {
-        val form = InvoiceFormDefaults.newForm(profile = null, today = LocalDate.parse("2026-10-12"), existingNumbers = existing)
+        val form = InvoiceFormDefaults.newForm(profile = null, today = LocalDate.parse("2026-10-05"), existingNumbers = existing)
 
-        assertEquals(LocalDate.parse("2026-10-12"), form.issueDate)
+        assertEquals(LocalDate.parse("2026-10-05"), form.issueDate)
         assertEquals(LocalDate.parse("2026-09-30"), form.deliveryDate)
         assertEquals("02/09/2026", form.invoiceNumber)
+
+        // From day 6 the delivery date and the number are of the current month.
+        val laterForm = InvoiceFormDefaults.newForm(profile = null, today = LocalDate.parse("2026-10-06"), existingNumbers = existing)
+        assertEquals(LocalDate.parse("2026-10-06"), laterForm.deliveryDate)
+        assertEquals("01/10/2026", laterForm.invoiceNumber)
     }
 
     @Test
@@ -54,6 +59,38 @@ class InvoiceFormDefaultsTest {
         val draft = InvoiceForm(issueDate = LocalDate.parse("2026-10-01"), deliveryDate = LocalDate.parse("2026-09-30"), invoiceNumber = "01/09/2026", datesEdited = true)
 
         assertEquals("02/09/2026", InvoiceFormDefaults.refresh(draft, LocalDate.parse("2026-10-20"), existing).invoiceNumber)
+    }
+
+    @Test
+    fun `default dates and suggested number replace those of any form`() {
+        val form = InvoiceForm(
+            issueDate = LocalDate.parse("2026-08-01"),
+            deliveryDate = LocalDate.parse("2026-07-31"),
+            invoiceNumber = "FV-TEST-7",
+            numberEdited = true,
+            datesEdited = true,
+            lines = listOf(LineForm("Usługa testowa", "1", "szt.", "100")),
+        )
+
+        val defaults = InvoiceFormDefaults.withDefaults(form, LocalDate.parse("2026-10-05"), existing)
+
+        assertEquals(form.copy(issueDate = LocalDate.parse("2026-10-05"), deliveryDate = LocalDate.parse("2026-09-30"), invoiceNumber = "02/09/2026", numberEdited = false, datesEdited = false), defaults)
+    }
+
+    @Test
+    fun `changing the delivery date moves an unedited number to its month`() {
+        val form = InvoiceFormDefaults.newForm(null, LocalDate.parse("2026-10-05"), existing)
+
+        val changed = InvoiceFormDefaults.changeDeliveryDate(form, LocalDate.parse("2026-10-12"), existing)
+        assertEquals("01/10/2026", changed.invoiceNumber)
+        assertEquals(true, changed.datesEdited)
+
+        val typed = form.copy(invoiceNumber = "FV-TEST-7", numberEdited = true)
+        assertEquals("FV-TEST-7", InvoiceFormDefaults.changeDeliveryDate(typed, LocalDate.parse("2026-10-12"), existing).invoiceNumber)
+        // "Użyj sugerowanego" brings the suggestion back.
+        val suggested = InvoiceFormDefaults.withSuggestedNumber(typed, existing)
+        assertEquals("02/09/2026", suggested.invoiceNumber)
+        assertEquals(false, suggested.numberEdited)
     }
 
     @Test
