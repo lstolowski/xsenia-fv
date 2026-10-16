@@ -39,7 +39,7 @@ Nowy APK instaluje się tak samo, **na starą wersję** (bez odinstalowania) —
 - podpisany **tym samym kluczem** (`secrets/xsenia-release.jks`) — inaczej telefon odmówi („Aplikacja nie została zainstalowana, bo pakiet jest niezgodny z istniejącym”),
 - `versionCode` nie niższy niż zainstalowany.
 
-Odinstalowanie usuwa dane aplikacji: token, pobrane faktury, faktury niewysłane oraz dane firmy, rachunki i kontrahentów (bez kopii zapasowej). Stare pliki JSON w folderze `Dokumenty` (sprzed US-010) zostają nietknięte.
+Odinstalowanie usuwa dane aplikacji: token, pobrane faktury, faktury niewysłane oraz dane firmy, rachunki i kontrahentów (bez kopii zapasowej).
 
 ## 6. Wersja testowa obok produkcyjnej
 
