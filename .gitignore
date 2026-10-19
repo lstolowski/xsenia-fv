@@ -8,6 +8,7 @@ keystore.properties
 # Android / Gradle
 .gradle/
 build/
+!/build/dist/*.apk
 /local.properties
 /captures/
 .externalNativeBuild/

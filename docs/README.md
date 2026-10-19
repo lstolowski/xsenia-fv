@@ -26,3 +26,6 @@
 
 - [android-studio-macos.md](srodowisko/android-studio-macos.md) — instalacja Android Studio, SDK i emulatora z biometrią
 - [instalacja-apk-telefon.md](srodowisko/instalacja-apk-telefon.md) — instalacja podpisanego APK na telefonie (Auto Blocker, nieznane źródła, aktualizacje)
+
+## Download
+- [build](build/dist) - apk w wersji testowej (ksef testowy) i produkcyjnej [do instalacji](srodowisko/instalacja-apk-telefon.md)
