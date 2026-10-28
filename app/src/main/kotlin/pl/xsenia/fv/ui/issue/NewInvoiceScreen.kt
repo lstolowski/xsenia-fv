@@ -91,6 +91,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
 import pl.xsenia.fv.ui.components.ShareInvoiceButton
+import pl.xsenia.fv.ui.components.SupportDialog
 import pl.xsenia.fv.currency.problemMessage
 import pl.xsenia.fv.invoice.currency.InvoiceCurrency
 import pl.xsenia.fv.invoice.profile.CompanyProfile
@@ -147,9 +148,23 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewC
         }
     }
     var confirmDelete by remember { mutableStateOf(false) }
+    // After the second issued invoice, leaving the success screen shows the support dialog once (US-016).
+    val supportPromptPending by viewModel.supportPromptPending.collectAsStateWithLifecycle()
+    var showSupport by remember { mutableStateOf(false) }
+    val acceptedShown = step == IssueStep.STATUS && sendState is SendState.Accepted
+    // [done] — "Gotowe": the result was seen, so the send state goes back to idle.
+    val leave = { done: Boolean ->
+        if (acceptedShown && supportPromptPending) {
+            showSupport = true
+        } else {
+            if (done) viewModel.finish()
+            onClose()
+        }
+    }
 
     BackHandler(enabled = step == IssueStep.PREVIEW) { viewModel.backToForm() }
     BackHandler(enabled = step == IssueStep.STATUS && sending) { /* stay until KSeF answers */ }
+    BackHandler(enabled = acceptedShown && supportPromptPending) { leave(false) }
 
     Scaffold(
         topBar = {
@@ -167,7 +182,7 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewC
                 },
                 navigationIcon = {
                     if (!sending) {
-                        IconButton(onClick = { if (step == IssueStep.PREVIEW) viewModel.backToForm() else onClose() }) {
+                        IconButton(onClick = { if (step == IssueStep.PREVIEW) viewModel.backToForm() else leave(false) }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                         }
                     }
@@ -196,13 +211,20 @@ fun NewInvoiceScreen(viewModel: NewInvoiceViewModel, onClose: () -> Unit, onNewC
         ) {
             when {
                 current == null -> LoadingScreen()
-                step == IssueStep.STATUS -> StatusContent(sendState, viewModel, onClose)
+                step == IssueStep.STATUS -> StatusContent(sendState, viewModel, onClose, onDone = { leave(true) })
                 step == IssueStep.PREVIEW -> PreviewContent(viewModel)
                 current.profile == null -> LoadingScreen()
                 !current.profile.canIssueInvoices -> ProfileGapsContent(current.profile.gaps, onOpenCompany, onNewCounterparty)
                 else -> FormContent(current, current.profile, viewModel, onNewCounterparty)
             }
         }
+    }
+    if (showSupport) {
+        SupportDialog(onDismiss = {
+            showSupport = false
+            viewModel.finish()
+            onClose()
+        })
     }
     if (confirmDelete) {
         AlertDialog(
@@ -504,7 +526,7 @@ private fun PreviewContent(viewModel: NewInvoiceViewModel) {
 }
 
 @Composable
-private fun StatusContent(state: SendState, viewModel: NewInvoiceViewModel, onClose: () -> Unit) {
+private fun StatusContent(state: SendState, viewModel: NewInvoiceViewModel, onClose: () -> Unit, onDone: () -> Unit) {
     when (state) {
         SendState.Idle -> LoadingScreen()
         is SendState.Sending -> Column(
@@ -522,7 +544,7 @@ private fun StatusContent(state: SendState, viewModel: NewInvoiceViewModel, onCl
             val preview by viewModel.preview.collectAsStateWithLifecycle()
             StatusMark(success = true)
             SuccessTicket(state, gross = preview?.let { Formats.money(it.grossTotal, it.currency) })
-            PrimaryButton(onClick = { viewModel.finish(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_done)) }
+            PrimaryButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.status_done)) }
         }
         is SendState.Rejected -> {
             val rejection = state.rejection

@@ -30,6 +30,8 @@ import pl.xsenia.fv.ui.components.SecondaryButton
 import pl.xsenia.fv.profile.ProfileSession
 import pl.xsenia.fv.ui.MainViewModel
 import pl.xsenia.fv.ui.components.SectionCard
+import pl.xsenia.fv.ui.components.SupportButton
+import pl.xsenia.fv.ui.components.SupportDialog
 import pl.xsenia.fv.ui.components.TokenSection
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +48,7 @@ fun SettingsScreen(
     val connection by viewModel.connection.collectAsStateWithLifecycle()
     val profile by session.profile.profile.collectAsStateWithLifecycle()
     var confirmClearCache by remember { mutableStateOf(false) }
+    var showSupport by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val cacheClearedMessage = stringResource(R.string.settings_cache_cleared)
 
@@ -68,6 +71,7 @@ fun SettingsScreen(
             SectionCard(stringResource(R.string.settings_app_section)) {
                 Text(stringResource(R.string.environment_label, viewModel.environment.name))
                 Text(stringResource(R.string.version_label, BuildConfig.VERSION_NAME))
+                SupportButton(onClick = { showSupport = true })
             }
             TokenSection(
                 title = stringResource(R.string.token_section_title),
@@ -84,6 +88,8 @@ fun SettingsScreen(
             }
         }
     }
+
+    if (showSupport) SupportDialog(onDismiss = { showSupport = false })
 
     if (confirmClearCache) {
         AlertDialog(

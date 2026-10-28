@@ -62,6 +62,14 @@
     <string name="settings_cache_confirm_text">Faktury zostaną ponownie pobrane z KSeF przy następnej synchronizacji.</string>
     <string name="settings_cache_cleared">Cache wyczyszczony.</string>
 
+    <!-- Support (US-016) -->
+    <string name="support_button">Wesprzyj rozwój aplikacji</string>
+    <string name="support_title">Postaw kawę</string>
+    <string name="support_message">Jeśli ta apka oszczędza twój czas, podziękuj autorowi drobną kwotą – to całkowicie dobrowolne, ale motywuje do rozwijania projektu.</string>
+    <string name="support_donate">Wesprzyj dobrowolną kwotą</string>
+    <string name="support_not_now">Nie teraz</string>
+    <string name="support_no_browser">Brak przeglądarki do otwarcia strony wsparcia.</string>
+
     <!-- Sync -->
     <string name="sync_now">Odśwież z KSeF</string>
     <string name="sync_never">Faktury nie zostały jeszcze pobrane z KSeF.</string>

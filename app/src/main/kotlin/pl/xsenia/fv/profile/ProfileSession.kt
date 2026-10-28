@@ -28,6 +28,7 @@ class ProfileSession(
     tokenStore: KsefTokenStore,
     mirrorStartDate: Instant,
     exchangeRates: ExchangeRateService,
+    onInvoiceIssued: () -> Unit,
 ) {
 
     val profile = ProfileRepository(CompanyProfileStore(directory, nip), scope)
@@ -48,7 +49,10 @@ class ProfileSession(
         backend = KsefSendBackend(ksef),
         storage = issueStorage,
         unsent = unsentInvoices,
-        onAccepted = syncService::syncNow,
+        onAccepted = {
+            syncService.syncNow()
+            onInvoiceIssued()
+        },
         finalRates = FinalRateSource { draft, sendDay -> exchangeRates.rateFor(draft.currency, draft.deliveryDate, sendDay) },
     )
 

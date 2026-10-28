@@ -40,6 +40,7 @@ import pl.xsenia.fv.issue.TakenNumbers
 import pl.xsenia.fv.issue.UnsentInvoice
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.profile.ProfileSession
+import pl.xsenia.fv.settings.IssuedInvoiceCounter
 import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
@@ -130,6 +131,11 @@ class NewInvoiceViewModel(container: AppContainer, private val session: ProfileS
     }
 
     val sendState: StateFlow<SendState> = session.sendService.state
+
+    /** "Gotowe" after the second issued invoice shows the support dialog first (US-016). */
+    val supportPromptPending: StateFlow<Boolean> = container.issuedInvoices.count
+        .map { it == IssuedInvoiceCounter.SUPPORT_PROMPT_AT }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val environment = container.environment
 
     val state: StateFlow<NewInvoiceUiState?> = combine(

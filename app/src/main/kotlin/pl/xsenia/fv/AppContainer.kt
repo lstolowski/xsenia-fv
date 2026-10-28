@@ -22,6 +22,7 @@ import pl.xsenia.fv.security.AppLock
 import pl.xsenia.fv.security.KeystoreCipher
 import pl.xsenia.fv.security.KsefTokenStore
 import pl.xsenia.fv.settings.AppSettings
+import pl.xsenia.fv.settings.IssuedInvoiceCounter
 import pl.xsenia.fv.settings.settingsDataStore
 import pl.xsenia.fv.storage.LocalCache
 import pl.xsenia.fv.whitelist.WhiteListClient
@@ -39,6 +40,9 @@ class AppContainer(context: Context) {
     val tokenStore = KsefTokenStore(context.settingsDataStore, KeystoreCipher(keyAlias = "ksef_token_key"))
 
     val localCache = LocalCache(context)
+
+    /** Kept in cacheDir: "Wyczyść cache" or the system may remove it, and counting starts again (US-016). */
+    val issuedInvoices = IssuedInvoiceCounter(File(context.cacheDir, "issued-invoices.txt"))
 
     /** Scope of work that must survive screen changes (e.g. synchronization). */
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -80,6 +84,7 @@ class AppContainer(context: Context) {
             tokenStore = tokenStore,
             mirrorStartDate = MIRROR_START_DATE.atStartOfDay(POLAND).toInstant(),
             exchangeRates = exchangeRates,
+            onInvoiceIssued = { applicationScope.launch(Dispatchers.IO) { issuedInvoices.increment() } },
         )
     }
 

@@ -42,6 +42,7 @@ Zadania implementacyjne (**jak**), wynikające z user stories. Plik: `ZAD-NNN-kr
 | [ZAD-036](ZAD-036-bic-swift-rachunku.md) | BIC (SWIFT) rachunku: model, formularz, XML FA(3), PDF, ostrzeżenie | US-014 | Zrobione |
 | [ZAD-037](ZAD-037-wspolna-podpowiedz-kopia-faktury.md) | Wspólna podpowiedź dat i numeru, kopiowanie faktury do formularza | US-015 | Zrobione |
 | [ZAD-038](ZAD-038-ui-wystaw-podobna.md) | UI: przycisk „Wystaw podobną”, szkic i kontrahent, przejście do formularza | US-015 | Zrobione |
+| [ZAD-039](ZAD-039-wesprzyj-rozwoj.md) | „Wesprzyj rozwój aplikacji”: przycisk w Ustawieniach i okno po drugiej fakturze | US-016 | Zrobione |
 
 Weryfikacja na urządzeniu fizycznym (2026-10-13): użytkownik sprawdził zadania 001–020 (poza 002 — infrastruktura testów integracyjnych) na swoim telefonie z KSeF TEST — aplikacja działa i wygląda poprawnie.
 
@@ -58,3 +59,5 @@ US-013: 034 → 035.
 US-014: 036.
 
 US-015: 037 → 038.
+
+US-016: 039.
