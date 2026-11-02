@@ -21,3 +21,4 @@ Z każdej historyjki rozpisujemy zadania w [../zadania/](../zadania/README.md).
 | [US-014](US-014-bic-swift-rachunku.md) | BIC (SWIFT) rachunku bankowego | MVP | Zrobiona |
 | [US-015](US-015-wystaw-podobna.md) | Wystaw podobną fakturę | MVP | Zrobiona |
 | [US-016](US-016-wesprzyj-rozwoj.md) | Wesprzyj rozwój aplikacji | Etap 2 | Zrobiona |
+| [US-017](US-017-przypomnienie-o-fakturze.md) | Przypomnienie o braku faktury w miesiącu | Etap 2 | Zrobiona |

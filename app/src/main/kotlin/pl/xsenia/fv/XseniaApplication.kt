@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.LocaleManager
 import android.os.LocaleList
 import androidx.lifecycle.ProcessLifecycleOwner
+import pl.xsenia.fv.reminder.MonthlyReminder
 
 class XseniaApplication : Application() {
 
@@ -14,6 +15,8 @@ class XseniaApplication : Application() {
         super.onCreate()
         usePolishLocale()
         container = AppContainer(this)
+        MonthlyReminder.createChannel(this)
+        MonthlyReminder.schedule(this)
         ProcessLifecycleOwner.get().lifecycle.addObserver(container.appLock)
     }
 

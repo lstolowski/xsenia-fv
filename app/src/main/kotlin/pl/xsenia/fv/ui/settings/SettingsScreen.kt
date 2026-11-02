@@ -1,6 +1,17 @@
 package pl.xsenia.fv.ui.settings
 
+import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.ui.Alignment
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import pl.xsenia.fv.reminder.MonthlyReminder
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +57,7 @@ fun SettingsScreen(
     val tokenSet by viewModel.tokenSet.collectAsStateWithLifecycle()
     val tokenNip by viewModel.tokenNip.collectAsStateWithLifecycle()
     val connection by viewModel.connection.collectAsStateWithLifecycle()
+    val reminderEnabled by viewModel.reminderEnabled.collectAsStateWithLifecycle()
     val profile by session.profile.profile.collectAsStateWithLifecycle()
     var confirmClearCache by remember { mutableStateOf(false) }
     var showSupport by remember { mutableStateOf(false) }
@@ -82,6 +94,7 @@ fun SettingsScreen(
                 onSaveToken = viewModel::saveToken,
                 onCheckConnection = viewModel::checkConnection,
             )
+            ReminderSection(enabled = reminderEnabled, onEnabledChange = viewModel::setReminderEnabled)
             SectionCard(stringResource(R.string.settings_cache_section)) {
                 Text(stringResource(R.string.settings_cache_description))
                 SecondaryButton(onClick = { confirmClearCache = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_cache_clear)) }
@@ -105,5 +118,36 @@ fun SettingsScreen(
             },
             dismissButton = { TextButton(onClick = { confirmClearCache = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
+    }
+}
+
+/** Switch of the monthly reminder (US-017); asks for the system notification permission when it is missing. */
+@Composable
+private fun ReminderSection(enabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
+    val context = LocalContext.current
+    var permissionGranted by remember { mutableStateOf(MonthlyReminder.hasPermission(context)) }
+    LifecycleResumeEffect(Unit) {
+        permissionGranted = MonthlyReminder.hasPermission(context)
+        onPauseOrDispose {}
+    }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { permissionGranted = it }
+
+    SectionCard(stringResource(R.string.settings_reminder_section)) {
+        Text(stringResource(R.string.settings_reminder_description))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.settings_reminder_switch), modifier = Modifier.weight(1f))
+            Switch(checked = enabled, onCheckedChange = {
+                onEnabledChange(it)
+                if (it && !permissionGranted) launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            })
+        }
+        if (enabled && !permissionGranted) {
+            Text(stringResource(R.string.settings_reminder_no_permission), color = MaterialTheme.colorScheme.error)
+            TextButton(onClick = {
+                context.startActivity(
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+                )
+            }) { Text(stringResource(R.string.settings_reminder_open_settings)) }
+        }
     }
 }

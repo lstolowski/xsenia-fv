@@ -1,14 +1,17 @@
 package pl.xsenia.fv
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import pl.xsenia.fv.reminder.MonthlyReminder
 import pl.xsenia.fv.security.BiometricGate
 import pl.xsenia.fv.ui.XseniaApp
 import pl.xsenia.fv.ui.theme.XseniaTheme
+import java.time.YearMonth
 
 /** FragmentActivity is required by BiometricPrompt. */
 class MainActivity : FragmentActivity() {
@@ -26,6 +29,8 @@ class MainActivity : FragmentActivity() {
         // Invoice data must not be visible in the recent apps overview.
         setRecentsScreenshotEnabled(false)
 
+        readReminderMonth(intent)
+
         setContent {
             XseniaTheme {
                 XseniaApp(
@@ -41,6 +46,19 @@ class MainActivity : FragmentActivity() {
                 autoPromptPending = locked
                 maybeAutoPrompt()
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        readReminderMonth(intent)
+    }
+
+    /** A tapped reminder notification asks for the sales list of its month. */
+    private fun readReminderMonth(intent: Intent) {
+        intent.getStringExtra(MonthlyReminder.EXTRA_MONTH)?.let { month ->
+            runCatching { YearMonth.parse(month) }.getOrNull()?.let { container.requestedSalesMonth.value = it }
+            intent.removeExtra(MonthlyReminder.EXTRA_MONTH)
         }
     }
 

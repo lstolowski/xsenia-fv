@@ -55,6 +55,13 @@
     <!-- Settings -->
     <string name="settings_title">Ustawienia</string>
     <string name="settings_app_section">Aplikacja</string>
+    <string name="settings_reminder_section">Przypomnienie</string>
+    <string name="settings_reminder_description">Powiadomienie w ostatnim dniu miesiąca o 19:00, gdy nie ma w nim żadnej faktury sprzedażowej.</string>
+    <string name="settings_reminder_switch">Przypominaj o fakturze</string>
+    <string name="settings_reminder_no_permission">Zezwól na powiadomienia w ustawieniach telefonu, aby przypomnienie mogło się wyświetlać.</string>
+    <string name="settings_reminder_open_settings">Ustawienia telefonu</string>
+    <string name="reminder_channel_name">Przypomnienia o fakturach</string>
+    <string name="reminder_text">Nie wystawiłeś żadnej faktury w tym miesiącu</string>
     <string name="settings_cache_section">Dane lokalne</string>
     <string name="settings_cache_description">Pobrane z KSeF faktury przechowywane na telefonie (od 01.04.2026). Po wyczyszczeniu zostaną pobrane ponownie.</string>
     <string name="settings_cache_clear">Wyczyść cache</string>

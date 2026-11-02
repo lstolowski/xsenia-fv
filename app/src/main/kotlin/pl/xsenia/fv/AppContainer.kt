@@ -5,6 +5,7 @@ import android.os.SystemClock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import pl.xsenia.fv.currency.ExchangeRateService
 import pl.xsenia.fv.exchangerates.CachedExchangeRateSource
@@ -28,6 +29,7 @@ import pl.xsenia.fv.storage.LocalCache
 import pl.xsenia.fv.whitelist.WhiteListClient
 import java.io.File
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 
 /** Manual dependency container, created once per process by [XseniaApplication]. */
@@ -41,8 +43,13 @@ class AppContainer(context: Context) {
 
     val localCache = LocalCache(context)
 
+    val appSettings = AppSettings(context.settingsDataStore)
+
     /** Kept in cacheDir: "Wyczyść cache" or the system may remove it, and counting starts again (US-016). */
     val issuedInvoices = IssuedInvoiceCounter(File(context.cacheDir, "issued-invoices.txt"))
+
+    /** Month of a tapped reminder notification, until the sales list shows it (US-017). */
+    val requestedSalesMonth = MutableStateFlow<YearMonth?>(null)
 
     /** Scope of work that must survive screen changes (e.g. synchronization). */
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -90,7 +97,7 @@ class AppContainer(context: Context) {
 
     init {
         // The shared folder with JSON files is no longer used (ADR 0006).
-        applicationScope.launch { AppSettings(context.settingsDataStore).forgetLegacyConfigFolder(context.contentResolver) }
+        applicationScope.launch { appSettings.forgetLegacyConfigFolder(context.contentResolver) }
     }
 
     companion object {
