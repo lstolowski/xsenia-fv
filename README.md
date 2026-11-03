@@ -8,6 +8,11 @@ Prostota wystawiania kilku faktur w miesiącu, idealna dla JDG. Przyjęto pewne 
 
 Dokumentacja projektu: [docs/](docs/README.md). Instrukcje dla agentów AI: [AGENTS.md](AGENTS.md).
 
+## Ostrzeżenie i wyłączenie odpowiedzialności
+
+Aplikacja jest w trakcie rozwoju i w fazie testów. Wystawianie faktur wiąże się z obowiązkiem podatkowym. Autor nie ponosi odpowiedzialności za ewentualne błedy w oprogramowaniu, które mogą skutkować wystawieniem błędnych faktur.
+
+
 ## Wymagania
 
 - Android Studio (z wbudowanym JDK) i Android SDK — [docs/srodowisko/android-studio-macos.md](docs/srodowisko/android-studio-macos.md)
