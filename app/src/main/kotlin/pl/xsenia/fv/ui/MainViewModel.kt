@@ -32,6 +32,13 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
 
     val profile: StateFlow<ProfileState> = container.profiles.state
 
+    /** The monthly "no sales invoice" reminder switch (US-017). */
+    val reminderEnabled: StateFlow<Boolean> = container.appSettings.reminderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    fun setReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch { container.appSettings.setReminderEnabled(enabled) }
+    }
+
     private val _connection = MutableStateFlow(ConnectionUiState())
     val connection: StateFlow<ConnectionUiState> = _connection.asStateFlow()
 

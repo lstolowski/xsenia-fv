@@ -23,7 +23,7 @@ import androidx.core.net.toUri
 import pl.xsenia.fv.R
 
 /** Voluntary support page of the author, opened in the default browser (US-016). */
-const val SUPPORT_URL = "https://suppi.pl/wsparcie/lsd"
+const val SUPPORT_URL = "https://suppi.pl/wsparcie/lsdevelopment"
 
 /**
  * "Postaw kawę" dialog (US-016): from Settings and once after the second issued invoice.

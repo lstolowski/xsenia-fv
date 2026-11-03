@@ -1,7 +1,10 @@
 package pl.xsenia.fv.ui
 
+import android.Manifest
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -34,9 +37,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.flow.MutableStateFlow
 import pl.xsenia.fv.AppContainer
 import pl.xsenia.fv.R
 import pl.xsenia.fv.profile.ProfileSession
+import pl.xsenia.fv.reminder.MonthlyReminder
 import pl.xsenia.fv.invoices.InvoiceRow
 import pl.xsenia.fv.mirror.InvoiceCategory
 import pl.xsenia.fv.ui.company.BankAccountFormScreen
@@ -54,6 +59,7 @@ import pl.xsenia.fv.ui.issue.NewInvoiceScreen
 import pl.xsenia.fv.ui.issue.NewInvoiceViewModel
 import pl.xsenia.fv.ui.invoices.InvoiceListViewModel
 import pl.xsenia.fv.ui.settings.SettingsScreen
+import java.time.YearMonth
 
 private const val DETAILS_ROUTE = "invoice"
 private const val NEW_INVOICE_ROUTE = "new-invoice"
@@ -84,6 +90,27 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
         session.sendService.resumeIfPending()
         // UPOs that KSeF had not provided right after accepting an invoice.
         session.sendService.fetchMissingUpos()
+    }
+
+    // The system asks for notification permission once, at the first start; without it no reminder is shown (US-017).
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    val appContext = LocalContext.current
+    LaunchedEffect(Unit) {
+        val settings = container.appSettings
+        if (!MonthlyReminder.hasPermission(appContext) && !settings.notificationPermissionAsked()) {
+            settings.markNotificationPermissionAsked()
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    // A tapped reminder opens the sales list; the list itself picks the month up (InvoiceListRoute).
+    val requestedMonth by container.requestedSalesMonth.collectAsStateWithLifecycle()
+    LaunchedEffect(requestedMonth) {
+        if (requestedMonth == null) return@LaunchedEffect
+        navController.navigate(Tab.SALES.route) {
+            popUpTo(navController.graph.findStartDestination().id)
+            launchSingleTop = true
+        }
     }
 
     Scaffold(
@@ -119,9 +146,9 @@ fun MainScaffold(container: AppContainer, viewModel: MainViewModel, session: Pro
                     ?: navController.navigate("$DETAILS_ROUTE/${category.name}/${row.ksefNumber}")
             }
             composable(Tab.SALES.route) {
-                InvoiceListRoute(InvoiceCategory.SALES, session, openInvoice, onNewInvoice = { navController.navigate(NEW_INVOICE_ROUTE) })
+                InvoiceListRoute(InvoiceCategory.SALES, session, openInvoice, onNewInvoice = { navController.navigate(NEW_INVOICE_ROUTE) }, requestedMonth = container.requestedSalesMonth)
             }
-            composable(Tab.PURCHASE.route) { InvoiceListRoute(InvoiceCategory.PURCHASE, session, openInvoice, onNewInvoice = null) }
+            composable(Tab.PURCHASE.route) { InvoiceListRoute(InvoiceCategory.PURCHASE, session, openInvoice, onNewInvoice = null, requestedMonth = null) }
             composable(
                 "$NEW_INVOICE_ROUTE?unsentId={unsentId}",
                 arguments = listOf(navArgument("unsentId") { type = NavType.StringType; nullable = true; defaultValue = null }),
@@ -242,11 +269,21 @@ private fun InvoiceListRoute(
     session: ProfileSession,
     onOpenInvoice: (InvoiceCategory, InvoiceRow) -> Unit,
     onNewInvoice: (() -> Unit)?,
+    requestedMonth: MutableStateFlow<YearMonth?>?,
 ) {
     val listViewModel: InvoiceListViewModel = viewModel(
         key = category.name,
         factory = viewModelFactory { initializer { InvoiceListViewModel(category, session) } },
     )
+    // Month of a tapped reminder (US-017): shown even when it is no longer the current month.
+    val requested = requestedMonth?.collectAsStateWithLifecycle()?.value
+    LaunchedEffect(requested) {
+        requested?.let {
+            listViewModel.selectMonth(it)
+            listViewModel.setQuery("")
+            requestedMonth.value = null
+        }
+    }
     val state by listViewModel.state.collectAsStateWithLifecycle()
     val sync by session.syncService.state.collectAsStateWithLifecycle()
     InvoiceListScreen(

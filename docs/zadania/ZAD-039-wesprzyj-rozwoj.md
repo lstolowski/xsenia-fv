@@ -6,7 +6,7 @@
 
 ## Cel
 
-Okno wsparcia autora z linkiem do https://suppi.pl/wsparcie/lsd — z Ustawień w każdej chwili oraz jednorazowo po „Gotowe” przy drugiej wystawionej fakturze.
+Okno wsparcia autora z linkiem do https://suppi.pl/wsparcie/lsdevelopment — z Ustawień w każdej chwili oraz jednorazowo po „Gotowe” przy drugiej wystawionej fakturze.
 
 ## Zakres
 

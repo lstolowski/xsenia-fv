@@ -10,7 +10,7 @@ Jako **użytkownik** chcę **móc dobrowolnie wesprzeć autora (postawić kawę,
 ## Kryteria akceptacji
 
 - [x] Ustawienia → ramka „Aplikacja”: podłużny zielony przycisk „Wesprzyj rozwój aplikacji” otwiera okno „Postaw kawę” (tytuł wyśrodkowany): obrazek filiżanki kawy, jedno zdanie o dobrowolnym wsparciu, przyciski „Wesprzyj dobrowolną kwotą” i „Nie teraz”
-- [x] „Wesprzyj dobrowolną kwotą” otwiera w domyślnej przeglądarce https://suppi.pl/wsparcie/lsd i zamyka okno; dalsze kroki są już poza aplikacją
+- [x] „Wesprzyj dobrowolną kwotą” otwiera w domyślnej przeglądarce https://suppi.pl/wsparcie/lsdevelopment i zamyka okno; dalsze kroki są już poza aplikacją
 - [x] To samo okno pojawia się po przyjęciu przez KSeF **drugiej** faktury wystawionej w aplikacji, dopiero po kliknięciu „Gotowe” na ekranie sukcesu; po zamknięciu okna formularz się zamyka jak zwykle
 - [x] Przy kolejnych fakturach okno się nie pojawia (licznik rośnie dalej) — tylko z Ustawień
 
