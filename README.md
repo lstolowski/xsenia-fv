@@ -79,3 +79,9 @@ Przed kolejnym wydaniem podnieś `versionCode` (o 1) i `versionName` w [app/buil
 ### 4. Instalacja na telefonie
 
 [docs/srodowisko/instalacja-apk-telefon.md](docs/srodowisko/instalacja-apk-telefon.md) — przesłanie pliku, nieznane źródła, Auto Blocker, pierwsze uruchomienie.
+
+### 5. Wesprzyj rozwój aplikacji
+
+Jeśli aplikacja ci sie podoba, możesz wesprzeć dobrowolną kwotą w [suppi](https://suppi.pl/wsparcie/lsdevelopment)
+
+<a href="https://suppi.pl/wsparcie/lsdevelopment" target="_blank"><img width="165" src="https://suppi.pl/api/widget/button.svg?fill=6457FD&textColor=ffffff"/></a>
